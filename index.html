@@ -471,7 +471,7 @@ const ORBITS={};
  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:dotTex(),color:nb[0],transparent:true,opacity:nb[4],depthWrite:false}));
  sp.position.set(nb[1],nb[2],nb[3]);sp.scale.set(9000,9000,1);scene.add(sp);});
 /* ---------- 銀河系俯視結構圖(按真實結構繪製：棒+旋臂+太陽喺獵戶支臂) ---------- */
-const MAPC={x:0,y:-8000,z:-1490,hw:1900};
+const MAPC={x:0,y:-8000,z:-1490,hw:1200};
 const MAPSUN=[672,655];
 const PER_T=3.3,SAG_T=2.4;
 function spiralPt(a0,b,th){const r=25*Math.exp(b*th);return [512+r*Math.cos(a0+th),512+r*Math.sin(a0+th)];}
@@ -525,7 +525,7 @@ function galaxyMapTex(){
  return tex(c);}
 const mapGroup=new THREE.Group();
 {
- const plane=new THREE.Mesh(new THREE.PlaneGeometry(3800,3800),
+ const plane=new THREE.Mesh(new THREE.PlaneGeometry(2400,2400),
   new THREE.MeshBasicMaterial({map:galaxyMapTex(),side:THREE.DoubleSide}));
  plane.position.set(MAPC.x,MAPC.y,MAPC.z);
  mapGroup.add(plane);
@@ -579,8 +579,9 @@ function focusDist(){
  if(focusId==='galaxy')return 2400;
  if(focusId==='system')return 200;
  const d=bodies3D[focusId].def;return Math.max(5,(d.size||2)*5);}
-function goFocus(id){focusId=id;tgtD=focusDist();tourOn=false;renderTour();
- if(id==='mmap'){camP=1.15;showMilky();}else if(id==='galaxy')showMilky();else if(id!=='system')showInfo(id);else hideInfo();}
+function enterMap(){focusId='mmap';const a=canvas.clientWidth/Math.max(1,canvas.clientHeight);tgtD=2489/Math.min(1,a);camP=1.15;showMilky();}
+function goFocus(id){if(id==='mmap'){tourOn=false;renderTour();enterMap();return;}focusId=id;tgtD=focusDist();tourOn=false;renderTour();
+ if(id==='galaxy')showMilky();else if(id!=='system')showInfo(id);else hideInfo();}
 function sliderToDist(v){return 6*Math.pow(2600/6,v/1000);}
 function distToSlider(d){return Math.round(1000*Math.log(Math.max(6,d)/6)/Math.log(2600/6));}
 const zoomSlider=$('zoom');
@@ -749,7 +750,8 @@ function frame(now){
  let dt=(now-last)/1000;last=now;if(dt>0.05)dt=0.05;
  if(tourOn&&!document.hidden){tourT+=dt;
   if(tourT>9){tourT=0;tourIdx=(tourIdx+1)%TOUR.length;
-   const id=TOUR[tourIdx];focusId=id;tgtD=focusDist();
+   const id=TOUR[tourIdx];focusId=id;
+   if(id==='mmap')enterMap();else tgtD=focusDist();
    if(id==='mmap'||id==='galaxy')showMilky();else if(id!=='system')showInfo(id);else hideInfo();}}
  scaleMix+=(scaleMixT-scaleMix)*Math.min(1,dt*2);
  for(const id in ORBITS){const o=ORBITS[id];o.line.scale.setScalar(Math.max(0.001,effDist(o.def)/(o.def.dist||1)));}
