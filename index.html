@@ -418,10 +418,7 @@ glow.scale.set(55,55,1);scene.add(glow);
 [[0x30408c,9000,-4000,-6000,0.14],[0x6e3a2a,-8000,2500,-7000,0.11],[0x2a5a6e,3000,-3000,8000,0.10]].forEach(nb=>{
  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:dotTex(),color:nb[0],transparent:true,opacity:nb[4],depthWrite:false}));
  sp.position.set(nb[1],nb[2],nb[3]);sp.scale.set(9000,9000,1);scene.add(sp);});
-// 銀河系(遠景)
-const galaxy=new THREE.Sprite(new THREE.SpriteMaterial({map:galaxyTex(),transparent:true,depthWrite:false,opacity:0.95}));
-galaxy.position.set(0,400,-11500);galaxy.scale.set(9500,9500,1);scene.add(galaxy);
-realTex('galaxy.jpg',gt=>{galaxy.material.map=gt;galaxy.material.needsUpdate=true;});
+// 銀河系：太陽系喺佢入面，所以唔再放獨立旋渦模型 —— 全景銀河背景(milkyway)就係由入面望出去嘅盤面
 
 /* ---------- 位置更新 ---------- */
 const YEAR_K=365/90; // 地球1年=90秒(1×時)
@@ -448,7 +445,7 @@ let camT=1.57,camP=1.05,camD=2300,tgtD=2300;
 let focusId='system',timeScale=1,showOrbit=true,showLabel=true,autoRot=true,tourOn=true,tourT=0,tourIdx=0;
 const TOUR=['galaxy','system','sun','earth','moon','mars','jupiter','saturn','uranus','neptune'];
 function focusTarget(out){
- if(focusId==='galaxy')return out.set(0,500,-7000);
+ if(focusId==='galaxy')return out.set(0,0,0); // 銀河視角：拉遠睇成個太陽系鄰域+背後銀河盤面
  if(focusId==='system')return out.set(0,0,0);
  const b3=bodies3D[focusId];if(!b3)return out.set(0,0,0);
  out.copy(b3.grp.position);return out;}
@@ -457,7 +454,7 @@ function focusDist(){
  if(focusId==='system')return 200;
  const d=bodies3D[focusId].def;return Math.max(5,(d.size||2)*5);}
 function goFocus(id){focusId=id;tgtD=focusDist();tourOn=false;renderTour();
- if(id!=='galaxy'&&id!=='system')showInfo(id);}
+ if(id==='galaxy')showMilky();else if(id!=='system')showInfo(id);else hideInfo();}
 function sliderToDist(v){return 6*Math.pow(2600/6,v/1000);}
 function distToSlider(d){return Math.round(1000*Math.log(Math.max(6,d)/6)/Math.log(2600/6));}
 const zoomSlider=$('zoom');
@@ -518,9 +515,6 @@ function updateLabels(){
   return[( _v.x*0.5+0.5)*W,(-_v.y*0.5+0.5)*H,_v.z<1];};
  const far=camD>500;
  let v=new THREE.Vector3();
- // 銀河
- v.set(0,900,-10500);let [gx,gy,ok]=proj(v);
- put('galaxy',gx,gy,t('gal'),(ok&&camD>900)?0.95:0);
  // 太陽系標記
  v.set(0,0,0);let [sx2,sy2,ok2]=proj(v);
  put('system',sx2,sy2-30,t('sys'),(ok2&&camD>420)?0.95:0);
@@ -533,8 +527,30 @@ function updateLabels(){
   else if(b.parent){op=camD<90?0.9:0;}
   else{op=camD<500?0.9:0;}
   put(b.id,x,y,bn(b),op);}
- galaxy.material.opacity=camD>500?0.95:Math.max(0,(camD-200)/300)*0.95;
  $('zoomRead').textContent=Math.round(camD)+'u';}
+
+/* ---------- 銀河系(我哋住喺入面) ---------- */
+const MILKY={
+ name:{zh:'🌌 銀河系',en:'🌌 Milky Way',ms:'🌌 Bima Sakti',ko:'🌌 은하수',ja:'🌌 天の川'},
+ stats:{
+  zh:[['直徑','約10萬光年'],['太陽位置','離中心26,000光年 · 獵戶座旋臂內側'],['恆星數量','1000–4000億粒'],['銀河年','太陽繞一圈要2.3億年']],
+  en:[['Diameter','~100,000 light-years'],['Where is the Sun','26,000 ly from center · inner Orion Spur'],['Stars','100–400 billion'],['Galactic year','Sun orbits once every 230M years']],
+  ms:[['Diameter','~100,000 tahun cahaya'],['Kedudukan Matahari','26,000 tc dari pusat · Lingkaran Orion'],['Bintang','100–400 bilion'],['Tahun galaksi','Matahari mengelilingi sekali setiap 230J tahun']],
+  ko:[['지름','약 10만 광년'],['태양 위치','중심에서 26,000광년 · 오리온자리 나선팔 안쪽'],['항성 수','1,000–4,000억 개'],['은하년','태양 공전 1회에 2.3억 년']],
+  ja:[['直径','約10万光年'],['太陽の位置','中心から26,000光年 · オリオン腕の内側'],['恒星数','1,000–4,000億個'],['銀河年','太陽の公転1周は2.3億年']]},
+ blurb:{
+  zh:'重點糾正：太陽系唔喺銀河系出面 —— 我哋住喺入面！銀河係個棒旋星系。你而家見到橫跨天空嘅光帶，就係由入面向外望嘅銀河盤面。拉近，就會飛返去我哋屋企——太陽系。',
+  en:'Correction: the Solar System is not outside the Milky Way — we live inside it! Ours is a barred spiral. The glowing band across the sky is the galactic disk seen from within. Zoom in to fly home to the Solar System.',
+  ms:'Pembetulan: Sistem Suria bukan di luar Bima Sakti — kita tinggal di dalamnya! Galaksi kita ialah pilin berpalang. Jalur cahaya merentasi langit ialah cakera galaksi dilihat dari dalam. Zum masuk untuk pulang ke Sistem Suria.',
+  ko:'정정: 태양계는 은하수 밖에 있지 않아요 — 우리는 안에 살고 있어요! 우리 은하는 막대나선은하예요. 하늘을 가로지르는 빛의 띠가 안에서 본 은하 원반이죠. 확대하면 집(태양계)으로 돌아가요.',
+  ja:'訂正：太陽系は天の川の外ではありません —— 私たちは中に住んでいます！私たちの銀河は棒渦巻銀河。空を横切る光の帯が内側から見た銀河円盤です。ズームインで我が家（太陽系）へ帰りましょう。'}};
+function showMilky(){
+ lastInfo='@milky';
+ $('infoName').textContent=MILKY.name[LANG]||MILKY.name.en;
+ $('infoBlurb').textContent=MILKY.blurb[LANG]||MILKY.blurb.en;
+ let h='';for(const [k,v] of (MILKY.stats[LANG]||MILKY.stats.en))h+=`<tr><td class="k">${k}</td><td>${v}</td></tr>`;
+ $('infoStats').innerHTML=h;
+ $('info').classList.remove('hidden');}
 
 /* ---------- 資訊面板 ---------- */
 const STATL={dia:'k_dia',dis:'k_dis',year:'k_year',day:'k_day',moon:'k_moon',temp:'k_temp',extra:'k_extra'};
@@ -564,7 +580,7 @@ function applyLang(){
  document.documentElement.lang=LANG==='zh'?'zh-Hant':LANG;
  document.querySelectorAll('[data-i18n]').forEach(el=>{el.innerHTML=t(el.dataset.i18n);});
  buildPlanetBtns();buildTable();
- if(!$('info').classList.contains('hidden')&&lastInfo)showInfo(lastInfo);
+ if(!$('info').classList.contains('hidden')&&lastInfo){if(lastInfo==='@milky')showMilky();else showInfo(lastInfo);}
  $('langSel').value=LANG;
  drawNow=true;}
 let lastInfo=null;
@@ -587,7 +603,7 @@ function frame(now){
  if(tourOn&&!document.hidden){tourT+=dt;
   if(tourT>9){tourT=0;tourIdx=(tourIdx+1)%TOUR.length;
    const id=TOUR[tourIdx];focusId=id;tgtD=focusDist();
-   if(id!=='galaxy'&&id!=='system')showInfo(id);else hideInfo();}}
+   if(id==='galaxy')showMilky();else if(id!=='system')showInfo(id);else hideInfo();}}
  updateBodies(dt);
  const k=1-Math.pow(0.002,dt);
  camD+=(tgtD-camD)*k;
@@ -601,7 +617,6 @@ function frame(now){
  if(autoRot&&tourOn)camT+=dt*0.02;
  const glowI=1+0.06*Math.sin(now*0.004);
  glow.scale.set(55*glowI,55*glowI,1);
- galaxy.material.rotation+=dt*0.004;
  renderer.render(scene,camera);
  updateLabels();
  if(Math.abs(tgtD-sliderToDist(+zoomSlider.value))>tgtD*0.05+1)zoomSlider.value=distToSlider(camD);
