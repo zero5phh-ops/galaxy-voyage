@@ -168,7 +168,7 @@ I18N.zh.mapcenter='✨ 銀河中心';I18N.en.mapcenter='✨ Galactic Center';I18
 I18N.zh.mapsun='☀️ 你喺度！太陽系';I18N.en.mapsun='☀️ YOU ARE HERE: Solar System';I18N.ms.mapsun='☀️ ANDA DI SINI: Sistem Suria';I18N.ko.mapsun='☀️ 여기가 너희 집! 태양계';I18N.ja.mapsun='☀️ 君はここ！太陽系';
 I18N.zh.mapper='🌀 英仙座旋臂';I18N.en.mapper='🌀 Perseus Arm';I18N.ms.mapper='🌀 Lengan Perseus';I18N.ko.mapper='🌀 페르세우스자리 나선팔';I18N.ja.mapper='🌀 ペルセウス腕';
 I18N.zh.mapsag='🌀 人馬座旋臂';I18N.en.mapsag='🌀 Sagittarius Arm';I18N.ms.mapsag='🌀 Lengan Sagittarius';I18N.ko.mapsag='🌀 궁수자리 나선팔';I18N.ja.mapsag='🌀 いて座腕';
-I18N.zh.sgra='⚫ 人馬座A* · 430萬太陽質量黑洞（撳近睇）';I18N.en.sgra='⚫ Sagittarius A* · 4.3M-solar-mass black hole (tap to zoom in)';I18N.ms.sgra='⚫ Sagittarius A* · lubang hitam 4.3J jisim suria (sentuh untuk zum)';I18N.ko.sgra='⚫ 궁수자리A* · 태양 430만 배 블랙홀(눌러서 확대)';I18N.ja.sgra='⚫ いて座A* · 太陽430万個分ブラックホール（タップで拡大）';
+I18N.zh.sgra='⚫ 人馬座A* · 430萬太陽質量黑洞（撳入去睇）';I18N.en.sgra='⚫ Sagittarius A* · 4.3M-solar-mass black hole (tap to visit)';I18N.ms.sgra='⚫ Sagittarius A* · lubang hitam 4.3J jisim suria (sentuh untuk lawat)';I18N.ko.sgra='⚫ 궁수자리A* · 태양 430만 배 블랙홀(눌러서 가기)';I18N.ja.sgra='⚫ いて座A* · 太陽430万個分ブラックホール（タップで見学）';
 I18N.zh.scale10k='📏 10,000光年';I18N.en.scale10k='📏 10,000 light-years';I18N.ms.scale10k='📏 10,000 tahun cahaya';I18N.ko.scale10k='📏 1만 광년';I18N.ja.scale10k='📏 1万光年';
 let LANG=localStorage.getItem('gv_lang')||'en';
 if(!I18N[LANG])LANG='en';
@@ -718,7 +718,7 @@ $('distBtn').onclick=function(){scaleMixT=scaleMixT>0.5?0:1;this.classList.toggl
  if(scaleMixT>0.5){bd.innerHTML=t('scalemode');bd.style.display='block';if(focusId==='system')tgtD=1000;}
  else bd.style.display='none';};
 document.querySelectorAll('#navRow [data-go]').forEach(b=>b.onclick=()=>{audio();hideInfo();goFocus(b.dataset.go);});
-$('bhBtn').onclick=()=>{hideInfo();goFocus('sgra');};
+$('bhBtn').onclick=()=>window.open('https://zero5phh-ops.github.io/blackhole-voyage/','_blank');
 function buildPlanetBtns(){const row=$('planetRow');row.innerHTML='';
  for(const b of BODIES){if(b.sun||b.parent)continue;
   const btn=document.createElement('button');btn.className='pbtn';btn.textContent=bn(b);
@@ -734,7 +734,7 @@ function buildLabels(){
  const maps=[['map_cap',null],['map_center',null],['map_sun','system'],['map_per',null],['map_sag',null],['map_sgra',null],['map_scale',null]];
  for(const [id,go] of maps){const d=document.createElement('div');d.className='lbl';d.style.display='none';
   d.onclick=()=>{if(go)goFocus(go);else showMilky();};labelLayer.appendChild(d);labelDivs[id]=d;}
- labelDivs.map_sgra.onclick=()=>{hideInfo();goFocus('sgra');};}
+ labelDivs.map_sgra.onclick=()=>window.open('https://zero5phh-ops.github.io/blackhole-voyage/','_blank');}
 function updateLabels(){
  const W=canvas.clientWidth,H=canvas.clientHeight;
  const put=(id,x,y,txt,op)=>{const d=labelDivs[id];if(!d)return;
