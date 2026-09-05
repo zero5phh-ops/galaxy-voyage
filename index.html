@@ -14,6 +14,10 @@
   #labels{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:4}
   .lbl{position:absolute;transform:translate(-50%,-130%);font-size:12px;font-weight:800;color:#fff;white-space:nowrap;
     text-shadow:0 1px 6px #000,0 0 10px rgba(0,229,255,.7);pointer-events:auto;cursor:pointer;padding:2px 6px}
+  #loading{position:absolute;inset:0;z-index:30;display:flex;flex-direction:column;gap:14px;align-items:center;justify-content:center;background:#020208;transition:opacity .6s}
+  #loading .spin{width:54px;height:54px;border-radius:50%;border:4px solid rgba(0,229,255,.2);border-top-color:#00e5ff;animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  #loadTxt{font-size:14px;color:#8be9fd}
   #title{position:absolute;z-index:5;top:calc(14px + env(safe-area-inset-top));left:16px;right:16px;text-align:center;pointer-events:none}
   #title h1{font-size:clamp(24px,5.5vw,40px);font-weight:900;letter-spacing:2px;text-shadow:0 0 24px #00e5ff,0 2px 8px #000}
   #title p{font-size:clamp(12px,3vw,14px);color:#a5f3fc;margin-top:4px;text-shadow:0 1px 6px #000}
@@ -58,6 +62,7 @@
 <div id="hero">
   <canvas id="gl"></canvas>
   <div id="labels"></div>
+  <div id="loading"><div class="spin"></div><div id="loadTxt">Loading textures…</div></div>
   <div id="title">
     <h1 data-i18n="title_h1">🌌 Galaxy Voyage</h1>
     <p data-i18n="title_p">Milky Way → Solar System → Earth &amp; Moon · drag to orbit / scroll to zoom</p>
@@ -111,35 +116,35 @@ zh:{title_h1:'🌌 銀河系漫遊',title_p:'銀河系 → 太陽系 → 地球�
 zoom_l:'縮放',time_l:'時間',hint:'👆 拖拽環繞 · 滾輪/雙指縮放 · 點星球睇詳解',
 sys:'☀️ 太陽系',gal:'🌌 銀河系',s1h:'① 行星一覽',s1sub:'3D裡面嘅大細同距離經過壓縮，方便同屏睇晒 —— 真實數字如下',
 note:'<b>點解唔用真實比例？</b>真實太陽系幾乎係空嘅 —— 如果地球係粒彈珠，太陽就係兩米外嘅大氣球，海王星喺幾公里外。上面3D將距離同大細壓縮咗，形狀、顏色、自轉、衛星關係全部按真實資料還原。',
-foot:'資料：NASA · 紋理為程序生成（教學示意） · 軌道為圓形近似<br>🌌 銀河系漫遊 · 分享俾朋友一齊由銀河飛返地球',
+foot:'資料：NASA · 星球紋理：NASA影像 · 軌道為圓形近似<br>🌌 銀河系漫遊 · 分享俾朋友一齊由銀河飛返地球',
 th_name:'天體',th_dia:'直徑',th_dis:'同太陽距離',th_year:'公轉',th_moon:'衛星',
 k_dia:'直徑',k_dis:'距離太陽',k_year:'公轉週期',k_day:'自轉',k_moon:'衛星',k_temp:'溫度',k_extra:'之最'},
 en:{title_h1:'🌌 Galaxy Voyage',title_p:'Milky Way → Solar System → Earth & Moon · drag to orbit / scroll to zoom',
 zoom_l:'Zoom',time_l:'Time',hint:'👆 Drag to orbit · scroll / pinch to zoom · tap a planet for details',
 sys:'☀️ Solar System',gal:'🌌 Milky Way',s1h:'Planets at a glance',s1sub:'Sizes and distances in 3D are compressed so everything fits on screen — real numbers below',
 note:'<b>Why not true scale?</b> The real Solar System is almost entirely empty — if Earth were a marble, the Sun would be a balloon 2 meters away and Neptune kilometers off. Distances and sizes above are compressed; shapes, colors, spins and moons follow real data.',
-foot:'Data: NASA · textures procedurally generated (illustrative) · circular-orbit approximation<br>🌌 Galaxy Voyage · share it and fly home to Earth together',
+foot:'Data: NASA · planet textures: NASA imagery · circular-orbit approximation<br>🌌 Galaxy Voyage · share it and fly home to Earth together',
 th_name:'Body',th_dia:'Diameter',th_dis:'Dist. from Sun',th_year:'Year',th_moon:'Moons',
 k_dia:'Diameter',k_dis:'Distance from Sun',k_year:'Orbital period',k_day:'Rotation',k_moon:'Moons',k_temp:'Temperature',k_extra:'Claim to fame'},
 ms:{title_h1:'🌌 Kembara Galaksi',title_p:'Bima Sakti → Sistem Suria → Bumi & Bulan · seret untuk mengorbit / skrol untuk zum',
 zoom_l:'Zum',time_l:'Masa',hint:'👆 Seret untuk mengorbit · skrol / cubit untuk zum · sentuh planet untuk butiran',
 sys:'☀️ Sistem Suria',gal:'🌌 Bima Sakti',s1h:'Planet sekilas pandang',s1sub:'Saiz dan jarak dalam 3D dimampatkan agar muat di skrin — angka sebenar di bawah',
 note:'<b>Kenapa bukan skala sebenar?</b> Sistem Suria sebenar hampir keseluruhannya kosong — jika Bumi sebiji guli, Matahari belon 2 meter jauhnya dan Neptun berkilometer jauhnya. Jarak dan saiz di atas dimampatkan; bentuk, warna, putaran dan bulan mengikut data sebenar.',
-foot:'Data: NASA · tekstur dijana prosedural (ilustrasi) · anggaran orbit membulat<br>🌌 Kembara Galaksi · kongsi dan terbang pulang ke Bumi bersama',
+foot:'Data: NASA · tekstur planet: imejan NASA · anggaran orbit membulat<br>🌌 Kembara Galaksi · kongsi dan terbang pulang ke Bumi bersama',
 th_name:'Jasad',th_dia:'Diameter',th_dis:'Jarak dari Matahari',th_year:'Tahun',th_moon:'Bulan',
 k_dia:'Diameter',k_dis:'Jarak dari Matahari',k_year:'Tempoh orbit',k_day:'Putaran',k_moon:'Bulan',k_temp:'Suhu',k_extra:'Kemasyhuran'},
 ko:{title_h1:'🌌 은하 항해',title_p:'은하수 → 태양계 → 지구와 달 · 드래그로 회전 / 스크롤로 확대',
 zoom_l:'확대',time_l:'시간',hint:'👆 드래그로 회전 · 스크롤/핀치로 확대 · 행성을 눌러보세요',
 sys:'☀️ 태양계',gal:'🌌 은하수',s1h:'행성 한눈에 보기',s1sub:'3D의 크기와 거리는 한 화면에 담기 위해 압축했어요 — 실제 수치는 아래에',
 note:'<b>왜 실제 비율이 아닌가요?</b> 실제 태양계는 거의 텅 비어 있어요. 지구가 구슬이라면 태양은 2m 밖의 풍선, 해왕성은 수 km 밖이죠. 위 3D는 거리·크기를 압축했고 모양·색·자전·위성은 실제 자료를 따랐어요.',
-foot:'자료: NASA · 텍스처는 절차적 생성(일러스트) · 원형 궤도 근사<br>🌌 은하 항해 · 공유하고 함께 지구로 날아가 보세요',
+foot:'자료: NASA · 행성 텍스처: NASA 영상 · 원형 궤도 근사<br>🌌 은하 항해 · 공유하고 함께 지구로 날아가 보세요',
 th_name:'천체',th_dia:'지름',th_dis:'태양과의 거리',th_year:'공전',th_moon:'위성',
 k_dia:'지름',k_dis:'태양과의 거리',k_year:'공전 주기',k_day:'자전',k_moon:'위성',k_temp:'온도',k_extra:'최고 기록'},
 ja:{title_h1:'🌌 銀河航海',title_p:'天の川 → 太陽系 → 地球と月 · ドラッグで周回 / スクロールでズーム',
 zoom_l:'ズーム',time_l:'時間',hint:'👆 ドラッグで周回 · スクロール/ピンチでズーム · 星をタップで解説',
 sys:'☀️ 太陽系',gal:'🌌 天の川',s1h:'惑星ひと目で',s1sub:'3Dのサイズと距離は1画面に収めるため圧縮しています —— 本当の数値は以下です',
 note:'<b>なぜ実スケールでないの?</b> 本物の太陽系はほぼ空っぽです —— 地球がビー玉なら太陽は2m先の風船、海王星は数km先。上3Dは距離とサイズを圧縮し、形・色・自転・衛星は実データ通りです。',
-foot:'資料:NASA · テクスチャは手順生成(イラスト) · 円軌道近似<br>🌌 銀河航海 · シェアして一緒に地球へ帰りましょう',
+foot:'資料:NASA · 惑星テクスチャ:NASA画像 · 円軌道近似<br>🌌 銀河航海 · シェアして一緒に地球へ帰りましょう',
 th_name:'天体',th_dia:'直径',th_dis:'太陽との距離',th_year:'公転',th_moon:'衛星',
 k_dia:'直径',k_dis:'太陽との距離',k_year:'公転周期',k_day:'自転',k_moon:'衛星',k_temp:'温度',k_extra:'一番'}};
 let LANG=localStorage.getItem('gv_lang')||'en';
@@ -323,6 +328,35 @@ const TEXMAP={
  neptune:()=>bandTex('#3f66d4',[[20,80,'#5a86e8'],[120,190,'#2f4fb0'],[200,240,'#6a96f0']],101,8),
  triton:()=>rockTex('#c9c2b8','#6a655e',40,111)};
 const bodies3D={};
+/* ---------- 真實NASA紋理(同源tex/,失敗自動保留程序紋理) ---------- */
+const loadMan=new THREE.LoadingManager();
+const texLoader=new THREE.TextureLoader(loadMan);
+loadMan.onProgress=(u,l,tt)=>{const el=$('loadTxt');if(el)el.textContent='Loading textures '+l+'/'+tt;};
+loadMan.onLoad=()=>{const el=$('loading');if(el){el.style.opacity=0;setTimeout(()=>el.style.display='none',600);}};
+loadMan.onError=()=>{};
+function srgbTx(x){x.encoding=THREE.sRGBEncoding;x.anisotropy=4;return x;}
+function realTex(f,ok){texLoader.load('tex/'+f,tx=>{ok(srgbTx(tx));},undefined,()=>{});}
+const REALTEX={sun:'sun.jpg',mercury:'mercury.jpg',venus:'venus.jpg',earth:'earth_day.jpg',moon:'moon.jpg',mars:'mars.jpg',jupiter:'jupiter.jpg',saturn:'saturn.jpg',uranus:'uranus.jpg',neptune:'neptune.jpg',io:'io.jpg',europa:'europa.jpg',ganymede:'ganymede.jpg',callisto:'callisto.jpg'};
+function loadReal(b,mat){
+ const f=REALTEX[b.id];if(!f)return;
+ realTex(f,tx=>{mat.map=tx;mat.needsUpdate=true;
+  if(b.id==='moon'||b.id==='mars'||b.id==='mercury'||b.id==='callisto'){mat.bumpMap=tx;mat.bumpScale=0.5;mat.needsUpdate=true;}
+  if(b.id==='earth'){
+   realTex('earth_night.jpg',nt=>{const b3=bodies3D.earth;if(!b3)return;
+    const tg=b3.grp.children.find(o=>o.type==='Group')||b3.grp;
+    tg.add(new THREE.Mesh(new THREE.SphereGeometry(b.size*1.004,48,32),
+     new THREE.MeshBasicMaterial({map:nt,transparent:true,opacity:0.9,blending:THREE.AdditiveBlending,depthWrite:false})));});
+   realTex('earth_clouds.jpg',ct=>{const b3=bodies3D.earth;
+    if(b3&&b3.def.clouds){b3.def.clouds.material=new THREE.MeshPhongMaterial({color:0xffffff,transparent:true,depthWrite:false,alphaMap:ct});b3.def.clouds.material.needsUpdate=true;}});
+   realTex('earth_normal.jpg',nm2=>{mat.normalMap=nm2;mat.normalScale=new THREE.Vector2(0.85,0.85);mat.needsUpdate=true;});
+   realTex('earth_specular.jpg',sp=>{mat.specularMap=sp;mat.specular=new THREE.Color(0x777777);mat.needsUpdate=true;});
+  }
+ });
+}
+realTex('milkyway.jpg',bg=>{
+ const sky=new THREE.Mesh(new THREE.SphereGeometry(30000,32,24),
+  new THREE.MeshBasicMaterial({map:bg,side:THREE.BackSide,depthWrite:false}));
+ sky.renderOrder=-10;scene.add(sky);});
 function buildBody(b){
  const grp=new THREE.Group();
  const mat=b.sun?new THREE.MeshBasicMaterial({map:TEXMAP[b.id]()}):
@@ -341,6 +375,7 @@ function buildBody(b){
   const rm=new THREE.Mesh(rg,new THREE.MeshBasicMaterial({map:ringTex(),transparent:true,side:THREE.DoubleSide,depthWrite:false}));
   rm.rotation.x=-Math.PI/2;grp.add(rm);}
  scene.add(grp);
+ loadReal(b,mat);
  bodies3D[b.id]={def:b,grp,mesh,angle:Math.random()*Math.PI*2};
  return bodies3D[b.id];}
 BODIES.forEach(buildBody);
