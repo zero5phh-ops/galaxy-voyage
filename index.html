@@ -442,7 +442,7 @@ function updateBodies(dt){
 
 /* ---------- 相機+控制 ---------- */
 let camT=1.57,camP=1.05,camD=2300,tgtD=2300;
-let focusId='system',timeScale=1,showOrbit=true,showLabel=true,autoRot=true,tourOn=true,tourT=0,tourIdx=0;
+let focusId='system',timeScale=1,showOrbit=true,showLabel=true,autoRot=true,tourOn=true,tourT=0,tourIdx=-1;
 const TOUR=['galaxy','system','sun','earth','moon','mars','jupiter','saturn','uranus','neptune'];
 function focusTarget(out){
  if(focusId==='galaxy')return out.set(0,0,0); // 銀河視角：拉遠睇成個太陽系鄰域+背後銀河盤面
