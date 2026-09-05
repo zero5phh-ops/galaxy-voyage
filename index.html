@@ -83,6 +83,7 @@
   <div id="panel">
     <div class="row" id="navRow">
       <button class="pbtn" data-go="galaxy">🌌</button>
+      <button class="pbtn" data-go="mmap">🗺️</button>
       <button class="pbtn" data-go="system">☀️</button>
     </div>
     <div class="row" id="planetRow" style="margin-top:6px"></div>
@@ -158,6 +159,11 @@ k_dia:'直径',k_dis:'太陽との距離',k_year:'公転周期',k_day:'自転',k
 I18N.zh.tb_dist='📏 真實距離';I18N.en.tb_dist='📏 True scale';I18N.ms.tb_dist='📏 Skala sebenar';I18N.ko.tb_dist='📏 실제 거리';I18N.ja.tb_dist='📏 実スケール';
 I18N.zh.scalemode='📏 真實AU距離模式 · 行星大細同衛星距離為顯示而保留示意';I18N.en.scalemode='📏 True-AU mode · planet sizes & moon orbits kept schematic for visibility';I18N.ms.scalemode='📏 Mod jarak AU sebenar · saiz planet & orbit bulan kekal skematik';I18N.ko.scalemode='📏 실제 AU 거리 모드 · 행성 크기와 위성 궤도는 표시용';I18N.ja.scalemode='📏 実AU距離モード · 惑星サイズと衛星軌道は表示用';
 I18N.zh.mapcap='🎨 銀河系藝術想像圖：NASA（太陽位置已標示）';I18N.en.mapcap='🎨 Artist impression of the Milky Way: NASA (Sun marked)';I18N.ms.mapcap='🎨 Ilustrasi artis Bima Sakti: NASA (Matahari ditanda)';I18N.ko.mapcap='🎨 은하수 상상도: NASA(태양 위치 표시)';I18N.ja.mapcap='🎨 天の川想像図：NASA（太陽の位置を標示）';
+I18N.zh.mapcap2='銀河系結構示意圖(俯視) · 橙點係太陽系';I18N.en.mapcap2='Milky Way schematic (top view) · orange dot = Solar System';I18N.ms.mapcap2='Skema Bima Sakti (pandangan atas) · titik oren = Sistem Suria';I18N.ko.mapcap2='은하수 구조도(위에서) · 주황점 = 태양계';I18N.ja.mapcap2='天の川構造図(真上から) · オレンジ点=太陽系';
+I18N.zh.mapcenter='✨ 銀河中心';I18N.en.mapcenter='✨ Galactic Center';I18N.ms.mapcenter='✨ Pusat Galaksi';I18N.ko.mapcenter='✨ 은하 중심';I18N.ja.mapcenter='✨ 銀河中心';
+I18N.zh.mapsun='☀️ 你喺度！太陽系';I18N.en.mapsun='☀️ YOU ARE HERE: Solar System';I18N.ms.mapsun='☀️ ANDA DI SINI: Sistem Suria';I18N.ko.mapsun='☀️ 여기가 너희 집! 태양계';I18N.ja.mapsun='☀️ 君はここ！太陽系';
+I18N.zh.mapper='🌀 英仙座旋臂';I18N.en.mapper='🌀 Perseus Arm';I18N.ms.mapper='🌀 Lengan Perseus';I18N.ko.mapper='🌀 페르세우스자리 나선팔';I18N.ja.mapper='🌀 ペルセウス腕';
+I18N.zh.mapsag='🌀 人馬座旋臂';I18N.en.mapsag='🌀 Sagittarius Arm';I18N.ms.mapsag='🌀 Lengan Sagittarius';I18N.ko.mapsag='🌀 궁수자리 나선팔';I18N.ja.mapsag='🌀 いて座腕';
 let LANG=localStorage.getItem('gv_lang')||'en';
 if(!I18N[LANG])LANG='en';
 function t(k){return (I18N[LANG]&&I18N[LANG][k]!==undefined)?I18N[LANG][k]:(I18N.en[k]!==undefined?I18N.en[k]:k);}
@@ -464,6 +470,53 @@ const ORBITS={};
 [[0x30408c,9000,-4000,-6000,0.14],[0x6e3a2a,-8000,2500,-7000,0.11],[0x2a5a6e,3000,-3000,8000,0.10]].forEach(nb=>{
  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:dotTex(),color:nb[0],transparent:true,opacity:nb[4],depthWrite:false}));
  sp.position.set(nb[1],nb[2],nb[3]);sp.scale.set(9000,9000,1);scene.add(sp);});
+/* ---------- 銀河系俯視結構圖(按真實結構繪製：棒+旋臂+太陽喺獵戶支臂) ---------- */
+const MAPC={x:0,y:-8000,z:-1490,hw:1900};
+const MAPSUN=[700,680];
+const PER_T=3.3,SAG_T=2.4;
+function spiralPt(a0,b,th){const r=25*Math.exp(b*th);return [512+r*Math.cos(a0+th),512+r*Math.sin(a0+th)];}
+function mapToWorld(cx,cy){return [MAPC.x+(cx-512)/512*MAPC.hw,MAPC.y+(512-cy)/512*MAPC.hw,MAPC.z];}
+function galaxyMapTex(){
+ const S=1024,c=cnv(S,S),g=c.getContext('2d');
+ g.fillStyle='#04060f';g.fillRect(0,0,S,S);
+ const rnd=R(31337);
+ for(let i=0;i<700;i++){g.fillStyle=`rgba(200,215,255,${0.08+rnd()*0.35})`;const s=rnd()<0.9?1:2;g.fillRect(rnd()*S,rnd()*S,s,s);}
+ const drawArm=(a0,b,th0,th1,col,w)=>{
+  g.strokeStyle=col;g.lineWidth=w;g.lineCap='round';g.shadowColor=col;g.shadowBlur=18;
+  g.beginPath();
+  for(let th=th0;th<=th1;th+=0.05){const [x,y]=spiralPt(a0,b,th);th===th0?g.moveTo(x,y):g.lineTo(x,y);}
+  g.stroke();g.shadowBlur=0;};
+ drawArm(0.6,0.75,0.5,3.9,'rgba(90,140,255,0.7)',26);
+ drawArm(0.6+Math.PI,0.75,0.5,3.9,'rgba(90,140,255,0.7)',26);
+ drawArm(2.2,0.78,0.5,3.2,'rgba(120,90,220,0.45)',15);
+ drawArm(2.2+Math.PI,0.78,0.5,3.2,'rgba(120,90,220,0.45)',15);
+ g.strokeStyle='rgba(140,200,255,0.85)';g.lineWidth=12;g.lineCap='round';g.shadowColor='rgba(140,200,255,0.9)';g.shadowBlur=14;
+ g.beginPath();g.moveTo(640,730);g.quadraticCurveTo(680,700,730,655);g.stroke();g.shadowBlur=0;
+ g.save();g.translate(512,512);g.rotate(0.5);
+ const bg=g.createRadialGradient(0,0,4,0,0,120);
+ bg.addColorStop(0,'rgba(255,240,210,0.95)');bg.addColorStop(0.35,'rgba(255,210,150,0.5)');bg.addColorStop(1,'rgba(255,200,140,0)');
+ g.fillStyle=bg;g.beginPath();g.ellipse(0,0,120,52,0,0,7);g.fill();g.restore();
+ const cg=g.createRadialGradient(512,512,2,512,512,34);
+ cg.addColorStop(0,'rgba(255,255,255,1)');cg.addColorStop(1,'rgba(255,255,255,0)');
+ g.fillStyle=cg;g.beginPath();g.arc(512,512,34,0,7);g.fill();
+ const sg2=g.createRadialGradient(MAPSUN[0],MAPSUN[1],1,MAPSUN[0],MAPSUN[1],22);
+ sg2.addColorStop(0,'rgba(255,200,80,1)');sg2.addColorStop(0.4,'rgba(255,160,60,0.8)');sg2.addColorStop(1,'rgba(255,150,50,0)');
+ g.fillStyle=sg2;g.beginPath();g.arc(MAPSUN[0],MAPSUN[1],22,0,7);g.fill();
+ g.fillStyle='#fff';g.beginPath();g.arc(MAPSUN[0],MAPSUN[1],4,0,7);g.fill();
+ return tex(c);}
+const mapGroup=new THREE.Group();
+{
+ const plane=new THREE.Mesh(new THREE.PlaneGeometry(3800,3800),
+  new THREE.MeshBasicMaterial({map:galaxyMapTex(),side:THREE.DoubleSide}));
+ plane.position.set(MAPC.x,MAPC.y,MAPC.z);
+ mapGroup.add(plane);
+ const sm=new THREE.Sprite(new THREE.SpriteMaterial({map:dotTex(),color:0xffb340,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
+ const swp=mapToWorld(MAPSUN[0],MAPSUN[1]);
+ sm.position.set(swp[0],swp[1],MAPC.z+10);sm.scale.set(150,150,1);sm.name='sunPulse';
+ mapGroup.add(sm);
+ scene.add(mapGroup);
+}
+const sunPulse=mapGroup.getObjectByName('sunPulse');
 // 銀河系：太陽系喺佢入面，所以唔再放獨立旋渦模型 —— 全景銀河背景(milkyway)就係由入面望出去嘅盤面
 
 /* ---------- 真實AU距離 ---------- */
@@ -495,18 +548,20 @@ function updateBodies(dt){
 /* ---------- 相機+控制 ---------- */
 let camT=1.57,camP=1.05,camD=2300,tgtD=2300;
 let focusId='system',timeScale=1,showOrbit=true,showLabel=true,autoRot=true,tourOn=true,tourT=0,tourIdx=-1;
-const TOUR=['galaxy','system','sun','earth','moon','mars','jupiter','saturn','uranus','neptune'];
+const TOUR=['mmap','galaxy','system','sun','earth','moon','mars','jupiter','saturn','uranus','neptune'];
 function focusTarget(out){
  if(focusId==='galaxy')return out.set(0,0,0); // 銀河視角：拉遠睇成個太陽系鄰域+背後銀河盤面
+ if(focusId==='mmap')return out.set(MAPC.x,MAPC.y,MAPC.z);
  if(focusId==='system')return out.set(0,0,0);
  const b3=bodies3D[focusId];if(!b3)return out.set(0,0,0);
  out.copy(b3.grp.position);return out;}
 function focusDist(){
+ if(focusId==='mmap')return 2500;
  if(focusId==='galaxy')return 2400;
  if(focusId==='system')return 200;
  const d=bodies3D[focusId].def;return Math.max(5,(d.size||2)*5);}
 function goFocus(id){focusId=id;tgtD=focusDist();tourOn=false;renderTour();
- if(id==='galaxy')showMilky();else if(id!=='system')showInfo(id);else hideInfo();}
+ if(id==='mmap'){camP=1.15;showMilky();}else if(id==='galaxy')showMilky();else if(id!=='system')showInfo(id);else hideInfo();}
 function sliderToDist(v){return 6*Math.pow(2600/6,v/1000);}
 function distToSlider(d){return Math.round(1000*Math.log(Math.max(6,d)/6)/Math.log(2600/6));}
 const zoomSlider=$('zoom');
@@ -560,7 +615,10 @@ const labelLayer=$('labels'),labelDivs={};
 function buildLabels(){
  const ids=['galaxy','system'].concat(BODIES.map(b=>b.id));
  for(const id of ids){const d=document.createElement('div');d.className='lbl';d.style.display='none';
-  d.onclick=()=>goFocus(id);labelLayer.appendChild(d);labelDivs[id]=d;}}
+  d.onclick=()=>goFocus(id);labelLayer.appendChild(d);labelDivs[id]=d;}
+ const maps=[['map_cap',null],['map_center',null],['map_sun','system'],['map_per',null],['map_sag',null]];
+ for(const [id,go] of maps){const d=document.createElement('div');d.className='lbl';d.style.display='none';
+  d.onclick=()=>{if(go)goFocus(go);else showMilky();};labelLayer.appendChild(d);labelDivs[id]=d;}}
 function updateLabels(){
  const W=canvas.clientWidth,H=canvas.clientHeight;
  const put=(id,x,y,txt,op)=>{const d=labelDivs[id];if(!d)return;
@@ -573,8 +631,17 @@ function updateLabels(){
  let v=new THREE.Vector3();
  // 太陽系標記
  v.set(0,0,0);let [sx2,sy2,ok2]=proj(v);
- put('system',sx2,sy2-30,t('sys'),(ok2&&camD>420)?0.95:0);
+ put('system',sx2,sy2-30,t('sys'),(ok2&&camD>420&&focusId!=='mmap')?0.95:0);
+ if(focusId==='mmap'){
+  put('map_cap',W/2,84,t('mapcap2'),0.95);
+  const mput=(id,cxp,cyp,txt)=>{const wp=mapToWorld(cxp,cyp);_v.set(wp[0],wp[1],wp[2]);const pr=proj(_v);put(id,pr[0],pr[1]-16,txt,pr[2]?0.95:0);};
+  mput('map_center',512,512,t('mapcenter'));
+  mput('map_sun',MAPSUN[0],MAPSUN[1],t('mapsun'));
+  const pp=spiralPt(0.6,0.75,PER_T);mput('map_per',pp[0],pp[1],t('mapper'));
+  const sp2=spiralPt(0.6+Math.PI,0.75,SAG_T);mput('map_sag',sp2[0],sp2[1],t('mapsag'));
+ }else{['map_cap','map_center','map_sun','map_per','map_sag'].forEach(id=>put(id,0,0,'',0));}
  for(const b of BODIES){
+  if(focusId==='mmap'){put(b.id,0,0,'',0);continue;}
   const b3=bodies3D[b.id];v.copy(b3.grp.position);
   if(b.parent)v.y+=b.size+1.5;else v.y+=b.size+2;
   let [x,y,ok3]=proj(v);if(!ok3){put(b.id,0,0,'',0);continue;}
@@ -664,7 +731,7 @@ function frame(now){
  if(tourOn&&!document.hidden){tourT+=dt;
   if(tourT>9){tourT=0;tourIdx=(tourIdx+1)%TOUR.length;
    const id=TOUR[tourIdx];focusId=id;tgtD=focusDist();
-   if(id==='galaxy')showMilky();else if(id!=='system')showInfo(id);else hideInfo();}}
+   if(id==='mmap'||id==='galaxy')showMilky();else if(id!=='system')showInfo(id);else hideInfo();}}
  scaleMix+=(scaleMixT-scaleMix)*Math.min(1,dt*2);
  for(const id in ORBITS){const o=ORBITS[id];o.line.scale.setScalar(Math.max(0.001,effDist(o.def)/(o.def.dist||1)));}
  if(bodies3D.belt)bodies3D.belt.mesh.scale.setScalar(1+0.35*scaleMix);
@@ -681,6 +748,7 @@ function frame(now){
  if(autoRot&&tourOn)camT+=dt*0.02;
  const glowI=1+0.06*Math.sin(now*0.004);
  glow.scale.set(55*glowI,55*glowI,1);
+ if(sunPulse){const sp2=1+0.25*Math.sin(now*0.004);sunPulse.scale.set(150*sp2,150*sp2,1);}
  renderer.render(scene,camera);
  updateLabels();
  if(Math.abs(tgtD-sliderToDist(+zoomSlider.value))>tgtD*0.05+1)zoomSlider.value=distToSlider(camD);
