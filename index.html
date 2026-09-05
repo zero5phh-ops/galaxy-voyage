@@ -334,7 +334,7 @@ const texLoader=new THREE.TextureLoader(loadMan);
 loadMan.onProgress=(u,l,tt)=>{const el=$('loadTxt');if(el)el.textContent='Loading textures '+l+'/'+tt;};
 loadMan.onLoad=()=>{const el=$('loading');if(el){el.style.opacity=0;setTimeout(()=>el.style.display='none',600);}};
 loadMan.onError=()=>{};
-function srgbTx(x){x.encoding=THREE.sRGBEncoding;x.anisotropy=4;return x;}
+function srgbTx(x){x.encoding=THREE.sRGBEncoding;x.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());return x;}
 function realTex(f,ok){texLoader.load('tex/'+f,tx=>{ok(srgbTx(tx));},undefined,()=>{});}
 const REALTEX={sun:'sun.jpg',mercury:'mercury.jpg',venus:'venus.jpg',earth:'earth_day.jpg',moon:'moon.jpg',mars:'mars.jpg',jupiter:'jupiter.jpg',saturn:'saturn.jpg',uranus:'uranus.jpg',neptune:'neptune.jpg',io:'io.jpg',europa:'europa.jpg',ganymede:'ganymede.jpg',callisto:'callisto.jpg'};
 function loadReal(b,mat){
@@ -409,7 +409,8 @@ glow.scale.set(55,55,1);scene.add(glow);
 }
 // 銀河系(遠景)
 const galaxy=new THREE.Sprite(new THREE.SpriteMaterial({map:galaxyTex(),transparent:true,depthWrite:false,opacity:0.95}));
-galaxy.position.set(0,900,-10500);galaxy.scale.set(8000,5000,1);scene.add(galaxy);
+galaxy.position.set(0,400,-11500);galaxy.scale.set(9500,9500,1);scene.add(galaxy);
+realTex('galaxy.jpg',gt=>{galaxy.material.map=gt;galaxy.material.needsUpdate=true;});
 
 /* ---------- 位置更新 ---------- */
 const YEAR_K=365/90; // 地球1年=90秒(1×時)
@@ -432,7 +433,7 @@ function updateBodies(dt){
 }
 
 /* ---------- 相機+控制 ---------- */
-let camT=0.8,camP=1.05,camD=2300,tgtD=2300;
+let camT=1.57,camP=1.05,camD=2300,tgtD=2300;
 let focusId='system',timeScale=1,showOrbit=true,showLabel=true,autoRot=true,tourOn=true,tourT=0,tourIdx=0;
 const TOUR=['galaxy','system','sun','earth','moon','mars','jupiter','saturn','uranus','neptune'];
 function focusTarget(out){
@@ -589,6 +590,7 @@ function frame(now){
  if(autoRot&&tourOn)camT+=dt*0.02;
  const glowI=1+0.06*Math.sin(now*0.004);
  glow.scale.set(55*glowI,55*glowI,1);
+ galaxy.material.rotation+=dt*0.004;
  renderer.render(scene,camera);
  updateLabels();
  if(Math.abs(tgtD-sliderToDist(+zoomSlider.value))>tgtD*0.05+1)zoomSlider.value=distToSlider(camD);
