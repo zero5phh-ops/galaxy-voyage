@@ -164,7 +164,7 @@ I18N.zh.mapcenter='✨ 銀河中心';I18N.en.mapcenter='✨ Galactic Center';I18
 I18N.zh.mapsun='☀️ 你喺度！太陽系';I18N.en.mapsun='☀️ YOU ARE HERE: Solar System';I18N.ms.mapsun='☀️ ANDA DI SINI: Sistem Suria';I18N.ko.mapsun='☀️ 여기가 너희 집! 태양계';I18N.ja.mapsun='☀️ 君はここ！太陽系';
 I18N.zh.mapper='🌀 英仙座旋臂';I18N.en.mapper='🌀 Perseus Arm';I18N.ms.mapper='🌀 Lengan Perseus';I18N.ko.mapper='🌀 페르세우스자리 나선팔';I18N.ja.mapper='🌀 ペルセウス腕';
 I18N.zh.mapsag='🌀 人馬座旋臂';I18N.en.mapsag='🌀 Sagittarius Arm';I18N.ms.mapsag='🌀 Lengan Sagittarius';I18N.ko.mapsag='🌀 궁수자리 나선팔';I18N.ja.mapsag='🌀 いて座腕';
-I18N.zh.sgra='⚫ 人馬座A* · 430萬太陽質量黑洞（撳入去睇）';I18N.en.sgra='⚫ Sagittarius A* · 4.3M-solar-mass black hole (tap to visit)';I18N.ms.sgra='⚫ Sagittarius A* · lubang hitam 4.3J jisim suria (sentuh untuk lawat)';I18N.ko.sgra='⚫ 궁수자리A* · 태양 430만 배 블랙홀(눌러서 가기)';I18N.ja.sgra='⚫ いて座A* · 太陽430万個分ブラックホール（タップで見学）';
+I18N.zh.sgra='⚫ 人馬座A* · 430萬太陽質量黑洞（撳近睇）';I18N.en.sgra='⚫ Sagittarius A* · 4.3M-solar-mass black hole (tap to zoom in)';I18N.ms.sgra='⚫ Sagittarius A* · lubang hitam 4.3J jisim suria (sentuh untuk zum)';I18N.ko.sgra='⚫ 궁수자리A* · 태양 430만 배 블랙홀(눌러서 확대)';I18N.ja.sgra='⚫ いて座A* · 太陽430万個分ブラックホール（タップで拡大）';
 I18N.zh.scale10k='📏 10,000光年';I18N.en.scale10k='📏 10,000 light-years';I18N.ms.scale10k='📏 10,000 tahun cahaya';I18N.ko.scale10k='📏 1만 광년';I18N.ja.scale10k='📏 1万光年';
 let LANG=localStorage.getItem('gv_lang')||'en';
 if(!I18N[LANG])LANG='en';
@@ -479,53 +479,6 @@ const ARM_P1=0.6,ARM_P2=0.6+Math.PI;
 function galArmR(t){return 150*Math.exp(0.5*t);}
 function galArmPt(ph,t){const r=galArmR(t),a=ph+t;return [GALC.x+r*Math.cos(a),GALC.y,GALC.z+r*Math.sin(a)];}
 function galSun(){return [GALC.x+SUN_R*Math.cos(SUN_A),GALC.y,GALC.z+SUN_R*Math.sin(SUN_A)];}
-function galaxyMapTex(){
- const S=2048,c=cnv(S,S),g=c.getContext('2d');
- g.scale(2,2);
- const U=1024;
- g.fillStyle='#03050d';g.fillRect(0,0,U,U);
- const rnd=R(31337);
- for(let i=0;i<2600;i++){const r=rnd();const col=r<0.6?'200,215,255':r<0.85?'255,230,190':'255,170,200';
-  g.fillStyle=`rgba(${col},${0.1+rnd()*0.45})`;const s=rnd()<0.93?1:2;g.fillRect(rnd()*U,rnd()*U,s,s);}
- const drawArm=(a0,b,th0,th1,col,w,blur)=>{
-  g.strokeStyle=col;g.lineWidth=w;g.lineCap='round';g.shadowColor=col;g.shadowBlur=blur;
-  g.beginPath();
-  for(let th=th0;th<=th1;th+=0.04){const [x,y]=spiralPt(a0,b,th);th===th0?g.moveTo(x,y):g.lineTo(x,y);}
-  g.stroke();g.shadowBlur=0;};
- drawArm(0.6,0.75,0.5,3.9,'rgba(60,100,200,0.28)',44,26);
- drawArm(0.6+Math.PI,0.75,0.5,3.9,'rgba(60,100,200,0.28)',44,26);
- const dust=a0=>{g.strokeStyle='rgba(5,8,18,0.55)';g.lineWidth=10;g.lineCap='round';
-  g.beginPath();
-  for(let th=0.6;th<=3.8;th+=0.04){const [x,y]=spiralPt(a0-0.10,0.75,th);th===0.6?g.moveTo(x,y):g.lineTo(x,y);}
-  g.stroke();};
- dust(0.6);dust(0.6+Math.PI);
- drawArm(0.6,0.75,0.5,3.9,'rgba(110,160,255,0.6)',20,16);
- drawArm(0.6+Math.PI,0.75,0.5,3.9,'rgba(110,160,255,0.6)',20,16);
- drawArm(2.2,0.78,0.5,3.2,'rgba(130,100,230,0.4)',13,12);
- drawArm(2.2+Math.PI,0.78,0.5,3.2,'rgba(130,100,230,0.4)',13,12);
- for(let k=0;k<90;k++){const a0=k%2?0.6:0.6+Math.PI,th=0.6+rnd()*3.2;
-  const [x,y]=spiralPt(a0,0.75,th);
-  g.fillStyle=`rgba(255,130,180,${0.25+rnd()*0.4})`;
-  g.beginPath();g.arc(x+(rnd()-0.5)*14,y+(rnd()-0.5)*14,1+rnd()*2.2,0,7);g.fill();}
- g.strokeStyle='rgba(150,205,255,0.85)';g.lineWidth=11;g.lineCap='round';g.shadowColor='rgba(140,200,255,0.9)';g.shadowBlur=13;
- g.beginPath();g.moveTo(615,715);g.quadraticCurveTo(655,670,710,615);g.stroke();g.shadowBlur=0;
- g.save();g.translate(512,512);g.rotate(0.5);
- const bg=g.createRadialGradient(0,0,4,0,0,130);
- bg.addColorStop(0,'rgba(255,242,214,0.95)');bg.addColorStop(0.35,'rgba(255,212,150,0.5)');bg.addColorStop(1,'rgba(255,200,140,0)');
- g.fillStyle=bg;g.beginPath();g.ellipse(0,0,130,56,0,0,7);g.fill();g.restore();
- const cg=g.createRadialGradient(512,512,2,512,512,36);
- cg.addColorStop(0,'rgba(255,255,255,1)');cg.addColorStop(1,'rgba(255,255,255,0)');
- g.fillStyle=cg;g.beginPath();g.arc(512,512,36,0,7);g.fill();
- g.strokeStyle='rgba(140,180,220,0.28)';g.lineWidth=1.5;
- g.fillStyle='rgba(150,190,230,0.65)';g.font='13px sans-serif';g.textAlign='left';
- for(const [rr,lb] of [[175,'20k ly'],[349,'40k ly']]){
-  g.beginPath();g.arc(512,512,rr,0,7);g.stroke();
-  g.fillText(lb,512+rr*0.72+6,512-rr*0.72);}
- const sg2=g.createRadialGradient(MAPSUN[0],MAPSUN[1],1,MAPSUN[0],MAPSUN[1],24);
- sg2.addColorStop(0,'rgba(255,200,80,1)');sg2.addColorStop(0.4,'rgba(255,160,60,0.8)');sg2.addColorStop(1,'rgba(255,150,50,0)');
- g.fillStyle=sg2;g.beginPath();g.arc(MAPSUN[0],MAPSUN[1],24,0,7);g.fill();
- g.fillStyle='#fff';g.beginPath();g.arc(MAPSUN[0],MAPSUN[1],4.5,0,7);g.fill();
- return tex(c);}
 const galAnim={spin:[],rings:[],mark:null};
 {
  const RND=R(4242);
@@ -621,6 +574,36 @@ const galAnim={spin:[],rings:[],mark:null};
    new THREE.LineBasicMaterial({color:0xffb340,transparent:true,opacity:0.35})));
  }
 }
+const galBH={};
+function bhDiskTex(){
+ const c=cnv(256,32),g=c.getContext('2d');
+ for(let x=0;x<256;x++){
+  const u=x/256;
+  let r2,gc,bc,a;
+  if(u<0.12){r2=255;gc=250;bc=235;a=1;}
+  else if(u<0.35){r2=255;gc=200;bc=120;a=0.95;}
+  else if(u<0.6){r2=255;gc=140;bc=60;a=0.85;}
+  else if(u<0.85){r2=180;gc=70;bc=30;a=0.6;}
+  else{r2=0;gc=0;bc=0;a=0;}
+  const fl=0.75+0.25*Math.sin(u*90)*Math.sin(u*37+1);
+  g.fillStyle=`rgba(${r2|0},${gc|0},${bc|0},${(a*fl).toFixed(2)})`;
+  g.fillRect(x,0,1,32);}
+ return tex(c);}
+{
+ const g=new THREE.RingGeometry(30,96,72,1);
+ const pp=g.attributes.position,uu=g.attributes.uv;
+ for(let i=0;i<pp.count;i++){const rr=Math.hypot(pp.getX(i),pp.getY(i));
+  uu.setXY(i,(rr-30)/(96-30),0.5);}
+ const tilt=new THREE.Group();tilt.position.set(GALC.x,GALC.y,GALC.z);tilt.rotation.x=1.05;tilt.rotation.y=0.3;
+ tilt.add(new THREE.Mesh(new THREE.SphereGeometry(24,32,24),new THREE.MeshBasicMaterial({color:0x000000})));
+ const disk=new THREE.Mesh(g,new THREE.MeshBasicMaterial({map:bhDiskTex(),transparent:true,side:THREE.DoubleSide,depthWrite:false}));
+ tilt.add(disk);
+ tilt.add(new THREE.Mesh(new THREE.RingGeometry(26,30,64),
+  new THREE.MeshBasicMaterial({color:0xffd9a0,transparent:true,opacity:0.85,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide})));
+ const bglow=new THREE.Sprite(new THREE.SpriteMaterial({map:dotTex(),color:0xff9a40,transparent:true,opacity:0.4,blending:THREE.AdditiveBlending,depthWrite:false}));
+ bglow.scale.set(420,420,1);tilt.add(bglow);
+ scene.add(tilt);galBH.disk=disk;
+}
 // 銀河系：太陽系喺佢入面，所以唔再放獨立旋渦模型 —— 全景銀河背景(milkyway)就係由入面望出去嘅盤面
 
 /* ---------- 真實AU距離 ---------- */
@@ -652,21 +635,23 @@ function updateBodies(dt){
 /* ---------- 相機+控制 ---------- */
 let camT=1.57,camP=1.05,camD=2300,tgtD=2300;
 let focusId='system',timeScale=1,showOrbit=true,showLabel=true,autoRot=true,tourOn=true,tourT=0,tourIdx=-1;
-const TOUR=['mmap','galaxy','system','sun','earth','moon','mars','jupiter','saturn','uranus','neptune'];
+const TOUR=['mmap','sgra','galaxy','system','sun','earth','moon','mars','jupiter','saturn','uranus','neptune'];
 function focusTarget(out){
  if(focusId==='galaxy')return out.set(0,0,0); // 銀河視角：拉遠睇成個太陽系鄰域+背後銀河盤面
  if(focusId==='mmap')return out.set(GALC.x,GALC.y,GALC.z);
+ if(focusId==='sgra')return out.set(GALC.x,GALC.y,GALC.z);
  if(focusId==='system')return out.set(0,0,0);
  const b3=bodies3D[focusId];if(!b3)return out.set(0,0,0);
  out.copy(b3.grp.position);return out;}
 function focusDist(){
  if(focusId==='mmap')return 2500;
+ if(focusId==='sgra')return 150;
  if(focusId==='galaxy')return 2400;
  if(focusId==='system')return 200;
  const d=bodies3D[focusId].def;return Math.max(5,(d.size||2)*5);}
 function enterMap(){focusId='mmap';const a=canvas.clientWidth/Math.max(1,canvas.clientHeight);tgtD=3169/Math.min(1,a);camP=1.15;showMilky();}
 function goFocus(id){if(id==='mmap'){tourOn=false;renderTour();enterMap();return;}focusId=id;tgtD=focusDist();tourOn=false;renderTour();
- if(id==='galaxy')showMilky();else if(id!=='system')showInfo(id);else hideInfo();}
+ if(id==='sgra')showSgra();else if(id==='galaxy')showMilky();else if(id!=='system')showInfo(id);else hideInfo();}
 function sliderToDist(v){return 6*Math.pow(2600/6,v/1000);}
 function distToSlider(d){return Math.round(1000*Math.log(Math.max(6,d)/6)/Math.log(2600/6));}
 const zoomSlider=$('zoom');
@@ -709,7 +694,7 @@ $('distBtn').onclick=function(){scaleMixT=scaleMixT>0.5?0:1;this.classList.toggl
  if(scaleMixT>0.5){bd.innerHTML=t('scalemode');bd.style.display='block';if(focusId==='system')tgtD=1000;}
  else bd.style.display='none';};
 document.querySelectorAll('#navRow [data-go]').forEach(b=>b.onclick=()=>{audio();hideInfo();goFocus(b.dataset.go);});
-$('bhBtn').onclick=()=>window.open('https://zero5phh-ops.github.io/blackhole-voyage/','_blank');
+$('bhBtn').onclick=()=>{hideInfo();goFocus('sgra');};
 function buildPlanetBtns(){const row=$('planetRow');row.innerHTML='';
  for(const b of BODIES){if(b.sun||b.parent)continue;
   const btn=document.createElement('button');btn.className='pbtn';btn.textContent=bn(b);
@@ -725,7 +710,7 @@ function buildLabels(){
  const maps=[['map_cap',null],['map_center',null],['map_sun','system'],['map_per',null],['map_sag',null],['map_sgra',null],['map_scale',null]];
  for(const [id,go] of maps){const d=document.createElement('div');d.className='lbl';d.style.display='none';
   d.onclick=()=>{if(go)goFocus(go);else showMilky();};labelLayer.appendChild(d);labelDivs[id]=d;}
- labelDivs.map_sgra.onclick=()=>window.open('https://zero5phh-ops.github.io/blackhole-voyage/','_blank');}
+ labelDivs.map_sgra.onclick=()=>{hideInfo();goFocus('sgra');};}
 function updateLabels(){
  const W=canvas.clientWidth,H=canvas.clientHeight;
  const put=(id,x,y,txt,op)=>{const d=labelDivs[id];if(!d)return;
@@ -738,19 +723,22 @@ function updateLabels(){
  let v=new THREE.Vector3();
  // 太陽系標記
  v.set(0,0,0);let [sx2,sy2,ok2]=proj(v);
- put('system',sx2,sy2-30,t('sys'),(ok2&&camD>420&&focusId!=='mmap')?0.95:0);
+ put('system',sx2,sy2-30,t('sys'),(ok2&&camD>420&&focusId!=='mmap'&&focusId!=='sgra')?0.95:0);
+ const wput=(id,wx,wy,wz,txt)=>{_v.set(wx,wy,wz);const pr=proj(_v);put(id,pr[0],pr[1]-16,txt,pr[2]?0.95:0);};
  if(focusId==='mmap'){
   put('map_cap',W/2,84,t('mapcap2'),0.95);
-  const wput=(id,wx,wy,wz,txt)=>{_v.set(wx,wy,wz);const pr=proj(_v);put(id,pr[0],pr[1]-16,txt,pr[2]?0.95:0);};
   wput('map_center',GALC.x,GALC.y+130,GALC.z,t('mapcenter'));
   const ssp=galSun();wput('map_sun',ssp[0],ssp[1]+95,ssp[2],t('mapsun'));
   const pp=galArmPt(ARM_P1,4.15);wput('map_per',pp[0],pp[1]+70,pp[2],t('mapper'));
   const sp2=galArmPt(ARM_P2,3.3);wput('map_sag',sp2[0],sp2[1]+70,sp2[2],t('mapsag'));
   wput('map_sgra',GALC.x,GALC.y+45,GALC.z,t('sgra'));
   wput('map_scale',GALC.x-1350,GALC.y-10,GALC.z+1100,t('scale10k'));
+ }else if(focusId==='sgra'){
+  ['map_cap','map_center','map_sun','map_per','map_sag','map_scale'].forEach(id=>put(id,0,0,'',0));
+  wput('map_sgra',GALC.x,GALC.y+60,GALC.z,t('sgra'));
  }else{['map_cap','map_center','map_sun','map_per','map_sag','map_sgra','map_scale'].forEach(id=>put(id,0,0,'',0));}
  for(const b of BODIES){
-  if(focusId==='mmap'){put(b.id,0,0,'',0);continue;}
+ if(focusId==='mmap'||focusId==='sgra'){put(b.id,0,0,'',0);continue;}
   const b3=bodies3D[b.id];v.copy(b3.grp.position);
   if(b.parent)v.y+=b.size+1.5;else v.y+=b.size+2;
   let [x,y,ok3]=proj(v);if(!ok3){put(b.id,0,0,'',0);continue;}
@@ -788,6 +776,29 @@ function showMilky(){
  $('infoStats').innerHTML=h;
  $('info').classList.remove('hidden');}
 
+/* ---------- 人馬座A*(銀河中心黑洞) ---------- */
+const SGRA={
+ name:{zh:'⚫ 人馬座A*',en:'⚫ Sagittarius A*',ms:'⚫ Sagittarius A*',ko:'⚫ 궁수자리A*',ja:'⚫ いて座A*'},
+ stats:{
+  zh:[['質量','430萬個太陽質量'],['距離','26,000光年（銀河中心）'],['視界直徑','約2,500萬km'],['照片','第二張黑洞相（EHT 2022）']],
+  en:[['Mass','4.3 million solar masses'],['Distance','26,000 ly (galactic center)'],['Horizon','~25M km across'],['Photo','2nd black hole imaged (EHT 2022)']],
+  ms:[['Jisim','4.3 juta jisim suria'],['Jarak','26,000 tc (pusat galaksi)'],['Ufuk','~25J km'],['Foto','Lubang ke-2 diimej (EHT 2022)']],
+  ko:[['질량','태양 430만 배'],['거리','26,000광년（은하 중심)'],['지평선','지름 약 2,500만km'],['사진','두 번째로 촬영된 블랙홀 (EHT 2022)']],
+  ja:[['質量','太陽430万個分'],['距離','26,000光年（銀河中心）'],['地平面','直径約2,500万km'],['写真','2番目に撮影されたブラックホール（EHT2022）']]},
+ blurb:{
+  zh:'銀河系中心嘅超大質量黑洞，上面個樣放大咗無數倍——真實佢細到喺呢幅圖完全睇唔到。2022年EHT拍到佢，附近氣體90分鐘繞一圈。撳🗺️返出去睇成個銀河。',
+  en:'The supermassive black hole at our Galaxy\u2019s heart — shown here magnified beyond count; the real thing is invisible at this scale. Imaged by EHT in 2022; nearby gas orbits every ~90 minutes.',
+  ms:'Lubang hitam supermasif di pusat galaksi kita — ditunjukkan di sini dibesarkan tidak terkira; yang sebenar tidak kelihatan pada skala ini. Diimej oleh EHT pada 2022; gas berdekatan mengorbit setiap ~90 minit.',
+  ko:'우리 은하 중심의 초대질량 블랙홀 — 셀 수 없이 확대해서 보여주는 중이라 실제 크기는 이 그림에서 안 보여요. 2022년 EHT가 촬영했고 주변 가스는 90분마다 한 바퀴를 돌아요.',
+  ja:'私たちの銀河中心の超大質量ブラックホール — 数え切れないほど拡大表示しているので実物はこの図では見えません。2022年にEHTが撮影、周囲のガスは約90分で1周します。'}};
+function showSgra(){
+ lastInfo='@sgra';
+ $('infoName').textContent=SGRA.name[LANG]||SGRA.name.en;
+ $('infoBlurb').textContent=SGRA.blurb[LANG]||SGRA.blurb.en;
+ let h='';for(const [k,v] of (SGRA.stats[LANG]||SGRA.stats.en))h+=`<tr><td class="k">${k}</td><td>${v}</td></tr>`;
+ $('infoStats').innerHTML=h;
+ $('info').classList.remove('hidden');}
+
 /* ---------- 資訊面板 ---------- */
 const STATL={dia:'k_dia',dis:'k_dis',year:'k_year',day:'k_day',moon:'k_moon',temp:'k_temp',extra:'k_extra'};
 function showInfo(id){
@@ -817,7 +828,7 @@ function applyLang(){
  document.documentElement.lang=LANG==='zh'?'zh-Hant':LANG;
  document.querySelectorAll('[data-i18n]').forEach(el=>{el.innerHTML=t(el.dataset.i18n);});
  buildPlanetBtns();buildTable();
- if(!$('info').classList.contains('hidden')&&lastInfo){if(lastInfo==='@milky')showMilky();else showInfo(lastInfo);}
+ if(!$('info').classList.contains('hidden')&&lastInfo){if(lastInfo==='@milky')showMilky();else if(lastInfo==='@sgra')showSgra();else showInfo(lastInfo);}
  $('langSel').value=LANG;
  drawNow=true;}
 let lastInfo=null;
@@ -841,7 +852,7 @@ function frame(now){
   if(tourT>9){tourT=0;tourIdx=(tourIdx+1)%TOUR.length;
    const id=TOUR[tourIdx];focusId=id;
    if(id==='mmap')enterMap();else tgtD=focusDist();
-   if(id==='mmap'||id==='galaxy')showMilky();else if(id!=='system')showInfo(id);else hideInfo();}}
+   if(id==='mmap'||id==='galaxy')showMilky();else if(id==='sgra')showSgra();else if(id!=='system')showInfo(id);else hideInfo();}}
  scaleMix+=(scaleMixT-scaleMix)*Math.min(1,dt*2);
  for(const id in ORBITS){const o=ORBITS[id];o.line.scale.setScalar(Math.max(0.001,effDist(o.def)/(o.def.dist||1)));}
  if(bodies3D.belt)bodies3D.belt.mesh.scale.setScalar(1+0.35*scaleMix);
@@ -859,6 +870,7 @@ function frame(now){
  const glowI=1+0.06*Math.sin(now*0.004);
  glow.scale.set(55*glowI,55*glowI,1);
  for(const s of galAnim.spin)s.o.rotation.y+=dt*s.s;
+ if(galBH.disk)galBH.disk.rotation.z+=dt*0.35;
  if(galAnim.sgra){const sp3=1+0.3*Math.sin(now*0.006);galAnim.sgra.scale.set(60*sp3,60*sp3,1);}
  for(const tw of galAnim.tw||[])tw.material.opacity=0.3+0.35*Math.abs(Math.sin(now*0.001+tw.userData.tw));
  if(galAnim.mark){const mp=1+0.22*Math.sin(now*0.005);galAnim.mark.scale.set(90*mp,90*mp,1);}
