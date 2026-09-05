@@ -159,7 +159,7 @@ k_dia:'直径',k_dis:'太陽との距離',k_year:'公転周期',k_day:'自転',k
 I18N.zh.tb_dist='📏 真實距離';I18N.en.tb_dist='📏 True scale';I18N.ms.tb_dist='📏 Skala sebenar';I18N.ko.tb_dist='📏 실제 거리';I18N.ja.tb_dist='📏 実スケール';
 I18N.zh.scalemode='📏 真實AU距離模式 · 行星大細同衛星距離為顯示而保留示意';I18N.en.scalemode='📏 True-AU mode · planet sizes & moon orbits kept schematic for visibility';I18N.ms.scalemode='📏 Mod jarak AU sebenar · saiz planet & orbit bulan kekal skematik';I18N.ko.scalemode='📏 실제 AU 거리 모드 · 행성 크기와 위성 궤도는 표시용';I18N.ja.scalemode='📏 実AU距離モード · 惑星サイズと衛星軌道は表示用';
 I18N.zh.mapcap='🎨 銀河系藝術想像圖：NASA（太陽位置已標示）';I18N.en.mapcap='🎨 Artist impression of the Milky Way: NASA (Sun marked)';I18N.ms.mapcap='🎨 Ilustrasi artis Bima Sakti: NASA (Matahari ditanda)';I18N.ko.mapcap='🎨 은하수 상상도: NASA(태양 위치 표시)';I18N.ja.mapcap='🎨 天の川想像図：NASA（太陽の位置を標示）';
-I18N.zh.mapcap2='NASA銀河系藝術想像圖(俯視) · 橙點係太陽系';I18N.en.mapcap2='NASA Milky Way artist illustration (top view) · orange dot = Solar System';I18N.ms.mapcap2='Ilustrasi artis NASA Bima Sakti (pandangan atas) · titik oren = Sistem Suria';I18N.ko.mapcap2='NASA 은하수 상상도(위에서) · 주황점 = 태양계';I18N.ja.mapcap2='NASA天の川想像図(真上から) · オレンジ点=太陽系';
+I18N.zh.mapcap2='銀河系立體結構模型 · 橙點係太陽系';I18N.en.mapcap2='3D Milky Way model · orange dot = Solar System';I18N.ms.mapcap2='Model 3D Bima Sakti · titik oren = Sistem Suria';I18N.ko.mapcap2='은하수 3D 모델 · 주황점 = 태양계';I18N.ja.mapcap2='天の川3Dモデル · オレンジ点=太陽系';
 I18N.zh.mapcenter='✨ 銀河中心';I18N.en.mapcenter='✨ Galactic Center';I18N.ms.mapcenter='✨ Pusat Galaksi';I18N.ko.mapcenter='✨ 은하 중심';I18N.ja.mapcenter='✨ 銀河中心';
 I18N.zh.mapsun='☀️ 你喺度！太陽系';I18N.en.mapsun='☀️ YOU ARE HERE: Solar System';I18N.ms.mapsun='☀️ ANDA DI SINI: Sistem Suria';I18N.ko.mapsun='☀️ 여기가 너희 집! 태양계';I18N.ja.mapsun='☀️ 君はここ！太陽系';
 I18N.zh.mapper='🌀 英仙座旋臂';I18N.en.mapper='🌀 Perseus Arm';I18N.ms.mapper='🌀 Lengan Perseus';I18N.ko.mapper='🌀 페르세우스자리 나선팔';I18N.ja.mapper='🌀 ペルセウス腕';
@@ -471,11 +471,12 @@ const ORBITS={};
  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:dotTex(),color:nb[0],transparent:true,opacity:nb[4],depthWrite:false}));
  sp.position.set(nb[1],nb[2],nb[3]);sp.scale.set(9000,9000,1);scene.add(sp);});
 /* ---------- 銀河系俯視結構圖(按真實結構繪製：棒+旋臂+太陽喺獵戶支臂) ---------- */
-const MAPC={x:0,y:-8000,z:-1490,hw:1200};
-const MAPSUN=[832,699];
-const PER_T=3.3,SAG_T=2.4;
-function spiralPt(a0,b,th){const r=25*Math.exp(b*th);return [512+r*Math.cos(a0+th),512+r*Math.sin(a0+th)];}
-function mapToWorld(cx,cy){return [MAPC.x+(cx-600)/600*MAPC.hw,MAPC.y+(600-cy)/600*MAPC.hw,MAPC.z];}
+const GALC={x:0,y:-8000,z:-1490};
+const GALR=1500,SUN_R=630,SUN_A=-0.85;
+const ARM_P1=0.6,ARM_P2=0.6+Math.PI;
+function galArmR(t){return 150*Math.exp(0.5*t);}
+function galArmPt(ph,t){const r=galArmR(t),a=ph+t;return [GALC.x+r*Math.cos(a),GALC.y,GALC.z+r*Math.sin(a)];}
+function galSun(){return [GALC.x+SUN_R*Math.cos(SUN_A),GALC.y,GALC.z+SUN_R*Math.sin(SUN_A)];}
 function galaxyMapTex(){
  const S=2048,c=cnv(S,S),g=c.getContext('2d');
  g.scale(2,2);
@@ -523,20 +524,62 @@ function galaxyMapTex(){
  g.fillStyle=sg2;g.beginPath();g.arc(MAPSUN[0],MAPSUN[1],24,0,7);g.fill();
  g.fillStyle='#fff';g.beginPath();g.arc(MAPSUN[0],MAPSUN[1],4.5,0,7);g.fill();
  return tex(c);}
-const mapGroup=new THREE.Group();
+const galAnim={spin:[],rings:[],mark:null};
 {
- const plane=new THREE.Mesh(new THREE.PlaneGeometry(2400,2400),
-  new THREE.MeshBasicMaterial({map:galaxyMapTex(),side:THREE.DoubleSide}));
- plane.position.set(MAPC.x,MAPC.y,MAPC.z);
- realTex('milkyway_map.jpg',mwt=>{plane.material.map=mwt;plane.material.needsUpdate=true;});
- mapGroup.add(plane);
- const sm=new THREE.Sprite(new THREE.SpriteMaterial({map:dotTex(),color:0xffb340,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
- const swp=mapToWorld(MAPSUN[0],MAPSUN[1]);
- sm.position.set(swp[0],swp[1],MAPC.z+10);sm.scale.set(150,150,1);sm.name='sunPulse';
- mapGroup.add(sm);
- scene.add(mapGroup);
+ const RND=R(4242);
+ const gauss=()=>(RND()+RND()+RND()-1.5)*1.2;
+ const inner={n:0,p:[],c:[]},outer={n:0,p:[],c:[]};
+ const pushStar=(cl,x,y,z,r,gcol,b)=>{cl.p.push(x,y,z);cl.c.push(Math.min(1,r),Math.min(1,gcol),Math.min(1,b));cl.n++;};
+ for(let k=0;k<26000;k++){
+  const arm=k%2?ARM_P1:ARM_P2,t=0.3+RND()*4.3;
+  const r=150*Math.exp(0.5*t),a=arm+t;
+  const spread=40+r*0.055;
+  const rr=r+gauss()*spread,aa=a+gauss()*spread/Math.max(r,200);
+  const x=rr*Math.cos(aa),z=rr*Math.sin(aa);
+  const y=gauss()*(26+r*0.022);
+  const w=t/4.6,roll=RND();
+  let cr,cg2,cb;
+  if(roll<0.03){cr=1;cg2=0.55;cb=0.3;}
+  else if(roll<0.055&&t>1.5){cr=1;cg2=0.5;cb=0.7;}
+  else{cr=1-w*0.25+(RND()-0.5)*0.1;cg2=0.85-w*0.05+(RND()-0.5)*0.1;cb=0.62+w*0.33;}
+  pushStar(r<750?inner:outer,x,y,z,cr,cg2,cb);}
+ const fin=(cl,size,spd)=>{const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(cl.p),3));
+  g.setAttribute('color',new THREE.BufferAttribute(new Float32Array(cl.c),3));
+  const m=new THREE.Points(g,new THREE.PointsMaterial({size:size,sizeAttenuation:false,map:dotTex(),vertexColors:true,transparent:true,depthWrite:false,opacity:0.95}));
+  const grp=new THREE.Group();grp.add(m);grp.position.set(GALC.x,GALC.y,GALC.z);scene.add(grp);galAnim.spin.push({o:grp,s:spd});};
+ fin(inner,3,0.030);fin(outer,2,0.016);
+ {
+  const n=6000,p=new Float32Array(n*3),c=new Float32Array(n*3);
+  for(let i=0;i<n;i++){
+   const x=gauss()*300,y=gauss()*165,z=gauss()*300;
+   const bx=x*1.5,bz=z*0.8;
+   p[i*3]=bx*Math.cos(-0.45)-bz*Math.sin(-0.45);p[i*3+1]=y;p[i*3+2]=bx*Math.sin(-0.45)+bz*Math.cos(-0.45);
+   const w=RND();c[i*3]=1;c[i*3+1]=0.82+w*0.12;c[i*3+2]=0.6+w*0.2;}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(p,3));g.setAttribute('color',new THREE.BufferAttribute(c,3));
+  const m=new THREE.Points(g,new THREE.PointsMaterial({size:2.5,sizeAttenuation:false,map:dotTex(),vertexColors:true,transparent:true,depthWrite:false,opacity:0.95}));
+  const grp=new THREE.Group();grp.add(m);grp.position.set(GALC.x,GALC.y,GALC.z);scene.add(grp);galAnim.spin.push({o:grp,s:0.022});
+ }
+ {
+  const n=2500,p=new Float32Array(n*3),c=new Float32Array(n*3);
+  for(let i=0;i<n;i++){const th=RND()*Math.PI*2,ph=Math.acos(2*RND()-1),r=900+RND()*1200;
+   p[i*3]=r*Math.sin(ph)*Math.cos(th);p[i*3+1]=r*Math.cos(ph)*0.8;p[i*3+2]=r*Math.sin(ph)*Math.sin(th);
+   const b2=0.3+RND()*0.4;c[i*3]=b2*0.8;c[i*3+1]=b2*0.85;c[i*3+2]=b2;}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(p,3));g.setAttribute('color',new THREE.BufferAttribute(c,3));
+  const m=new THREE.Points(g,new THREE.PointsMaterial({size:2,sizeAttenuation:false,map:dotTex(),vertexColors:true,transparent:true,depthWrite:false,opacity:0.8}));
+  m.position.set(GALC.x,GALC.y,GALC.z);scene.add(m);
+ }
+ const core=new THREE.Sprite(new THREE.SpriteMaterial({map:dotTex(),color:0xffe8c0,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0.95}));
+ core.position.set(GALC.x,GALC.y,GALC.z);core.scale.set(700,700,1);scene.add(core);
+ const sp=galSun();
+ const mark=new THREE.Sprite(new THREE.SpriteMaterial({map:dotTex(),color:0xffc040,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
+ mark.position.set(sp[0],sp[1],sp[2]);mark.scale.set(90,90,1);scene.add(mark);galAnim.mark=mark;
+ for(let i=0;i<2;i++){
+  const rg=new THREE.Mesh(new THREE.RingGeometry(58,66,64),
+   new THREE.MeshBasicMaterial({color:0xffb340,transparent:true,opacity:0.7,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
+  rg.rotation.x=-Math.PI/2;rg.position.set(sp[0],sp[1],sp[2]);
+  rg.userData.ph=i*0.5;scene.add(rg);galAnim.rings.push(rg);}
 }
-const sunPulse=mapGroup.getObjectByName('sunPulse');
 // 銀河系：太陽系喺佢入面，所以唔再放獨立旋渦模型 —— 全景銀河背景(milkyway)就係由入面望出去嘅盤面
 
 /* ---------- 真實AU距離 ---------- */
@@ -571,7 +614,7 @@ let focusId='system',timeScale=1,showOrbit=true,showLabel=true,autoRot=true,tour
 const TOUR=['mmap','galaxy','system','sun','earth','moon','mars','jupiter','saturn','uranus','neptune'];
 function focusTarget(out){
  if(focusId==='galaxy')return out.set(0,0,0); // 銀河視角：拉遠睇成個太陽系鄰域+背後銀河盤面
- if(focusId==='mmap')return out.set(MAPC.x,MAPC.y,MAPC.z);
+ if(focusId==='mmap')return out.set(GALC.x,GALC.y,GALC.z);
  if(focusId==='system')return out.set(0,0,0);
  const b3=bodies3D[focusId];if(!b3)return out.set(0,0,0);
  out.copy(b3.grp.position);return out;}
@@ -580,7 +623,7 @@ function focusDist(){
  if(focusId==='galaxy')return 2400;
  if(focusId==='system')return 200;
  const d=bodies3D[focusId].def;return Math.max(5,(d.size||2)*5);}
-function enterMap(){focusId='mmap';const a=canvas.clientWidth/Math.max(1,canvas.clientHeight);tgtD=2489/Math.min(1,a);camP=1.15;showMilky();}
+function enterMap(){focusId='mmap';const a=canvas.clientWidth/Math.max(1,canvas.clientHeight);tgtD=3169/Math.min(1,a);camP=1.15;showMilky();}
 function goFocus(id){if(id==='mmap'){tourOn=false;renderTour();enterMap();return;}focusId=id;tgtD=focusDist();tourOn=false;renderTour();
  if(id==='galaxy')showMilky();else if(id!=='system')showInfo(id);else hideInfo();}
 function sliderToDist(v){return 6*Math.pow(2600/6,v/1000);}
@@ -655,11 +698,11 @@ function updateLabels(){
  put('system',sx2,sy2-30,t('sys'),(ok2&&camD>420&&focusId!=='mmap')?0.95:0);
  if(focusId==='mmap'){
   put('map_cap',W/2,84,t('mapcap2'),0.95);
-  const mput=(id,cxp,cyp,txt)=>{const wp=mapToWorld(cxp,cyp);_v.set(wp[0],wp[1],wp[2]);const pr=proj(_v);put(id,pr[0],pr[1]-16,txt,pr[2]?0.95:0);};
-  mput('map_center',600,600,t('mapcenter'));
-  mput('map_sun',MAPSUN[0],MAPSUN[1],t('mapsun'));
-  mput('map_per',477,942,t('mapper'));
-  mput('map_sag',900,438,t('mapsag'));
+  const wput=(id,wx,wy,wz,txt)=>{_v.set(wx,wy,wz);const pr=proj(_v);put(id,pr[0],pr[1]-16,txt,pr[2]?0.95:0);};
+  wput('map_center',GALC.x,GALC.y+130,GALC.z,t('mapcenter'));
+  const ssp=galSun();wput('map_sun',ssp[0],ssp[1]+95,ssp[2],t('mapsun'));
+  const pp=galArmPt(ARM_P1,4.15);wput('map_per',pp[0],pp[1]+70,pp[2],t('mapper'));
+  const sp2=galArmPt(ARM_P2,3.3);wput('map_sag',sp2[0],sp2[1]+70,sp2[2],t('mapsag'));
  }else{['map_cap','map_center','map_sun','map_per','map_sag'].forEach(id=>put(id,0,0,'',0));}
  for(const b of BODIES){
   if(focusId==='mmap'){put(b.id,0,0,'',0);continue;}
@@ -770,7 +813,9 @@ function frame(now){
  if(autoRot&&tourOn)camT+=dt*0.02;
  const glowI=1+0.06*Math.sin(now*0.004);
  glow.scale.set(55*glowI,55*glowI,1);
- if(sunPulse){const sp2=1+0.25*Math.sin(now*0.004);sunPulse.scale.set(150*sp2,150*sp2,1);}
+ for(const s of galAnim.spin)s.o.rotation.y+=dt*s.s;
+ if(galAnim.mark){const mp=1+0.22*Math.sin(now*0.005);galAnim.mark.scale.set(90*mp,90*mp,1);}
+ for(const r of galAnim.rings){const ph=((now*0.00035)+r.userData.ph)%1;const sc=1+ph*2.6;r.scale.set(sc,sc,sc);r.material.opacity=0.75*(1-ph);}
  renderer.render(scene,camera);
  updateLabels();
  if(Math.abs(tgtD-sliderToDist(+zoomSlider.value))>tgtD*0.05+1)zoomSlider.value=distToSlider(camD);
