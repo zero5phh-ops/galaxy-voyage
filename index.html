@@ -31,6 +31,8 @@
   #info td{padding:3px 6px;border-bottom:1px solid rgba(255,255,255,.1)}
   #info td.k{color:#8be9fd;width:38%}
   #infoClose{float:right;background:none;border:none;color:#8be9fd;font-size:18px}
+  #scaleBadge{position:absolute;z-index:6;top:calc(64px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);border:1px solid rgba(255,209,102,.6);color:#ffd166;border-radius:12px;padding:6px 14px;font-size:12.5px;font-weight:800;white-space:nowrap;max-width:94vw;overflow:hidden;text-overflow:ellipsis}
+  .lbl small{font-size:10px;color:#ffd166;font-weight:800}
   #panel{position:absolute;z-index:6;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));
     max-width:560px;margin:0 auto;background:rgba(5,10,25,.72);border:1px solid rgba(0,229,255,.35);
     border-radius:16px;padding:10px 12px;backdrop-filter:blur(8px)}
@@ -67,6 +69,7 @@
     <h1 data-i18n="title_h1">🌌 Galaxy Voyage</h1>
     <p data-i18n="title_p">Milky Way → Solar System → Earth &amp; Moon · drag to orbit / scroll to zoom</p>
   </div>
+  <div id="scaleBadge" style="display:none"></div>
   <div id="info" class="hidden">
     <button id="infoClose">✕</button>
     <h3 id="infoName"></h3>
@@ -92,6 +95,7 @@
       <button class="pbtn on" id="orbitBtn">🛰️</button>
       <button class="pbtn on" id="labelBtn">🏷️</button>
       <button class="pbtn on" id="tourBtn">🧭</button>
+      <button class="pbtn" id="distBtn" data-i18n="tb_dist">📏</button>
     </div>
     <div id="hint" data-i18n="hint">👆 Drag to orbit · scroll / pinch to zoom · tap a planet for details</div>
   </div>
@@ -147,6 +151,8 @@ note:'<b>なぜ実スケールでないの?</b> 本物の太陽系はほぼ空�
 foot:'資料:NASA · 惑星テクスチャ:NASA画像 · 円軌道近似<br>🌌 銀河航海 · シェアして一緒に地球へ帰りましょう',
 th_name:'天体',th_dia:'直径',th_dis:'太陽との距離',th_year:'公転',th_moon:'衛星',
 k_dia:'直径',k_dis:'太陽との距離',k_year:'公転周期',k_day:'自転',k_moon:'衛星',k_temp:'温度',k_extra:'一番'}};
+I18N.zh.tb_dist='📏 真實距離';I18N.en.tb_dist='📏 True scale';I18N.ms.tb_dist='📏 Skala sebenar';I18N.ko.tb_dist='📏 실제 거리';I18N.ja.tb_dist='📏 実スケール';
+I18N.zh.scalemode='📏 真實AU距離模式 · 行星大細同衛星距離為顯示而保留示意';I18N.en.scalemode='📏 True-AU mode · planet sizes & moon orbits kept schematic for visibility';I18N.ms.scalemode='📏 Mod jarak AU sebenar · saiz planet & orbit bulan kekal skematik';I18N.ko.scalemode='📏 실제 AU 거리 모드 · 행성 크기와 위성 궤도는 표시용';I18N.ja.scalemode='📏 実AU距離モード · 惑星サイズと衛星軌道は表示用';
 let LANG=localStorage.getItem('gv_lang')||'en';
 if(!I18N[LANG])LANG='en';
 function t(k){return (I18N[LANG]&&I18N[LANG][k]!==undefined)?I18N[LANG][k]:(I18N.en[k]!==undefined?I18N.en[k]:k);}
@@ -409,13 +415,14 @@ BODIES.forEach(buildBody);
 // 太陽光暈
 const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex(),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
 glow.scale.set(55,55,1);scene.add(glow);
+const ORBITS={};
 // 軌道線
 {
  const mat=new THREE.LineBasicMaterial({color:0x3a5a8a,transparent:true,opacity:0.55});
  for(const b of BODIES){if(!b.dist)continue;
   const pts=[];for(let i=0;i<=128;i++){const a=i/128*Math.PI*2;pts.push(new THREE.Vector3(Math.cos(a)*b.dist,0,Math.sin(a)*b.dist));}
   const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),mat);
-  line.name='orbit';scene.add(line);}
+  line.name='orbit';ORBITS[b.id]={line,def:b};scene.add(line);}
 }
 // 小行星帶
 {
@@ -454,6 +461,11 @@ glow.scale.set(55,55,1);scene.add(glow);
  sp.position.set(nb[1],nb[2],nb[3]);sp.scale.set(9000,9000,1);scene.add(sp);});
 // 銀河系：太陽系喺佢入面，所以唔再放獨立旋渦模型 —— 全景銀河背景(milkyway)就係由入面望出去嘅盤面
 
+/* ---------- 真實AU距離 ---------- */
+const AUD={mercury:0.39,venus:0.72,earth:1,mars:1.52,jupiter:5.2,saturn:9.5,uranus:19.19,neptune:30.07};
+const AU_U=28;
+let scaleMix=0,scaleMixT=0;
+function effDist(d){const tr=(d.id&&AUD[d.id])?AUD[d.id]*AU_U:(d.dist||0);return (d.dist||0)*(1-scaleMix)+tr*scaleMix;}
 /* ---------- 位置更新 ---------- */
 const YEAR_K=365/90; // 地球1年=90秒(1×時)
 function bodyPos(b3,out){
@@ -462,7 +474,8 @@ function bodyPos(b3,out){
  if(d.parent){const p=bodies3D[d.parent].mesh; // 月球繞行星
   p.getWorldPosition(out);
   out.x+=Math.cos(b3.angle)*d.orbitR;out.z+=Math.sin(b3.angle)*d.orbitR;return out;}
- out.set(Math.cos(b3.angle)*d.dist,0,Math.sin(b3.angle)*d.dist);return out;}
+ const R=effDist(d);
+ out.set(Math.cos(b3.angle)*R,0,Math.sin(b3.angle)*R);return out;}
 const _v=new THREE.Vector3();
 function updateBodies(dt){
  for(const id in bodies3D){const b3=bodies3D[id];if(id==='belt'){b3.mesh.rotation.y+=dt*0.004*timeScale;continue;}
@@ -526,6 +539,10 @@ $('tourBtn').onclick=()=>{tourOn=!tourOn;renderTour();tourT=0;};
 $('orbitBtn').onclick=function(){showOrbit=!showOrbit;this.classList.toggle('on',showOrbit);
  scene.traverse(o=>{if(o.name==='orbit'||o.name==='belt')o.visible=showOrbit;});};
 $('labelBtn').onclick=function(){showLabel=!showLabel;this.classList.toggle('on',showLabel);};
+$('distBtn').onclick=function(){scaleMixT=scaleMixT>0.5?0:1;this.classList.toggle('on',scaleMixT>0.5);
+ const bd=$('scaleBadge');
+ if(scaleMixT>0.5){bd.innerHTML=t('scalemode');bd.style.display='block';if(focusId==='system')tgtD=1000;}
+ else bd.style.display='none';};
 document.querySelectorAll('#navRow [data-go]').forEach(b=>b.onclick=()=>{audio();hideInfo();goFocus(b.dataset.go);});
 function buildPlanetBtns(){const row=$('planetRow');row.innerHTML='';
  for(const b of BODIES){if(b.sun||b.parent)continue;
@@ -544,7 +561,7 @@ function updateLabels(){
  const put=(id,x,y,txt,op)=>{const d=labelDivs[id];if(!d)return;
   if(op<=0.02||!showLabel){d.style.display='none';return;}
   d.style.display='block';d.style.left=x+'px';d.style.top=y+'px';d.style.opacity=op;
-  if(d.textContent!==txt)d.textContent=txt;};
+  if(d.innerHTML!==txt)d.innerHTML=txt;};
  const proj=(v)=>{_v.copy(v).project(camera);
   return[( _v.x*0.5+0.5)*W,(-_v.y*0.5+0.5)*H,_v.z<1];};
  const far=camD>500;
@@ -560,7 +577,7 @@ function updateLabels(){
   if(far){op=(b.sun)?0.9:0;}
   else if(b.parent){op=camD<90?0.9:0;}
   else{op=camD<500?0.9:0;}
-  put(b.id,x,y,bn(b),op);}
+  put(b.id,x,y,(scaleMix>0.5&&!b.parent&&b.stats.dis)?bn(b)+'<br><small>'+b.stats.dis+'</small>':bn(b),op);}
  $('zoomRead').textContent=Math.round(camD)+'u';}
 
 /* ---------- 銀河系(我哋住喺入面) ---------- */
@@ -638,6 +655,9 @@ function frame(now){
   if(tourT>9){tourT=0;tourIdx=(tourIdx+1)%TOUR.length;
    const id=TOUR[tourIdx];focusId=id;tgtD=focusDist();
    if(id==='galaxy')showMilky();else if(id!=='system')showInfo(id);else hideInfo();}}
+ scaleMix+=(scaleMixT-scaleMix)*Math.min(1,dt*2);
+ for(const id in ORBITS){const o=ORBITS[id];o.line.scale.setScalar(Math.max(0.001,effDist(o.def)/(o.def.dist||1)));}
+ if(bodies3D.belt)bodies3D.belt.mesh.scale.setScalar(1+0.35*scaleMix);
  updateBodies(dt);
  const k=1-Math.pow(0.002,dt);
  camD+=(tgtD-camD)*k;
