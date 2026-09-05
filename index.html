@@ -31,6 +31,8 @@
   #info td{padding:3px 6px;border-bottom:1px solid rgba(255,255,255,.1)}
   #info td.k{color:#8be9fd;width:38%}
   #infoClose{float:right;background:none;border:none;color:#8be9fd;font-size:18px}
+  #infoImg{width:100%;border-radius:12px;margin:6px 0 2px;border:1px solid rgba(0,229,255,.3)}
+  #infoCap{font-size:11px;color:#7d93ad;margin-bottom:6px}
   #scaleBadge{position:absolute;z-index:6;top:calc(64px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);border:1px solid rgba(255,209,102,.6);color:#ffd166;border-radius:12px;padding:6px 14px;font-size:12.5px;font-weight:800;white-space:nowrap;max-width:94vw;overflow:hidden;text-overflow:ellipsis}
   .lbl small{font-size:10px;color:#ffd166;font-weight:800}
   #panel{position:absolute;z-index:6;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));
@@ -73,6 +75,8 @@
   <div id="info" class="hidden">
     <button id="infoClose">✕</button>
     <h3 id="infoName"></h3>
+    <img id="infoImg" style="display:none" alt="map">
+    <div id="infoCap" style="display:none"></div>
     <div class="blurb" id="infoBlurb"></div>
     <table id="infoStats"></table>
   </div>
@@ -153,6 +157,7 @@ th_name:'天体',th_dia:'直径',th_dis:'太陽との距離',th_year:'公転',th
 k_dia:'直径',k_dis:'太陽との距離',k_year:'公転周期',k_day:'自転',k_moon:'衛星',k_temp:'温度',k_extra:'一番'}};
 I18N.zh.tb_dist='📏 真實距離';I18N.en.tb_dist='📏 True scale';I18N.ms.tb_dist='📏 Skala sebenar';I18N.ko.tb_dist='📏 실제 거리';I18N.ja.tb_dist='📏 実スケール';
 I18N.zh.scalemode='📏 真實AU距離模式 · 行星大細同衛星距離為顯示而保留示意';I18N.en.scalemode='📏 True-AU mode · planet sizes & moon orbits kept schematic for visibility';I18N.ms.scalemode='📏 Mod jarak AU sebenar · saiz planet & orbit bulan kekal skematik';I18N.ko.scalemode='📏 실제 AU 거리 모드 · 행성 크기와 위성 궤도는 표시용';I18N.ja.scalemode='📏 実AU距離モード · 惑星サイズと衛星軌道は表示用';
+I18N.zh.mapcap='🎨 銀河系藝術想像圖：NASA（太陽位置已標示）';I18N.en.mapcap='🎨 Artist impression of the Milky Way: NASA (Sun marked)';I18N.ms.mapcap='🎨 Ilustrasi artis Bima Sakti: NASA (Matahari ditanda)';I18N.ko.mapcap='🎨 은하수 상상도: NASA(태양 위치 표시)';I18N.ja.mapcap='🎨 天の川想像図：NASA（太陽の位置を標示）';
 let LANG=localStorage.getItem('gv_lang')||'en';
 if(!I18N[LANG])LANG='en';
 function t(k){return (I18N[LANG]&&I18N[LANG][k]!==undefined)?I18N[LANG][k]:(I18N.en[k]!==undefined?I18N.en[k]:k);}
@@ -584,19 +589,23 @@ function updateLabels(){
 const MILKY={
  name:{zh:'🌌 銀河系',en:'🌌 Milky Way',ms:'🌌 Bima Sakti',ko:'🌌 은하수',ja:'🌌 天の川'},
  stats:{
-  zh:[['直徑','約10萬光年'],['太陽位置','離中心26,000光年 · 獵戶座旋臂內側'],['恆星數量','1000–4000億粒'],['銀河年','太陽繞一圈要2.3億年']],
-  en:[['Diameter','~100,000 light-years'],['Where is the Sun','26,000 ly from center · inner Orion Spur'],['Stars','100–400 billion'],['Galactic year','Sun orbits once every 230M years']],
-  ms:[['Diameter','~100,000 tahun cahaya'],['Kedudukan Matahari','26,000 tc dari pusat · Lingkaran Orion'],['Bintang','100–400 bilion'],['Tahun galaksi','Matahari mengelilingi sekali setiap 230J tahun']],
-  ko:[['지름','약 10만 광년'],['태양 위치','중심에서 26,000광년 · 오리온자리 나선팔 안쪽'],['항성 수','1,000–4,000억 개'],['은하년','태양 공전 1회에 2.3억 년']],
-  ja:[['直径','約10万光年'],['太陽の位置','中心から26,000光年 · オリオン腕の内側'],['恒星数','1,000–4,000億個'],['銀河年','太陽の公転1周は2.3億年']]},
+  zh:[['直徑','約10萬光年'],['太陽位置','離中心約25,000光年 · 獵戶座-天鵝座旋臂'],['恆星數量','1000–4000億粒'],['銀河年','太陽繞一圈要2.3億年']],
+  en:[['Diameter','~100,000 light-years'],['Where is the Sun','~25,000 ly from center · Orion–Cygnus Arm'],['Stars','100–400 billion'],['Galactic year','Sun orbits once every 230M years']],
+  ms:[['Diameter','~100,000 tahun cahaya'],['Kedudukan Matahari','~25,000 tc dari pusat · Lengan Orion–Cygnus'],['Bintang','100–400 bilion'],['Tahun galaksi','Matahari mengelilingi sekali setiap 230J tahun']],
+  ko:[['지름','약 10만 광년'],['태양 위치','중심에서 약 25,000광년 · 오리온-백조자리 나선팔'],['항성 수','1,000–4,000억 개'],['은하년','태양 공전 1회에 2.3억 년']],
+  ja:[['直径','約10万光年'],['太陽の位置','中心から約25,000光年 · オリオン-白鳥座腕'],['恒星数','1,000–4,000億個'],['銀河年','太陽の公転1周は2.3億年']]},
  blurb:{
-  zh:'重點糾正：太陽系唔喺銀河系出面 —— 我哋住喺入面！銀河係個棒旋星系。你而家見到橫跨天空嘅光帶，就係由入面向外望嘅銀河盤面。拉近，就會飛返去我哋屋企——太陽系。',
-  en:'Correction: the Solar System is not outside the Milky Way — we live inside it! Ours is a barred spiral. The glowing band across the sky is the galactic disk seen from within. Zoom in to fly home to the Solar System.',
-  ms:'Pembetulan: Sistem Suria bukan di luar Bima Sakti — kita tinggal di dalamnya! Galaksi kita ialah pilin berpalang. Jalur cahaya merentasi langit ialah cakera galaksi dilihat dari dalam. Zum masuk untuk pulang ke Sistem Suria.',
-  ko:'정정: 태양계는 은하수 밖에 있지 않아요 — 우리는 안에 살고 있어요! 우리 은하는 막대나선은하예요. 하늘을 가로지르는 빛의 띠가 안에서 본 은하 원반이죠. 확대하면 집(태양계)으로 돌아가요.',
-  ja:'訂正：太陽系は天の川の外ではありません —— 私たちは中に住んでいます！私たちの銀河は棒渦巻銀河。空を横切る光の帯が内側から見た銀河円盤です。ズームインで我が家（太陽系）へ帰りましょう。'}};
+  zh:'重點糾正：太陽系唔喺銀河系出面 —— 我哋住喺入面！銀河係個棒旋星系。你而家見到橫跨天空嘅光帶，就係由入面向外望嘅銀河盤面。拉近，就會飛返去我哋屋企——太陽系。歐空局蓋亞任務正用十幾億粒星嘅數據繪製緊成個銀河地圖。',
+  en:'Correction: the Solar System is not outside the Milky Way — we live inside it! Ours is a barred spiral. The glowing band across the sky is the galactic disk seen from within. Zoom in to fly home to the Solar System. ESA’s Gaia mission is mapping the whole Galaxy from billions of stars.',
+  ms:'Pembetulan: Sistem Suria bukan di luar Bima Sakti — kita tinggal di dalamnya! Galaksi kita ialah pilin berpalang. Jalur cahaya merentasi langit ialah cakera galaksi dilihat dari dalam. Zum masuk untuk pulang ke Sistem Suria. Misi Gaia ESA sedang memetakan seluruh galaksi daripada bilion bintang.',
+  ko:'정정: 태양계는 은하수 밖에 있지 않아요 — 우리는 안에 살고 있어요! 우리 은하는 막대나선은하예요. 하늘을 가로지르는 빛의 띠가 안에서 본 은하 원반이죠. 확대하면 집(태양계)으로 돌아가요. ESA 가이아 탐사선이 수십억 개 별 데이터로 은하 전체를 그리고 있어요.',
+  ja:'訂正：太陽系は天の川の外ではありません —— 私たちは中に住んでいます！私たちの銀河は棒渦巻銀河。空を横切る光の帯が内側から見た銀河円盤です。ズームインで我が家（太陽系）へ帰りましょう。ESAガイアミッションが数十億の星データで銀河全体を描いています。'}};
 function showMilky(){
  lastInfo='@milky';
+ $('infoImg').src='tex/milkyway_map.jpg';
+ $('infoImg').style.display='block';
+ $('infoCap').innerHTML=t('mapcap');
+ $('infoCap').style.display='block';
  $('infoName').textContent=MILKY.name[LANG]||MILKY.name.en;
  $('infoBlurb').textContent=MILKY.blurb[LANG]||MILKY.blurb.en;
  let h='';for(const [k,v] of (MILKY.stats[LANG]||MILKY.stats.en))h+=`<tr><td class="k">${k}</td><td>${v}</td></tr>`;
@@ -607,6 +616,7 @@ function showMilky(){
 const STATL={dia:'k_dia',dis:'k_dis',year:'k_year',day:'k_day',moon:'k_moon',temp:'k_temp',extra:'k_extra'};
 function showInfo(id){
  const b=BODIES.find(x=>x.id===id);if(!b)return;
+ $('infoImg').style.display='none';$('infoCap').style.display='none';
  $('infoName').textContent=bn(b);
  $('infoBlurb').textContent=b.blurb[LANG]||b.blurb.en;
  let h='';
