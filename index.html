@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Galaxy Voyage · 銀河系漫遊</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html{scroll-behavior:smooth}
+  body{background:#020208;color:#e8f4ff;font-family:-apple-system,"PingFang HK","Microsoft JhengHei","Noto Sans TC",sans-serif;overflow-x:hidden}
+  #hero{position:relative;height:100vh;min-height:640px;overflow:hidden}
+  #gl{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+  #gl:active{cursor:grabbing}
+  #labels{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:4}
+  .lbl{position:absolute;transform:translate(-50%,-130%);font-size:12px;font-weight:800;color:#fff;white-space:nowrap;
+    text-shadow:0 1px 6px #000,0 0 10px rgba(0,229,255,.7);pointer-events:auto;cursor:pointer;padding:2px 6px}
+  #title{position:absolute;z-index:5;top:calc(14px + env(safe-area-inset-top));left:16px;right:16px;text-align:center;pointer-events:none}
+  #title h1{font-size:clamp(24px,5.5vw,40px);font-weight:900;letter-spacing:2px;text-shadow:0 0 24px #00e5ff,0 2px 8px #000}
+  #title p{font-size:clamp(12px,3vw,14px);color:#a5f3fc;margin-top:4px;text-shadow:0 1px 6px #000}
+  #info{position:absolute;z-index:7;left:10px;right:10px;bottom:calc(196px + env(safe-area-inset-bottom));max-width:560px;margin:0 auto;
+    background:rgba(5,10,25,.85);border:1px solid rgba(0,229,255,.4);border-radius:16px;padding:12px 14px;backdrop-filter:blur(8px);
+    max-height:34vh;overflow-y:auto}
+  #info.hidden{display:none}
+  #info h3{font-size:19px;margin-bottom:4px}
+  #info .blurb{font-size:13.5px;line-height:1.8;color:#cfe8ff;margin-bottom:8px}
+  #info table{width:100%;border-collapse:collapse;font-size:13px}
+  #info td{padding:3px 6px;border-bottom:1px solid rgba(255,255,255,.1)}
+  #info td.k{color:#8be9fd;width:38%}
+  #infoClose{float:right;background:none;border:none;color:#8be9fd;font-size:18px}
+  #panel{position:absolute;z-index:6;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));
+    max-width:560px;margin:0 auto;background:rgba(5,10,25,.72);border:1px solid rgba(0,229,255,.35);
+    border-radius:16px;padding:10px 12px;backdrop-filter:blur(8px)}
+  #panel .row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;justify-content:center}
+  .pbtn{background:rgba(0,229,255,.12);border:1px solid rgba(0,229,255,.5);color:#dffaff;border-radius:10px;
+    padding:7px 10px;font-size:12.5px;font-weight:800}
+  .pbtn:active{transform:scale(.94);background:rgba(0,229,255,.3)}
+  .pbtn.on{background:rgba(0,229,255,.32);border-color:#00e5ff}
+  select.pbtn{appearance:none;-webkit-appearance:none}
+  select.pbtn option{color:#000}
+  #panel label{font-size:12px;color:#8be9fd;display:flex;align-items:center;gap:6px;margin-top:8px}
+  #panel input[type=range]{flex:1;accent-color:#00e5ff}
+  #panel .val{font-size:12px;color:#ffd166;min-width:52px;text-align:right}
+  #hint{margin-top:6px;font-size:11px;color:#7d93ad;text-align:center}
+  section{max-width:720px;margin:0 auto;padding:44px 18px 10px}
+  section h2{font-size:24px;margin-bottom:4px;text-shadow:0 0 14px rgba(0,229,255,.6)}
+  section .sub{color:#8be9fd;font-size:14px;margin-bottom:14px}
+  .card{background:rgba(255,255,255,.045);border:1px solid rgba(0,229,255,.22);border-radius:14px;padding:14px 15px;margin-bottom:12px;line-height:1.9;font-size:15px}
+  .card b{color:#ffd166}
+  table.data{width:100%;border-collapse:collapse;font-size:13px;background:rgba(255,255,255,.03);border-radius:14px;overflow:hidden}
+  table.data th,table.data td{padding:8px 8px;border-bottom:1px solid rgba(255,255,255,.1);text-align:left}
+  table.data th{color:#8be9fd;font-size:12px}
+  table.data tr:last-child td{border-bottom:none}
+  footer{text-align:center;color:#5b6b82;font-size:12px;padding:30px 18px 50px;line-height:2}
+</style>
+</head>
+<body>
+
+<div id="hero">
+  <canvas id="gl"></canvas>
+  <div id="labels"></div>
+  <div id="title">
+    <h1 data-i18n="title_h1">🌌 Galaxy Voyage</h1>
+    <p data-i18n="title_p">Milky Way → Solar System → Earth &amp; Moon · drag to orbit / scroll to zoom</p>
+  </div>
+  <div id="info" class="hidden">
+    <button id="infoClose">✕</button>
+    <h3 id="infoName"></h3>
+    <div class="blurb" id="infoBlurb"></div>
+    <table id="infoStats"></table>
+  </div>
+  <div id="panel">
+    <div class="row" id="navRow">
+      <button class="pbtn" data-go="galaxy">🌌</button>
+      <button class="pbtn" data-go="system">☀️</button>
+    </div>
+    <div class="row" id="planetRow" style="margin-top:6px"></div>
+    <label><span data-i18n="zoom_l">Zoom</span><input type="range" id="zoom" min="0" max="1000" value="1000"><span class="val" id="zoomRead"></span></label>
+    <label><span data-i18n="time_l">Time</span><input type="range" id="time" min="0" max="100" value="35"><span class="val" id="timeRead">1.0×</span></label>
+    <div class="row" style="margin-top:8px">
+      <select id="langSel" class="pbtn">
+        <option value="zh">中文</option>
+        <option value="en">English</option>
+        <option value="ms">Melayu</option>
+        <option value="ko">한국어</option>
+        <option value="ja">日本語</option>
+      </select>
+      <button class="pbtn on" id="orbitBtn">🛰️</button>
+      <button class="pbtn on" id="labelBtn">🏷️</button>
+      <button class="pbtn on" id="tourBtn">🧭</button>
+    </div>
+    <div id="hint" data-i18n="hint">👆 Drag to orbit · scroll / pinch to zoom · tap a planet for details</div>
+  </div>
+</div>
+
+<section>
+  <h2 data-i18n="s1h">Planets at a glance</h2>
+  <div class="sub" data-i18n="s1sub">Sizes and distances in 3D are compressed so everything fits on screen — real numbers below</div>
+  <div class="card" style="overflow-x:auto"><table class="data" id="dataTable"></table></div>
+  <div class="card" data-i18n="note"></div>
+</section>
+
+<footer data-i18n="foot"></footer>
+
+<script src="three.min.js"></script>
+<script>
+'use strict';
+/* ================= i18n ================= */
+const $=id=>document.getElementById(id);
+const I18N={
+zh:{title_h1:'🌌 銀河系漫遊',title_p:'銀河系 → 太陽系 → 地球和月亮 · 拖拽環繞 / 滑動縮放',
+zoom_l:'縮放',time_l:'時間',hint:'👆 拖拽環繞 · 滾輪/雙指縮放 · 點星球睇詳解',
+sys:'☀️ 太陽系',gal:'🌌 銀河系',s1h:'① 行星一覽',s1sub:'3D裡面嘅大細同距離經過壓縮，方便同屏睇晒 —— 真實數字如下',
+note:'<b>點解唔用真實比例？</b>真實太陽系幾乎係空嘅 —— 如果地球係粒彈珠，太陽就係兩米外嘅大氣球，海王星喺幾公里外。上面3D將距離同大細壓縮咗，形狀、顏色、自轉、衛星關係全部按真實資料還原。',
+foot:'資料：NASA · 紋理為程序生成（教學示意） · 軌道為圓形近似<br>🌌 銀河系漫遊 · 分享俾朋友一齊由銀河飛返地球',
+th_name:'天體',th_dia:'直徑',th_dis:'同太陽距離',th_year:'公轉',th_moon:'衛星',
+k_dia:'直徑',k_dis:'距離太陽',k_year:'公轉週期',k_day:'自轉',k_moon:'衛星',k_temp:'溫度',k_extra:'之最'},
+en:{title_h1:'🌌 Galaxy Voyage',title_p:'Milky Way → Solar System → Earth & Moon · drag to orbit / scroll to zoom',
+zoom_l:'Zoom',time_l:'Time',hint:'👆 Drag to orbit · scroll / pinch to zoom · tap a planet for details',
+sys:'☀️ Solar System',gal:'🌌 Milky Way',s1h:'Planets at a glance',s1sub:'Sizes and distances in 3D are compressed so everything fits on screen — real numbers below',
+note:'<b>Why not true scale?</b> The real Solar System is almost entirely empty — if Earth were a marble, the Sun would be a balloon 2 meters away and Neptune kilometers off. Distances and sizes above are compressed; shapes, colors, spins and moons follow real data.',
+foot:'Data: NASA · textures procedurally generated (illustrative) · circular-orbit approximation<br>🌌 Galaxy Voyage · share it and fly home to Earth together',
+th_name:'Body',th_dia:'Diameter',th_dis:'Dist. from Sun',th_year:'Year',th_moon:'Moons',
+k_dia:'Diameter',k_dis:'Distance from Sun',k_year:'Orbital period',k_day:'Rotation',k_moon:'Moons',k_temp:'Temperature',k_extra:'Claim to fame'},
+ms:{title_h1:'🌌 Kembara Galaksi',title_p:'Bima Sakti → Sistem Suria → Bumi & Bulan · seret untuk mengorbit / skrol untuk zum',
+zoom_l:'Zum',time_l:'Masa',hint:'👆 Seret untuk mengorbit · skrol / cubit untuk zum · sentuh planet untuk butiran',
+sys:'☀️ Sistem Suria',gal:'🌌 Bima Sakti',s1h:'Planet sekilas pandang',s1sub:'Saiz dan jarak dalam 3D dimampatkan agar muat di skrin — angka sebenar di bawah',
+note:'<b>Kenapa bukan skala sebenar?</b> Sistem Suria sebenar hampir keseluruhannya kosong — jika Bumi sebiji guli, Matahari belon 2 meter jauhnya dan Neptun berkilometer jauhnya. Jarak dan saiz di atas dimampatkan; bentuk, warna, putaran dan bulan mengikut data sebenar.',
+foot:'Data: NASA · tekstur dijana prosedural (ilustrasi) · anggaran orbit membulat<br>🌌 Kembara Galaksi · kongsi dan terbang pulang ke Bumi bersama',
+th_name:'Jasad',th_dia:'Diameter',th_dis:'Jarak dari Matahari',th_year:'Tahun',th_moon:'Bulan',
+k_dia:'Diameter',k_dis:'Jarak dari Matahari',k_year:'Tempoh orbit',k_day:'Putaran',k_moon:'Bulan',k_temp:'Suhu',k_extra:'Kemasyhuran'},
+ko:{title_h1:'🌌 은하 항해',title_p:'은하수 → 태양계 → 지구와 달 · 드래그로 회전 / 스크롤로 확대',
+zoom_l:'확대',time_l:'시간',hint:'👆 드래그로 회전 · 스크롤/핀치로 확대 · 행성을 눌러보세요',
+sys:'☀️ 태양계',gal:'🌌 은하수',s1h:'행성 한눈에 보기',s1sub:'3D의 크기와 거리는 한 화면에 담기 위해 압축했어요 — 실제 수치는 아래에',
+note:'<b>왜 실제 비율이 아닌가요?</b> 실제 태양계는 거의 텅 비어 있어요. 지구가 구슬이라면 태양은 2m 밖의 풍선, 해왕성은 수 km 밖이죠. 위 3D는 거리·크기를 압축했고 모양·색·자전·위성은 실제 자료를 따랐어요.',
+foot:'자료: NASA · 텍스처는 절차적 생성(일러스트) · 원형 궤도 근사<br>🌌 은하 항해 · 공유하고 함께 지구로 날아가 보세요',
+th_name:'천체',th_dia:'지름',th_dis:'태양과의 거리',th_year:'공전',th_moon:'위성',
+k_dia:'지름',k_dis:'태양과의 거리',k_year:'공전 주기',k_day:'자전',k_moon:'위성',k_temp:'온도',k_extra:'최고 기록'},
+ja:{title_h1:'🌌 銀河航海',title_p:'天の川 → 太陽系 → 地球と月 · ドラッグで周回 / スクロールでズーム',
+zoom_l:'ズーム',time_l:'時間',hint:'👆 ドラッグで周回 · スクロール/ピンチでズーム · 星をタップで解説',
+sys:'☀️ 太陽系',gal:'🌌 天の川',s1h:'惑星ひと目で',s1sub:'3Dのサイズと距離は1画面に収めるため圧縮しています —— 本当の数値は以下です',
+note:'<b>なぜ実スケールでないの?</b> 本物の太陽系はほぼ空っぽです —— 地球がビー玉なら太陽は2m先の風船、海王星は数km先。上3Dは距離とサイズを圧縮し、形・色・自転・衛星は実データ通りです。',
+foot:'資料:NASA · テクスチャは手順生成(イラスト) · 円軌道近似<br>🌌 銀河航海 · シェアして一緒に地球へ帰りましょう',
+th_name:'天体',th_dia:'直径',th_dis:'太陽との距離',th_year:'公転',th_moon:'衛星',
+k_dia:'直径',k_dis:'太陽との距離',k_year:'公転周期',k_day:'自転',k_moon:'衛星',k_temp:'温度',k_extra:'一番'}};
+let LANG=localStorage.getItem('gv_lang')||'en';
+if(!I18N[LANG])LANG='en';
+function t(k){return (I18N[LANG]&&I18N[LANG][k]!==undefined)?I18N[LANG][k]:(I18N.en[k]!==undefined?I18N.en[k]:k);}
+
+/* ================= 資料 ================= */
+const BODIES=[
+{id:'sun',sun:true,size:10,name:{zh:'☀️ 太陽',en:'☀️ Sun',ms:'☀️ Matahari',ko:'☀️ 태양',ja:'☀️ 太陽'},
+ stats:{dia:'1,392,700 km',day:'≈27 days',temp:'5,505°C',extra:{zh:'佔太陽系99.86%質量',en:'99.86% of system mass',ms:'99.86% jisim sistem',ko:'태양계 질량의 99.86%',ja:'太陽系の質量の99.86%'}},
+ blurb:{zh:'太陽系嘅心臟，一粒黃矮星。每秒將6億噸氫聚變成氦。佢嘅光行8分20秒先到地球。',en:'Heart of the system, a yellow dwarf fusing 600M tons of hydrogen every second. Its light takes 8m20s to reach Earth.',ms:'Jantung sistem, kerdil kuning yang melakur 600J tan hidrogen setiap saat. Cahayanya mengambil masa 8m20s untuk sampai ke Bumi.',ko:'태양계의 심장인 황색왜성. 매초 수소 6억 톤을 핵융합해요. 빛이 지구에 닿기까지 8분 20초가 걸려요.',ja:'太陽系の心臓である黄色矮星。毎秒6億トンの水素を核融合しています。光が地球に届くまで8分20秒かかります。'}},
+{id:'mercury',dist:20,size:1.2,period:88,tilt:0.03,spin:0.05,name:{zh:'☿️ 水星',en:'☿️ Mercury',ms:'☿️ Utarid',ko:'☿️ 수성',ja:'☿️ 水星'},
+ stats:{dia:'4,879 km',dis:'0.39 AU',year:'88 days',day:'59 days',moon:'0',temp:'-180 ~ 430°C',extra:{zh:'最大温差行星',en:'Wildest temperature swings',ms:'Perbezaan suhu paling ekstrem',ko:'온도 차가 가장 극심',ja:'寒暖差最大の惑星'}},
+ blurb:{zh:'最貼近太陽，布滿環形山。日頭430°C、夜晚-180°C，快2年先等於1日（3:2自轉共振）。',en:'Closest to the Sun, cratered like the Moon. 430°C by day, -180°C by night — locked in a 3:2 spin resonance.',ms:'Paling dekat dengan Matahari, berkawah seperti Bulan. 430°C siang, -180°C malam — resonans putaran 3:2.',ko:'태양에 가장 가깝고 운석 구덩이투성이예요. 낮 430°C, 밤 -180°C, 3:2 자전 공명을 해요.',ja:'太陽に最も近く、クレーターだらけ。昼430°C・夜-180°C、自転と公転が3:2で共振しています。'}},
+{id:'venus',dist:28,size:1.9,period:225,tilt:177,spin:-0.03,name:{zh:'♀️ 金星',en:'♀️ Venus',ms:'♀️ Zuhrah',ko:'♀️ 금성',ja:'♀️ 金星'},
+ stats:{dia:'12,104 km',dis:'0.72 AU',year:'225 days',day:'243 days ↺',moon:'0',temp:'465°C',extra:{zh:'最熱行星·倒轉',en:'Hottest planet·spins backwards',ms:'Planet terpanas·berputar songsang',ko:'가장 뜨거운 행성·역자전',ja:'最も暑い惑星·逆自転'}},
+ blurb:{zh:'成粒包住二氧化碳濃雲，失控溫室效應令佢熱過水星。仲要倒轉：太陽由西邊升起。',en:'Wrapped in CO₂ clouds with runaway greenhouse effect — hotter than Mercury. Spins backwards: the Sun rises in the west.',ms:'Diselubungi awan CO₂ dengan kesan rumah hijau — lebih panas daripada Utarid. Berputar songsang: Matahari terbit di barat.',ko:'이산화탄소 구름의 폭주 온실효과로 수성보다 뜨거워요. 역자전해서 태양이 서쪽에서 떠요.',ja:'二酸化炭素の雲の暴走温室効果で水星より暑い。逆自転なので太陽は西から昇ります。'}},
+{id:'earth',dist:38,size:2,period:365,tilt:23.4,spin:0.4,name:{zh:'🌍 地球',en:'🌍 Earth',ms:'🌍 Bumi',ko:'🌍 지구',ja:'🌍 地球'},
+ stats:{dia:'12,742 km',dis:'1 AU',year:'365.25 days',day:'23.9 h',moon:'1',temp:'-89 ~ 58°C',extra:{zh:'已知唯一有生命',en:'Only known life',ms:'Satu-satunya hidupan diketahui',ko:'생명이 확인된 유일한 행성',ja:'生命が確認された唯一の惑星'}},
+ blurb:{zh:'我哋屋企。71%海洋、氮氧大氣、磁場擋太陽風。拉近睇：雲層、極光（夜晚側）、月亮喺隔籬。',en:'Home. 71% ocean, nitrogen-oxygen air, magnetic shield. Zoom in: clouds, city lights on the night side, and the Moon next door.',ms:'Rumah kita. 71% lautan, udara nitrogen-oksigen, perisai magnet. Zum masuk: awan, lampu kota di sisi malam, dan Bulan di sebelah.',ko:'우리의 집. 71% 바다, 질소-산소 대기, 자기장 실드. 확대해 보세요. 구름, 밤의 도시 불빛, 옆의 달까지.',ja:'私たちの家。71%が海、窒素酸素の大気、磁気シールド。ズームすると雲、夜側の都市の灯り、隣の月が見えます。'}},
+{id:'moon',parent:'earth',orbitR:4,size:0.55,period:27.3,spin:0.1,name:{zh:'🌙 月亮',en:'🌙 Moon',ms:'🌙 Bulan',ko:'🌙 달',ja:'🌌 月'},
+ stats:{dia:'3,474 km',dis:'384,400 km',year:'27.3 days',day:'locked',moon:'—',temp:'-173 ~ 127°C',extra:{zh:'潮汐鎖定·搞到潮汐',en:'Tidally locked·drives tides',ms:'Berkunci pasang·mencetus pasang surut',ko:'조석 고정·조석을 만듦',ja:'潮汐固定·潮の満ち引きの原因'}},
+ blurb:{zh:'地球唯一天然衛星，永遠同一面對住我哋。45億年前可能係火星大細嘅天體撞出嚟嘅。',en:'Earth\u2019s only natural satellite, forever showing the same face. Probably born from a Mars-sized impact 4.5B years ago.',ms:'Satu-satunya satelit semula jadi Bumi, sentiasa menghadap sisi sama. Mungkin lahir daripada pelanggaran sebesar Marikh 4.5B tahun lalu.',ko:'지구의 유일한 천연위성. 항상 같은 면만 보여줘요. 45억 년 전 화성 크기 천체 충돌로 태어났을 거예요.',ja:'地球唯一の天然衛星、常に同じ面を向けています。45億年前の火星サイズの天体衝突で生まれたとされます。'}},
+{id:'mars',dist:48,size:1.4,period:687,tilt:25,spin:0.38,name:{zh:'♂️ 火星',en:'♂️ Mars',ms:'♂️ Marikh',ko:'♂️ 화성',ja:'♂️ 火星'},
+ stats:{dia:'6,779 km',dis:'1.52 AU',year:'687 days',day:'24.6 h',moon:'2',temp:'-110 ~ 35°C',extra:{zh:'奧林帕斯山21.9km',en:'Olympus Mons 21.9 km',ms:'Olympus Mons 21.9 km',ko:'올림포스산 21.9km',ja:'オリンポス山21.9km'}},
+ blurb:{zh:'紅色沙漠，太陽系最高火山奧林帕斯山（珠峰2.5倍），水手谷長過美國闊度。人類下一個目的地。',en:'Red desert with Olympus Mons (2.5× Everest) and Valles Marineris wider than the USA. Humanity\u2019s next destination.',ms:'Gurun merah dengan Olympus Mons (2.5× Everest) dan Valles Marineris selebar AS. Destinasi manusia seterusnya.',ko:'붉은 사막. 에베레스트 2.5배 올림포스산과 미국보다 넓은 매리너 협곡. 인류의 다음 목적지예요.',ja:'赤い砂漠。エベレスト2.5倍のオリンポス山、米国より広いマリナー峡谷。人類の次の目的地です。'}},
+{id:'jupiter',dist:70,size:4.6,period:4333,tilt:3,spin:0.8,name:{zh:'♃ 木星',en:'♃ Jupiter',ms:'♃ Musytari',ko:'♃ 목성',ja:'♃ 木星'},
+ stats:{dia:'139,820 km',dis:'5.2 AU',year:'11.9 yrs',day:'9.9 h',moon:'95',temp:'-110°C',extra:{zh:'大紅斑風暴幾百年',en:'Red Spot raging for centuries',ms:'Bintik Merah bergelora berabad',ko:'수백 년째 대적점 폭풍',ja:'数百年の大赤斑の嵐'}},
+ blurb:{zh:'太陽系大佬，1300粒地球先塞得滿。大紅斑係大過地球嘅風暴，轉咗幾百年。重力夠大，成個太陽系嘅保鏢，擋走唔少彗星。',en:'The giant: 1,300 Earths fit inside. The Great Red Spot is an Earth-sized storm centuries old. Its gravity shields the inner system from comets.',ms:'Gergasi: 1,300 Bumi muat di dalam. Bintik Merah Lebih besar daripada Bumi, bergelora berabad. Gravitinya melindungi sistem dalam daripada komet.',ko:'거인. 지구 1,300개가 들어가요. 대적점은 지구만 한 폭풍으로 수백 년째 지속 중. 중력으로 혜성을 막는 태양계의 보디가드예요.',ja:'巨人。地球1300個分。大赤斑は地球より大きい嵐で数百年継続中。重力で彗星から内側を守る用心棒です。'}},
+{id:'io',parent:'jupiter',orbitR:6.5,size:0.5,period:1.77,name:{zh:'🌋 木衛一',en:'🌋 Io',ms:'🌋 Io',ko:'🌋 이오',ja:'🌋 イオ'},
+ stats:{dia:'3,643 km',dis:'Jupiter',year:'1.8 days',day:'locked',moon:'—',temp:'-143°C',extra:{zh:'火山最多天體',en:'Most volcanic body',ms:'Jasad paling bergunung berapi',ko:'화산 최다 천체',ja:'火山最多の天体'}},
+ blurb:{zh:'太陽系火山最多嘅地方，400幾座活火山，木星潮汐力搓到佢成粒熔。',en:'The most volcanic place known: 400+ live volcanoes, kneaded molten by Jupiter\u2019s tides.',ms:'Tempat paling bergunung berapi: 400+ gunung aktif, diuli cair oleh pasang Musytari.',ko:'알려진 가장 화산 많은 곳. 활화산 400개 이상, 목성 조석력에 녹아 있어요.',ja:'知られる限り最多の火山地帯。活火山400以上、木星の潮汐力で溶かされています。'}},
+{id:'europa',parent:'jupiter',orbitR:8,size:0.45,period:3.55,name:{zh:'🧊 木衛二',en:'🧊 Europa',ms:'🧊 Europa',ko:'🧊 유로파',ja:'🧊 エウロパ'},
+ stats:{dia:'3,122 km',dis:'Jupiter',year:'3.6 days',day:'locked',moon:'—',temp:'-160°C',extra:{zh:'冰下海洋·找生命',en:'Hidden ocean·life hunt',ms:'Lautan tersembunyi·cari hidupan',ko:'숨은 바다·생명 탐색',ja:'地下の海·生命探査'}},
+ blurb:{zh:'冰殼下面可能係100km深嘅鹹水海，水量多過地球所有海。NASA派緊快船號去睇有冇生命。',en:'Under the ice may lie a 100 km deep salty ocean holding more water than Earth. NASA\u2019s Clipper is on its way to check for life.',ms:'Di bawah ais mungkin ada lautan masin 100 km dalam — lebih banyak air daripada Bumi. Clipper NASA sedang menuju ke sana.',ko:'얼음 아래 100km 깊이 바닷물이 지구 전체보다 많을지도. NASA 클리퍼가 생명 확인차 가는 중이에요.',ja:'氷の下に深さ100kmの塩水の海(地球より多量)があるかも。NASAクリッパーが生命確認に向かっています。'}},
+{id:'ganymede',parent:'jupiter',orbitR:9.5,size:0.7,period:7.15,name:{zh:'🛰️ 木衛三',en:'🛰️ Ganymede',ms:'🛰️ Ganymede',ko:'🛰️ 가니메데',ja:'🛰️ ガニメデ'},
+ stats:{dia:'5,268 km',dis:'Jupiter',year:'7.2 days',day:'locked',moon:'—',temp:'-160°C',extra:{zh:'最大衛星·大過水星',en:'Biggest moon·beats Mercury',ms:'Bulan terbesar·atasi Utarid',ko:'최대 위성·수성보다 큼',ja:'最大の衛星·水星より大きい'}},
+ blurb:{zh:'太陽系最大衛星，大過水星，自己有磁場，冰下都有海。',en:'The biggest moon of all — larger than Mercury — with its own magnetic field and a hidden ocean.',ms:'Bulan terbesar — lebih besar daripada Utarid — dengan medan magnet sendiri dan lautan tersembunyi.',ko:'가장 큰 위성으로 수성보다 커요. 자체 자기장과 숨은 바다도 있어요.',ja:'最大の衛星で水星より大きく、独自の磁場と地下の海があります。'}},
+{id:'callisto',parent:'jupiter',orbitR:11,size:0.65,period:16.7,name:{zh:'☄️ 木衛四',en:'☄️ Callisto',ms:'☄️ Callisto',ko:'☄️ 칼리스토',ja:'☄️ カリスト'},
+ stats:{dia:'4,821 km',dis:'Jupiter',year:'16.7 days',day:'locked',moon:'—',temp:'-139°C',extra:{zh:'最古老隕石坑表面',en:'Most ancient cratered face',ms:'Wajah berkawah paling purba',ko:'가장 오래된 크레이터',ja:'最古のクレーター地形'}},
+ blurb:{zh:'表面隕石坑最密最古老，40億年冇乜地質活動，係太陽系嘅活化石。',en:'The most densely cratered, geologically dead face around — a 4-billion-year fossil of the early system.',ms:'Wajah berkawah paling padat dan mati secara geologi — fosil sistem awal berusia 4 bilion tahun.',ko:'크레이터가 가장 빽빽하고 지질 활동이 멈춘 40억 년 화석이에요.',ja:'クレーターが最も密集し地質活動の止まった40億年の化石です。'}},
+{id:'saturn',dist:95,size:3.9,period:10759,tilt:27,spin:0.75,ring:[4.9,8.6],name:{zh:'♄ 土星',en:'♄ Saturn',ms:'♄ Zuhal',ko:'♄ 토성',ja:'♄ 土星'},
+ stats:{dia:'116,460 km',dis:'9.5 AU',year:'29.4 yrs',day:'10.7 h',moon:'146',temp:'-140°C',extra:{zh:'光環+146衛星之王',en:'Rings + moon-count king',ms:'Raja gelang + bulan terbanyak',ko:'고리+위성 수 1위',ja:'環と衛星数王者'}},
+ blurb:{zh:'光環闊28萬km但薄得滯（約10米），主要係冰！卡西尼環縫係俾衛星掃出嚟嘅。密度仲細過水，擺得落水會浮！',en:'Rings 280,000 km wide yet ~10 m thin — nearly pure ice, with the Cassini Division swept by a moon. Less dense than water: it would float!',ms:'Gelang selebar 280,000 km tetapi setebal ~10 m — hampir ais tulen, dengan Belahan Cassini disapu oleh bulan. Kurang tumpat daripada air: ia akan terapung!',ko:'고리는 폭 28만km인데 두께는 10m! 거의 순수 얼음이고, 카시니 간극은 위성이 쓸어낸 거예요. 물보다 가벼워서 물에 뜨죠.',ja:'環は幅28万kmなのに厚さ約10m、ほぼ純粋な氷。カッシーニの間隙は衛星が掃いたもの。水より軽く、水に浮きます!'}},
+{id:'titan',parent:'saturn',orbitR:10,size:0.8,period:16,name:{zh:'🌫️ 土衛六',en:'🌫️ Titan',ms:'🌫️ Titan',ko:'🌫️ 타이탄',ja:'🌫️ タイタン'},
+ stats:{dia:'5,150 km',dis:'Saturn',year:'16 days',day:'locked',moon:'—',temp:'-179°C',extra:{zh:'甲烷湖·濃大氣',en:'Methane lakes·thick air',ms:'Tasik metana·udara tebal',ko:'메탄 호수·짙은 대기',ja:'メタンの湖·濃い大気'}},
+ blurb:{zh:'唯一有濃大氣嘅衛星，落甲烷雨，有甲烷湖同海。惠更斯號2005年登陸過。',en:'The only moon with thick air: methane rain, lakes and seas. Huygens landed here in 2005.',ms:'Satu-satunya bulan berudara tebal: hujan metana, tasik dan laut. Huygens mendarat pada 2005.',ko:'유일하게 짙은 대기가 있는 위성. 메탄 비와 호수·바다가 있어요. 2005년 호이겐스가 착륙했죠.',ja:'唯一濃い大気を持つ衛星。メタンの雨や湖と海があります。2005年にホイヘンスが着陸しました。'}},
+{id:'uranus',dist:120,size:2.6,period:30687,tilt:98,spin:0.5,name:{zh:'♅ 天王星',en:'♅ Uranus',ms:'♅ Uranus',ko:'♅ 천왕성',ja:'♅ 天王星'},
+ stats:{dia:'50,724 km',dis:'19.2 AU',year:'84 yrs',day:'17.2 h',moon:'28',temp:'-224°C',extra:{zh:'瞓喺度轉·最凍大氣',en:'Rolls on its side·coldest air',ms:'Berguling·udara paling sejuk',ko:'누워서 자전·가장 추운 대기',ja:'横倒し自転·最低の大気温度'}},
+ blurb:{zh:'成粒瞓喺度碌（傾98°），可能細個俾嘢撞歪咗。大氣-224°C係咁多行星最凍，甲烷令佢變藍綠色。',en:'Knocked on its side (98° tilt), rolling around the Sun. Its -224°C air is the coldest of all planets; methane paints it teal.',ms:'Terbaring mengiring (condong 98°), berguling mengelilingi Matahari. Udara -224°C paling sejuk; metana mewarnakannya firus.',ko:'98° 기울어져 누워서 굴러요. -224°C로 가장 추운 대기, 메탄 때문에 청록색이죠.',ja:'98°傾いて横倒しで公転。-224°Cで最も寒い大気、メタンで青緑色です。'}},
+{id:'neptune',dist:145,size:2.5,period:60190,tilt:28,spin:0.55,name:{zh:'♆ 海王星',en:'♆ Neptune',ms:'♆ Neptun',ko:'♆ 해왕성',ja:'♆ 海王星'},
+ stats:{dia:'49,244 km',dis:'30.1 AU',year:'164.8 yrs',day:'16.1 h',moon:'16',temp:'-214°C',extra:{zh:'用數學搵到·2100km/h風',en:'Found by math·2,100 km/h winds',ms:'Ditemui dengan matematik·angin 2,100 km/j',ko:'수학으로 발견·시속 2100km 바람',ja:'数学で発見·時速2100kmの風'}},
+ blurb:{zh:'1846年憑數學算出位置再望到嘅行星。超音速風時速2100km係太陽系最快。自轉一圈先164.8年，發現至今只行咗唔夠一圈！',en:'Found by mathematics in 1846 before anyone saw it. Supersonic 2,100 km/h winds — the fastest anywhere. One year is 164.8 Earth years: it hasn\u2019t finished a single lap since discovery!',ms:'Ditemui melalui matematik pada 1846 sebelum sesiapa melihatnya. Angin supersonik 2,100 km/j — terpantas. Setahun 164.8 tahun Bumi: belum lengkap sepusingan sejak ditemui!',ko:'1846년 수학으로 위치를 계산해 찾아냈어요. 시속 2100km 초음속 바람은 최고 기록. 1년이 164.8년이라 발견 이후 한 바퀴도 못 돌았어요!',ja:'1846年に数学で位置を割り出して発見。時速2100kmの超音速の風は最速。1年が164.8年なので発見からまだ1周していません!'}},
+{id:'triton',parent:'neptune',orbitR:5,size:0.55,period:-5.88,name:{zh:'🌊 海衛一',en:'🌊 Triton',ms:'🌊 Triton',ko:'🌊 트리톤',ja:'🌊 トリトン'},
+ stats:{dia:'2,707 km',dis:'Neptune',year:'5.9 days ↺',day:'locked',moon:'—',temp:'-235°C',extra:{zh:'逆行·氮間歇泉',en:'Retrograde·nitrogen geysers',ms:'Retrograd·geiser nitrogen',ko:'역공전·질소 간헐천',ja:'逆行·窒素間欠泉'}},
+ blurb:{zh:'逆行衛星，可能係捉返嚟嘅古柏帶天體。有氮氣間歇泉噴8km高，表面-235°C。',en:'A backwards-orbiting moon, probably a captured Kuiper object. Nitrogen geysers erupt 8 km high; -235°C surface.',ms:'Bulan berorbit songsang, mungkin objek Kuiper yang ditangkap. Geiser nitrogen memancut 8 km tinggi; permukaan -235°C.',ko:'역행 위성으로 카이퍼벨트 출신일 거예요. 질소 간헐천이 8km 높이로 솟고 표면은 -235°C예요.',ja:'逆行衛星でカイパーベルト出身の可能性。窒素間欠泉が8km噴き上がり、表面-235°Cです。'}}];
+function bn(b){return b.name[LANG]||b.name.en;}
+
+/* ================= 三 принципиальная сцена ================= */
+const canvas=$('gl');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
+renderer.outputEncoding=THREE.sRGBEncoding;
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(55,1,0.1,80000);
+scene.add(new THREE.AmbientLight(0x8a93b8,0.55));
+const sunLight=new THREE.PointLight(0xfff2dd,1.7,0,0);
+scene.add(sunLight);
+
+/* ---------- 程序紋理 ---------- */
+function cnv(w,h){const c=document.createElement('canvas');c.width=w;c.height=h;return c;}
+function R(a){let s=a;return()=>{s=(s*16807)%2147483647;return(s-1)/2147483646;};}
+function tex(c){const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;return t;}
+function bandTex(base,bands,seed,wobble){
+ const w=512,h=256,c=cnv(w,h),g=c.getContext('2d'),rnd=R(seed);
+ g.fillStyle=base;g.fillRect(0,0,w,h);
+ for(const [y0,y1,col] of bands){
+  g.fillStyle=col;
+  g.beginPath();g.moveTo(0,y0);
+  for(let x=0;x<=w;x+=8)g.lineTo(x,y0+Math.sin(x*0.02+y0)*wobble+(rnd()-0.5)*4);
+  for(let x=w;x>=0;x-=8)g.lineTo(x,y1+Math.sin(x*0.025+y1)*wobble+(rnd()-0.5)*4);
+  g.fill();}
+ for(let i=0;i<900;i++){g.fillStyle=`rgba(255,255,255,${rnd()*0.05})`;g.fillRect(rnd()*w,rnd()*h,2,1);}
+ return tex(c);}
+function rockTex(base,dark,nC,seed){
+ const w=512,h=256,c=cnv(w,h),g=c.getContext('2d'),rnd=R(seed);
+ g.fillStyle=base;g.fillRect(0,0,w,h);
+ for(let i=0;i<nC;i++){const x=rnd()*w,y=rnd()*h,r=2+rnd()*14;
+  g.fillStyle=dark;g.globalAlpha=0.5;g.beginPath();g.arc(x,y,r,0,7);g.fill();
+  g.globalAlpha=0.35;g.fillStyle='#fff';g.beginPath();g.arc(x-r*0.25,y-r*0.25,r*0.55,0,7);g.fill();g.globalAlpha=1;}
+ for(let i=0;i<1500;i++){g.fillStyle=`rgba(0,0,0,${rnd()*0.08})`;g.fillRect(rnd()*w,rnd()*h,2,2);}
+ return tex(c);}
+function earthTex(){
+ const w=1024,h=512,c=cnv(w,h),g=c.getContext('2d'),rnd=R(42);
+ g.fillStyle='#0b3d91';g.fillRect(0,0,w,h);
+ const blobs=28;
+ for(let i=0;i<blobs;i++){const x=rnd()*w,y=h*0.15+rnd()*h*0.7,r=30+rnd()*110;
+  const gr=g.createRadialGradient(x,y,5,x,y,r);
+  const land=rnd()<0.6;
+  gr.addColorStop(0,land?'#3d7a2d':'#8a6f3c');gr.addColorStop(1,'rgba(11,61,145,0)');
+  g.fillStyle=gr;g.beginPath();g.arc(x,y,r,0,7);g.fill();}
+ g.fillStyle='#7a5c30';
+ for(let i=0;i<12;i++){const x=rnd()*w,y=h*0.35+rnd()*h*0.3;
+  g.globalAlpha=0.5;g.beginPath();g.ellipse(x,y,20+rnd()*60,12+rnd()*25,0,0,7);g.fill();g.globalAlpha=1;}
+ const ice=g.createLinearGradient(0,0,0,h);
+ ice.addColorStop(0,'rgba(255,255,255,.95)');ice.addColorStop(0.12,'rgba(255,255,255,0)');
+ ice.addColorStop(0.88,'rgba(255,255,255,0)');ice.addColorStop(1,'rgba(255,255,255,.95)');
+ g.fillStyle=ice;g.fillRect(0,0,w,h);
+ return tex(c);}
+function cloudTex(){
+ const w=512,h=256,c=cnv(w,h),g=c.getContext('2d'),rnd=R(7);
+ g.clearRect(0,0,w,h);
+ for(let i=0;i<130;i++){const x=rnd()*w,y=rnd()*h,r=8+rnd()*30;
+  const gr=g.createRadialGradient(x,y,1,x,y,r);
+  gr.addColorStop(0,'rgba(255,255,255,.75)');gr.addColorStop(1,'rgba(255,255,255,0)');
+  g.fillStyle=gr;g.beginPath();g.arc(x,y,r,0,7);g.fill();}
+ return tex(c);}
+function sunTex(){
+ const w=512,h=256,c=cnv(w,h),g=c.getContext('2d'),rnd=R(99);
+ const gr=g.createLinearGradient(0,0,0,h);
+ gr.addColorStop(0,'#ffdd66');gr.addColorStop(0.5,'#ff9933');gr.addColorStop(1,'#ff6611');
+ g.fillStyle=gr;g.fillRect(0,0,w,h);
+ for(let i=0;i<2600;i++){const x=rnd()*w,y=rnd()*h,r=1+rnd()*5;
+  g.fillStyle=rnd()<0.5?`rgba(255,240,180,${0.15+rnd()*0.3})`:`rgba(200,60,0,${0.15+rnd()*0.3})`;
+  g.beginPath();g.arc(x,y,r,0,7);g.fill();}
+ return tex(c);}
+function glowTex(){
+ const c=cnv(128,128),g=c.getContext('2d');
+ const gr=g.createRadialGradient(64,64,2,64,64,64);
+ gr.addColorStop(0,'rgba(255,240,200,1)');gr.addColorStop(0.25,'rgba(255,200,120,.55)');gr.addColorStop(1,'rgba(255,150,50,0)');
+ g.fillStyle=gr;g.fillRect(0,0,128,128);
+ return tex(c);}
+function dotTex(){
+ const c=cnv(32,32),g=c.getContext('2d');
+ const gr=g.createRadialGradient(16,16,1,16,16,16);
+ gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(1,'rgba(255,255,255,0)');
+ g.fillStyle=gr;g.fillRect(0,0,32,32);
+ return tex(c);}
+function ringTex(){
+ const c=cnv(256,8),g=c.getContext('2d'),rnd=R(5);
+ for(let x=0;x<256;x++){
+  const u=x/256;
+  let a=0.25+0.6*Math.abs(Math.sin(u*40+rnd()*0))* (0.5+0.5*Math.sin(u*13));
+  if(u>0.62&&u<0.70)a=0.03; // 卡西尼環縫
+  if(u<0.06)a*=u/0.06;
+  const shade=180+Math.floor(60*Math.sin(u*90));
+  g.fillStyle=`rgba(${shade},${shade-20},${shade-60},${Math.max(0,Math.min(1,a))})`;
+  g.fillRect(x,0,1,8);}
+ return tex(c);}
+function galaxyTex(){
+ const c=cnv(512,512),g=c.getContext('2d'),rnd=R(2024);
+ g.clearRect(0,0,512,512);
+ const gr=g.createRadialGradient(256,256,4,256,256,60);
+ gr.addColorStop(0,'rgba(255,250,230,.95)');gr.addColorStop(1,'rgba(255,250,230,0)');
+ g.fillStyle=gr;g.beginPath();g.arc(256,256,60,0,7);g.fill();
+ for(let a=0;a<2;a++)for(let i=0;i<900;i++){
+  const th=rnd()*Math.PI*4+a*Math.PI,r=40+rnd()*200;
+  const rr=40+Math.pow(rnd(),0.6)*200;
+  const x=256+Math.cos(th+rr*0.012)*rr,y=256+Math.sin(th+rr*0.012)*rr*0.62;
+  const s=rnd();
+  g.fillStyle=s<0.75?`rgba(160,190,255,${0.25+rnd()*0.5})`:(s<0.9?`rgba(255,220,180,${0.3+rnd()*0.5})`:`rgba(255,150,200,${0.3+rnd()*0.4})`);
+  const sz=rnd()<0.92?1:2;g.fillRect(x,y,sz,sz);}
+ return tex(c);}
+
+/* ---------- 場景搭建 ---------- */
+const TEXMAP={
+ sun:()=>sunTex(),
+ mercury:()=>rockTex('#8a8078','#4a4440',90,11),
+ venus:()=>bandTex('#d9b77c',[[-20,60,'#e8c88f'],[60,130,'#c9a05e'],[130,200,'#e0bd85'],[200,280,'#caa066']],21,5),
+ earth:()=>earthTex(),
+ moon:()=>rockTex('#9a9a9a','#5a5a5a',130,31),
+ mars:()=>rockTex('#c1613b','#6e2f16',60,41),
+ jupiter:()=>bandTex('#d8b48f',[[0,30,'#e8d3b0'],[30,70,'#b07a4e'],[70,110,'#e3c298'],[110,150,'#a8643c'],[150,190,'#e8d3b0'],[190,256,'#8f5a34']],51,9),
+ io:()=>rockTex('#e8d24a','#8a6a1a',50,61),
+ europa:()=>bandTex('#c9bfae',[[0,256,'rgba(150,90,60,0)']],0,0),
+ ganymede:()=>rockTex('#8a7f70','#4a4238',80,71),
+ callisto:()=>rockTex('#5a5148','#2e2823',150,81),
+ saturn:()=>bandTex('#e3cfa0',[[0,50,'#efe0b8'],[50,110,'#d4b983'],[110,170,'#e8d5a5'],[170,256,'#c4a878']],91,7),
+ titan:()=>bandTex('#dd8c2e',[[0,256,'rgba(120,50,0,0)']],0,0),
+ uranus:()=>bandTex('#9fe3e0',[[0,256,'rgba(255,255,255,0)']],0,0),
+ neptune:()=>bandTex('#3f66d4',[[20,80,'#5a86e8'],[120,190,'#2f4fb0'],[200,240,'#6a96f0']],101,8),
+ triton:()=>rockTex('#c9c2b8','#6a655e',40,111)};
+const bodies3D={};
+function buildBody(b){
+ const grp=new THREE.Group();
+ const mat=b.sun?new THREE.MeshBasicMaterial({map:TEXMAP[b.id]()}):
+  new THREE.MeshPhongMaterial({map:TEXMAP[b.id](),shininess:6,specular:0x222222});
+ const mesh=new THREE.Mesh(new THREE.SphereGeometry(b.size,48,32),mat);
+ const tiltG=new THREE.Group();tiltG.add(mesh);tiltG.rotation.z=(b.tilt||0)*Math.PI/180;grp.add(tiltG);
+ if(b.id==='earth'){
+  const cl=new THREE.Mesh(new THREE.SphereGeometry(b.size*1.02,48,32),
+   new THREE.MeshPhongMaterial({map:cloudTex(),transparent:true,depthWrite:false}));
+  tiltG.add(cl);b.clouds=cl;}
+ if(b.ring){
+  const rg=new THREE.RingGeometry(b.ring[0],b.ring[1],128,1);
+  const pp=rg.attributes.position,uu=rg.attributes.uv;
+  for(let i=0;i<pp.count;i++){const rr=Math.hypot(pp.getX(i),pp.getY(i));
+   uu.setXY(i,(rr-b.ring[0])/(b.ring[1]-b.ring[0]),0.5);}
+  const rm=new THREE.Mesh(rg,new THREE.MeshBasicMaterial({map:ringTex(),transparent:true,side:THREE.DoubleSide,depthWrite:false}));
+  rm.rotation.x=-Math.PI/2;grp.add(rm);}
+ scene.add(grp);
+ bodies3D[b.id]={def:b,grp,mesh,angle:Math.random()*Math.PI*2};
+ return bodies3D[b.id];}
+BODIES.forEach(buildBody);
+// 太陽光暈
+const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex(),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
+glow.scale.set(55,55,1);scene.add(glow);
+// 軌道線
+{
+ const mat=new THREE.LineBasicMaterial({color:0x3a5a8a,transparent:true,opacity:0.55});
+ for(const b of BODIES){if(!b.dist)continue;
+  const pts=[];for(let i=0;i<=128;i++){const a=i/128*Math.PI*2;pts.push(new THREE.Vector3(Math.cos(a)*b.dist,0,Math.sin(a)*b.dist));}
+  const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),mat);
+  line.name='orbit';scene.add(line);}
+}
+// 小行星帶
+{
+ const n=2200,pos=new Float32Array(n*3),rnd=R(1234);
+ for(let i=0;i<n;i++){const a=rnd()*Math.PI*2,r=55+rnd()*8;
+  pos[i*3]=Math.cos(a)*r;pos[i*3+1]=(rnd()-0.5)*3;pos[i*3+2]=Math.sin(a)*r;}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+ const belt=new THREE.Points(g,new THREE.PointsMaterial({color:0x998866,size:0.7,map:dotTex(),transparent:true,depthWrite:false}));
+ belt.name='belt';scene.add(belt);bodies3D.belt={mesh:belt};
+}
+// 星空
+{
+ const n=3500,pos=new Float32Array(n*3),rnd=R(777);
+ for(let i=0;i<n;i++){const th=rnd()*Math.PI*2,ph=Math.acos(2*rnd()-1),r=15000+rnd()*4000;
+  pos[i*3]=r*Math.sin(ph)*Math.cos(th);pos[i*3+1]=r*Math.cos(ph);pos[i*3+2]=r*Math.sin(ph)*Math.sin(th);}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+ scene.add(new THREE.Points(g,new THREE.PointsMaterial({color:0xcfe0ff,size:2,sizeAttenuation:false,map:dotTex(),transparent:true,depthWrite:false,opacity:0.9})));
+}
+// 銀河系(遠景)
+const galaxy=new THREE.Sprite(new THREE.SpriteMaterial({map:galaxyTex(),transparent:true,depthWrite:false,opacity:0.95}));
+galaxy.position.set(0,900,-10500);galaxy.scale.set(8000,5000,1);scene.add(galaxy);
+
+/* ---------- 位置更新 ---------- */
+const YEAR_K=365/90; // 地球1年=90秒(1×時)
+function bodyPos(b3,out){
+ const d=b3.def;
+ if(d.sun)return out.set(0,0,0);
+ if(d.parent){const p=bodies3D[d.parent].mesh; // 月球繞行星
+  p.getWorldPosition(out);
+  out.x+=Math.cos(b3.angle)*d.orbitR;out.z+=Math.sin(b3.angle)*d.orbitR;return out;}
+ out.set(Math.cos(b3.angle)*d.dist,0,Math.sin(b3.angle)*d.dist);return out;}
+const _v=new THREE.Vector3();
+function updateBodies(dt){
+ for(const id in bodies3D){const b3=bodies3D[id];if(id==='belt'){b3.mesh.rotation.y+=dt*0.004*timeScale;continue;}
+  const d=b3.def;
+  if(!d.sun&&d.period)b3.angle+=dt*(2*Math.PI/90)*(365/Math.abs(d.period))*(d.period<0?-1:1)*timeScale;
+  bodyPos(b3,_v);b3.grp.position.copy(_v);
+  b3.mesh.rotation.y+=dt*(d.spin||0.2)*timeScale;
+  if(b3.def.clouds)b3.def.clouds.rotation.y+=dt*0.06*timeScale;}
+ // 土星環永遠向住大致方向(跟組) — 已在組內,自動跟隨
+}
+
+/* ---------- 相機+控制 ---------- */
+let camT=0.8,camP=1.05,camD=2300,tgtD=2300;
+let focusId='system',timeScale=1,showOrbit=true,showLabel=true,autoRot=true,tourOn=true,tourT=0,tourIdx=0;
+const TOUR=['galaxy','system','sun','earth','moon','mars','jupiter','saturn','uranus','neptune'];
+function focusTarget(out){
+ if(focusId==='galaxy')return out.set(0,500,-7000);
+ if(focusId==='system')return out.set(0,0,0);
+ const b3=bodies3D[focusId];if(!b3)return out.set(0,0,0);
+ out.copy(b3.grp.position);return out;}
+function focusDist(){
+ if(focusId==='galaxy')return 2400;
+ if(focusId==='system')return 260;
+ const d=bodies3D[focusId].def;return Math.max(6,(d.size||2)*7);}
+function goFocus(id){focusId=id;tgtD=focusDist();tourOn=false;renderTour();
+ if(id!=='galaxy'&&id!=='system')showInfo(id);}
+function sliderToDist(v){return 6*Math.pow(2600/6,v/1000);}
+function distToSlider(d){return Math.round(1000*Math.log(Math.max(6,d)/6)/Math.log(2600/6));}
+const zoomSlider=$('zoom');
+zoomSlider.addEventListener('input',()=>{tgtD=sliderToDist(+zoomSlider.value);tourOn=false;renderTour();});
+const timeSlider=$('time');
+timeSlider.addEventListener('input',()=>{const v=+timeSlider.value/100;
+ timeScale=v<=0.02?0:0.05*Math.pow(80,v);$('timeRead').textContent=timeScale===0?'⏸':timeScale.toFixed(1)+'×';});
+function setTime(v){timeSlider.value=v;timeSlider.dispatchEvent(new Event('input'));}
+setTime(35);
+let drags=new Map(),pinchD=0,downXY=null,movedFar=false;
+canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);
+ drags.set(e.pointerId,[e.clientX,e.clientY]);downXY=[e.clientX,e.clientY];movedFar=false;
+ if(drags.size===2){const p=[...drags.values()];pinchD=Math.hypot(p[0][0]-p[1][0],p[0][1]-p[1][1]);}});
+canvas.addEventListener('pointermove',e=>{if(!drags.has(e.pointerId))return;
+ const old=drags.get(e.pointerId);drags.set(e.pointerId,[e.clientX,e.clientY]);
+ if(downXY&&Math.hypot(e.clientX-downXY[0],e.clientY-downXY[1])>10)movedFar=true;
+ if(drags.size===1){camT+=(e.clientX-old[0])*0.005;camP=Math.max(0.08,Math.min(1.65,camP-(e.clientY-old[1])*0.004));tourOn=false;renderTour();}
+ else if(drags.size===2){const p=[...drags.values()];
+  const d=Math.hypot(p[0][0]-p[1][0],p[0][1]-p[1][1]);
+  if(pinchD>0)tgtD=Math.max(6,Math.min(2600,tgtD*pinchD/Math.max(1,d)));pinchD=d;tourOn=false;renderTour();}});
+const up=e=>{if(drags.has(e.pointerId)&&!movedFar&&drags.size===1)tapPick(e);drags.delete(e.pointerId);};
+canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',e=>drags.delete(e.pointerId));
+canvas.addEventListener('wheel',e=>{e.preventDefault();
+ tgtD=Math.max(6,Math.min(2600,tgtD*Math.pow(1.0015,e.deltaY)));tourOn=false;renderTour();},{passive:false});
+const ray=new THREE.Raycaster(),mouseV=new THREE.Vector2();
+function tapPick(e){const r=canvas.getBoundingClientRect();
+ mouseV.set(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1);
+ ray.setFromCamera(mouseV,camera);
+ const meshes=[];for(const id in bodies3D){const b=bodies3D[id];if(b.mesh)meshes.push(b.mesh);}
+ const hit=ray.intersectObjects(meshes,false)[0];
+ if(hit){for(const id in bodies3D)if(bodies3D[id].mesh===hit.object){audio();goFocus(id);break;}}}
+// 導覽+按鈕
+function renderTour(){$('tourBtn').classList.toggle('on',tourOn);}
+$('tourBtn').onclick=()=>{tourOn=!tourOn;renderTour();tourT=0;};
+$('orbitBtn').onclick=function(){showOrbit=!showOrbit;this.classList.toggle('on',showOrbit);
+ scene.traverse(o=>{if(o.name==='orbit'||o.name==='belt')o.visible=showOrbit;});};
+$('labelBtn').onclick=function(){showLabel=!showLabel;this.classList.toggle('on',showLabel);};
+document.querySelectorAll('#navRow [data-go]').forEach(b=>b.onclick=()=>{audio();hideInfo();goFocus(b.dataset.go);});
+function buildPlanetBtns(){const row=$('planetRow');row.innerHTML='';
+ for(const b of BODIES){if(b.sun||b.parent)continue;
+  const btn=document.createElement('button');btn.className='pbtn';btn.textContent=bn(b);
+  btn.onclick=()=>{audio();goFocus(b.id);};row.appendChild(btn);}}
+function audio(){return null;}
+
+/* ---------- 標籤 ---------- */
+const labelLayer=$('labels'),labelDivs={};
+function buildLabels(){
+ const ids=['galaxy','system'].concat(BODIES.map(b=>b.id));
+ for(const id of ids){const d=document.createElement('div');d.className='lbl';d.style.display='none';
+  d.onclick=()=>goFocus(id);labelLayer.appendChild(d);labelDivs[id]=d;}}
+function updateLabels(){
+ const W=canvas.clientWidth,H=canvas.clientHeight;
+ const put=(id,x,y,txt,op)=>{const d=labelDivs[id];if(!d)return;
+  if(op<=0.02||!showLabel){d.style.display='none';return;}
+  d.style.display='block';d.style.left=x+'px';d.style.top=y+'px';d.style.opacity=op;
+  if(d.textContent!==txt)d.textContent=txt;};
+ const proj=(v)=>{_v.copy(v).project(camera);
+  return[( _v.x*0.5+0.5)*W,(-_v.y*0.5+0.5)*H,_v.z<1];};
+ const far=camD>500;
+ let v=new THREE.Vector3();
+ // 銀河
+ v.set(0,900,-10500);let [gx,gy,ok]=proj(v);
+ put('galaxy',gx,gy,t('gal'),(ok&&camD>900)?0.95:0);
+ // 太陽系標記
+ v.set(0,0,0);let [sx2,sy2,ok2]=proj(v);
+ put('system',sx2,sy2-30,t('sys'),(ok2&&camD>420)?0.95:0);
+ for(const b of BODIES){
+  const b3=bodies3D[b.id];v.copy(b3.grp.position);
+  if(b.parent)v.y+=b.size+1.5;else v.y+=b.size+2;
+  let [x,y,ok3]=proj(v);if(!ok3){put(b.id,0,0,'',0);continue;}
+  let op=0;
+  if(far){op=(b.sun)?0.9:0;}
+  else if(b.parent){op=camD<90?0.9:0;}
+  else{op=camD<500?0.9:0;}
+  put(b.id,x,y,bn(b),op);}
+ galaxy.material.opacity=camD>500?0.95:Math.max(0,(camD-200)/300)*0.95;
+ $('zoomRead').textContent=Math.round(camD)+'u';}
+
+/* ---------- 資訊面板 ---------- */
+const STATL={dia:'k_dia',dis:'k_dis',year:'k_year',day:'k_day',moon:'k_moon',temp:'k_temp',extra:'k_extra'};
+function showInfo(id){
+ const b=BODIES.find(x=>x.id===id);if(!b)return;
+ $('infoName').textContent=bn(b);
+ $('infoBlurb').textContent=b.blurb[LANG]||b.blurb.en;
+ let h='';
+ for(const k of['dia','dis','year','day','moon','temp','extra']){
+  if(!b.stats[k])continue;
+  const v=typeof b.stats[k]==='object'?(b.stats[k][LANG]||b.stats[k].en):b.stats[k];
+  h+=`<tr><td class="k">${t(STATL[k])}</td><td>${v}</td></tr>`;}
+ $('infoStats').innerHTML=h;
+ $('info').classList.remove('hidden');}
+function hideInfo(){$('info').classList.add('hidden');}
+$('infoClose').onclick=hideInfo;
+
+/* ---------- 資料表 ---------- */
+function buildTable(){
+ let h=`<tr><th>${t('th_name')}</th><th>${t('th_dia')}</th><th>${t('th_dis')}</th><th>${t('th_year')}</th><th>${t('th_moon')}</th></tr>`;
+ for(const b of BODIES){if(b.parent||b.sun)continue;
+  h+=`<tr><td>${bn(b)}</td><td>${b.stats.dia}</td><td>${b.stats.dis||'—'}</td><td>${b.stats.year}</td><td>${b.stats.moon}</td></tr>`;}
+ $('dataTable').innerHTML=h;}
+
+/* ---------- i18n apply ---------- */
+function applyLang(){
+ document.documentElement.lang=LANG==='zh'?'zh-Hant':LANG;
+ document.querySelectorAll('[data-i18n]').forEach(el=>{el.innerHTML=t(el.dataset.i18n);});
+ buildPlanetBtns();buildTable();
+ if(!$('info').classList.contains('hidden')&&lastInfo)showInfo(lastInfo);
+ $('langSel').value=LANG;
+ drawNow=true;}
+let lastInfo=null;
+const _showInfo=showInfo;
+showInfo=function(id){lastInfo=id;_showInfo(id);};
+$('langSel').value=LANG;
+$('langSel').addEventListener('change',function(){LANG=this.value;localStorage.setItem('gv_lang',LANG);applyLang();});
+
+/* ---------- 主循環 ---------- */
+function size(){const r=canvas.parentElement.getBoundingClientRect();
+ const w=Math.max(200,r.width),h=Math.max(200,r.height);
+ renderer.setSize(w,h,false);
+ camera.aspect=w/h;camera.updateProjectionMatrix();}
+addEventListener('resize',size);size();
+const camTarget=new THREE.Vector3(),camPos=new THREE.Vector3();
+let last=performance.now(),drawNow=false;
+function frame(now){
+ requestAnimationFrame(frame);
+ let dt=(now-last)/1000;last=now;if(dt>0.05)dt=0.05;
+ if(tourOn&&!document.hidden){tourT+=dt;
+  if(tourT>9){tourT=0;tourIdx=(tourIdx+1)%TOUR.length;
+   const id=TOUR[tourIdx];focusId=id;tgtD=focusDist();
+   if(id!=='galaxy'&&id!=='system')showInfo(id);else hideInfo();}}
+ updateBodies(dt);
+ const k=1-Math.pow(0.002,dt);
+ camD+=(tgtD-camD)*k;
+ focusTarget(camTarget);
+ camPos.set(
+  camTarget.x+camD*Math.sin(camP)*Math.cos(camT),
+  camTarget.y+camD*Math.cos(camP),
+  camTarget.z+camD*Math.sin(camP)*Math.sin(camT));
+ camera.position.lerp(camPos,1-Math.pow(0.0001,dt));
+ camera.lookAt(camTarget);
+ if(autoRot&&tourOn)camT+=dt*0.02;
+ const glowI=1+0.06*Math.sin(now*0.004);
+ glow.scale.set(55*glowI,55*glowI,1);
+ renderer.render(scene,camera);
+ updateLabels();
+ if(Math.abs(tgtD-sliderToDist(+zoomSlider.value))>tgtD*0.05+1)zoomSlider.value=distToSlider(camD);
+}
+buildLabels();buildPlanetBtns();buildTable();applyLang();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
