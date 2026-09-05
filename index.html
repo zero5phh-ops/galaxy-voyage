@@ -208,11 +208,14 @@ const canvas=$('gl');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
 renderer.outputEncoding=THREE.sRGBEncoding;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
 const scene=new THREE.Scene();
 const camera=new THREE.PerspectiveCamera(55,1,0.1,80000);
-scene.add(new THREE.AmbientLight(0x8a93b8,0.55));
-const sunLight=new THREE.PointLight(0xfff2dd,1.7,0,0);
+scene.add(new THREE.AmbientLight(0x33405e,0.5));
+const sunLight=new THREE.PointLight(0xffe2b0,1.8,0,0);
 scene.add(sunLight);
+const rim=new THREE.DirectionalLight(0x4a6fc8,0.5);
+rim.position.set(-1,0.4,-0.6);scene.add(rim);
 
 /* ---------- 程序紋理 ---------- */
 function cnv(w,h){const c=document.createElement('canvas');c.width=w;c.height=h;return c;}
@@ -405,8 +408,16 @@ glow.scale.set(55,55,1);scene.add(glow);
  for(let i=0;i<n;i++){const th=rnd()*Math.PI*2,ph=Math.acos(2*rnd()-1),r=15000+rnd()*4000;
   pos[i*3]=r*Math.sin(ph)*Math.cos(th);pos[i*3+1]=r*Math.cos(ph);pos[i*3+2]=r*Math.sin(ph)*Math.sin(th);}
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));
- scene.add(new THREE.Points(g,new THREE.PointsMaterial({color:0xcfe0ff,size:2,sizeAttenuation:false,map:dotTex(),transparent:true,depthWrite:false,opacity:0.9})));
+ const col=new Float32Array(n*3),rnd2=R(778);
+ for(let i=0;i<n;i++){const r=rnd2();let c=r<0.6?[0.85,0.9,1]:r<0.85?[1,0.9,0.75]:[1,0.65,0.5];
+  const b2=0.5+rnd2()*0.5;col[i*3]=c[0]*b2;col[i*3+1]=c[1]*b2;col[i*3+2]=c[2]*b2;}
+ g.setAttribute('color',new THREE.BufferAttribute(col,3));
+ scene.add(new THREE.Points(g,new THREE.PointsMaterial({size:2.4,sizeAttenuation:false,map:dotTex(),vertexColors:true,transparent:true,depthWrite:false,opacity:0.95})));
 }
+// 遠景星雲(電影感底色)
+[[0x30408c,9000,-4000,-6000,0.14],[0x6e3a2a,-8000,2500,-7000,0.11],[0x2a5a6e,3000,-3000,8000,0.10]].forEach(nb=>{
+ const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:dotTex(),color:nb[0],transparent:true,opacity:nb[4],depthWrite:false}));
+ sp.position.set(nb[1],nb[2],nb[3]);sp.scale.set(9000,9000,1);scene.add(sp);});
 // 銀河系(遠景)
 const galaxy=new THREE.Sprite(new THREE.SpriteMaterial({map:galaxyTex(),transparent:true,depthWrite:false,opacity:0.95}));
 galaxy.position.set(0,400,-11500);galaxy.scale.set(9500,9500,1);scene.add(galaxy);
@@ -443,8 +454,8 @@ function focusTarget(out){
  out.copy(b3.grp.position);return out;}
 function focusDist(){
  if(focusId==='galaxy')return 2400;
- if(focusId==='system')return 260;
- const d=bodies3D[focusId].def;return Math.max(6,(d.size||2)*7);}
+ if(focusId==='system')return 200;
+ const d=bodies3D[focusId].def;return Math.max(5,(d.size||2)*5);}
 function goFocus(id){focusId=id;tgtD=focusDist();tourOn=false;renderTour();
  if(id!=='galaxy'&&id!=='system')showInfo(id);}
 function sliderToDist(v){return 6*Math.pow(2600/6,v/1000);}
