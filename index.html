@@ -82,7 +82,7 @@
   </div>
   <div id="panel">
     <div class="row" id="navRow">
-      <button class="pbtn" data-go="galaxy">🌌</button>
+      <button class="pbtn" id="bhBtn">🕳️</button>
       <button class="pbtn" data-go="mmap">🗺️</button>
       <button class="pbtn" data-go="system">☀️</button>
     </div>
@@ -709,6 +709,7 @@ $('distBtn').onclick=function(){scaleMixT=scaleMixT>0.5?0:1;this.classList.toggl
  if(scaleMixT>0.5){bd.innerHTML=t('scalemode');bd.style.display='block';if(focusId==='system')tgtD=1000;}
  else bd.style.display='none';};
 document.querySelectorAll('#navRow [data-go]').forEach(b=>b.onclick=()=>{audio();hideInfo();goFocus(b.dataset.go);});
+$('bhBtn').onclick=()=>window.open('https://zero5phh-ops.github.io/blackhole-voyage/','_blank');
 function buildPlanetBtns(){const row=$('planetRow');row.innerHTML='';
  for(const b of BODIES){if(b.sun||b.parent)continue;
   const btn=document.createElement('button');btn.className='pbtn';btn.textContent=bn(b);
