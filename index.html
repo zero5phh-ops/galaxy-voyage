@@ -164,6 +164,8 @@ I18N.zh.mapcenter='✨ 銀河中心';I18N.en.mapcenter='✨ Galactic Center';I18
 I18N.zh.mapsun='☀️ 你喺度！太陽系';I18N.en.mapsun='☀️ YOU ARE HERE: Solar System';I18N.ms.mapsun='☀️ ANDA DI SINI: Sistem Suria';I18N.ko.mapsun='☀️ 여기가 너희 집! 태양계';I18N.ja.mapsun='☀️ 君はここ！太陽系';
 I18N.zh.mapper='🌀 英仙座旋臂';I18N.en.mapper='🌀 Perseus Arm';I18N.ms.mapper='🌀 Lengan Perseus';I18N.ko.mapper='🌀 페르세우스자리 나선팔';I18N.ja.mapper='🌀 ペルセウス腕';
 I18N.zh.mapsag='🌀 人馬座旋臂';I18N.en.mapsag='🌀 Sagittarius Arm';I18N.ms.mapsag='🌀 Lengan Sagittarius';I18N.ko.mapsag='🌀 궁수자리 나선팔';I18N.ja.mapsag='🌀 いて座腕';
+I18N.zh.sgra='⚫ 人馬座A* · 430萬太陽質量黑洞（撳入去睇）';I18N.en.sgra='⚫ Sagittarius A* · 4.3M-solar-mass black hole (tap to visit)';I18N.ms.sgra='⚫ Sagittarius A* · lubang hitam 4.3J jisim suria (sentuh untuk lawat)';I18N.ko.sgra='⚫ 궁수자리A* · 태양 430만 배 블랙홀(눌러서 가기)';I18N.ja.sgra='⚫ いて座A* · 太陽430万個分ブラックホール（タップで見学）';
+I18N.zh.scale10k='📏 10,000光年';I18N.en.scale10k='📏 10,000 light-years';I18N.ms.scale10k='📏 10,000 tahun cahaya';I18N.ko.scale10k='📏 1만 광년';I18N.ja.scale10k='📏 1万光年';
 let LANG=localStorage.getItem('gv_lang')||'en';
 if(!I18N[LANG])LANG='en';
 function t(k){return (I18N[LANG]&&I18N[LANG][k]!==undefined)?I18N[LANG][k]:(I18N.en[k]!==undefined?I18N.en[k]:k);}
@@ -472,7 +474,7 @@ const ORBITS={};
  sp.position.set(nb[1],nb[2],nb[3]);sp.scale.set(9000,9000,1);scene.add(sp);});
 /* ---------- 銀河系俯視結構圖(按真實結構繪製：棒+旋臂+太陽喺獵戶支臂) ---------- */
 const GALC={x:0,y:-8000,z:-1490};
-const GALR=1500,SUN_R=630,SUN_A=-0.85;
+const GALR=1500,SUN_R=780,SUN_A=-0.85;
 const ARM_P1=0.6,ARM_P2=0.6+Math.PI;
 function galArmR(t){return 150*Math.exp(0.5*t);}
 function galArmPt(ph,t){const r=galArmR(t),a=ph+t;return [GALC.x+r*Math.cos(a),GALC.y,GALC.z+r*Math.sin(a)];}
@@ -579,6 +581,45 @@ const galAnim={spin:[],rings:[],mark:null};
    new THREE.MeshBasicMaterial({color:0xffb340,transparent:true,opacity:0.7,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
   rg.rotation.x=-Math.PI/2;rg.position.set(sp[0],sp[1],sp[2]);
   rg.userData.ph=i*0.5;scene.add(rg);galAnim.rings.push(rg);}
+ galAnim.tw=[];
+ {
+  const R2=R(777);
+  for(let i=0;i<36;i++){
+   const arm=i%2?ARM_P1:ARM_P2,t=1+R2()*3.2;
+   const p=galArmPt(arm,t);
+   const col=R2()<0.6?0xff7ab0:0x7ae8ff;
+   const s=new THREE.Sprite(new THREE.SpriteMaterial({map:dotTex(),color:col,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0.5}));
+   s.position.set(p[0]+(R2()-0.5)*120,p[1]+(R2()-0.5)*60,p[2]+(R2()-0.5)*120);
+   const sc=40+R2()*90;s.scale.set(sc,sc,1);scene.add(s);
+   if(i<8){s.userData.tw=R2()*6.28;galAnim.tw.push(s);}
+  }
+ }
+ {
+  const R3=R(999);
+  for(let i=0;i<36;i++){
+   const th=R3()*Math.PI*2,ph=Math.acos(2*R3()-1),r=1100+R3()*1300;
+   const s=new THREE.Sprite(new THREE.SpriteMaterial({map:dotTex(),color:0xcdd8ff,transparent:true,depthWrite:false,opacity:0.4}));
+   s.position.set(GALC.x+r*Math.sin(ph)*Math.cos(th),GALC.y+r*Math.cos(ph)*0.9,GALC.z+r*Math.sin(ph)*Math.sin(th));
+   const sc=50+R3()*70;s.scale.set(sc,sc,1);scene.add(s);
+  }
+ }
+ {
+  const mk=(dx,dy,dz,sc,op)=>{const s=new THREE.Sprite(new THREE.SpriteMaterial({map:dotTex(),color:0xaac4ff,transparent:true,depthWrite:false,opacity:op}));
+   s.position.set(GALC.x+dx,GALC.y+dy,GALC.z+dz);s.scale.set(sc,sc*0.7,1);scene.add(s);};
+  mk(2600,500,-1800,700,0.5);mk(3100,-300,-1200,420,0.45);
+ }
+ {
+  const g=new THREE.BufferGeometry().setFromPoints(
+   [new THREE.Vector3(GALC.x-1500,GALC.y-60,GALC.z+1100),new THREE.Vector3(GALC.x-1500+300,GALC.y-60,GALC.z+1100)]);
+  scene.add(new THREE.Line(g,new THREE.LineBasicMaterial({color:0xffd166,transparent:true,opacity:0.8})));
+ }
+ const sgra=new THREE.Sprite(new THREE.SpriteMaterial({map:dotTex(),color:0xffffff,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
+ sgra.position.set(GALC.x,GALC.y,GALC.z);sgra.scale.set(60,60,1);scene.add(sgra);galAnim.sgra=sgra;
+ {
+  const pts=[];for(let i=0;i<=128;i++){const a=i/128*Math.PI*2;pts.push(new THREE.Vector3(GALC.x+Math.cos(a)*SUN_R,GALC.y,GALC.z+Math.sin(a)*SUN_R));}
+  scene.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts),
+   new THREE.LineBasicMaterial({color:0xffb340,transparent:true,opacity:0.35})));
+ }
 }
 // 銀河系：太陽系喺佢入面，所以唔再放獨立旋渦模型 —— 全景銀河背景(milkyway)就係由入面望出去嘅盤面
 
@@ -680,9 +721,10 @@ function buildLabels(){
  const ids=['galaxy','system'].concat(BODIES.map(b=>b.id));
  for(const id of ids){const d=document.createElement('div');d.className='lbl';d.style.display='none';
   d.onclick=()=>goFocus(id);labelLayer.appendChild(d);labelDivs[id]=d;}
- const maps=[['map_cap',null],['map_center',null],['map_sun','system'],['map_per',null],['map_sag',null]];
+ const maps=[['map_cap',null],['map_center',null],['map_sun','system'],['map_per',null],['map_sag',null],['map_sgra',null],['map_scale',null]];
  for(const [id,go] of maps){const d=document.createElement('div');d.className='lbl';d.style.display='none';
-  d.onclick=()=>{if(go)goFocus(go);else showMilky();};labelLayer.appendChild(d);labelDivs[id]=d;}}
+  d.onclick=()=>{if(go)goFocus(go);else showMilky();};labelLayer.appendChild(d);labelDivs[id]=d;}
+ labelDivs.map_sgra.onclick=()=>window.open('https://zero5phh-ops.github.io/blackhole-voyage/','_blank');}
 function updateLabels(){
  const W=canvas.clientWidth,H=canvas.clientHeight;
  const put=(id,x,y,txt,op)=>{const d=labelDivs[id];if(!d)return;
@@ -703,7 +745,9 @@ function updateLabels(){
   const ssp=galSun();wput('map_sun',ssp[0],ssp[1]+95,ssp[2],t('mapsun'));
   const pp=galArmPt(ARM_P1,4.15);wput('map_per',pp[0],pp[1]+70,pp[2],t('mapper'));
   const sp2=galArmPt(ARM_P2,3.3);wput('map_sag',sp2[0],sp2[1]+70,sp2[2],t('mapsag'));
- }else{['map_cap','map_center','map_sun','map_per','map_sag'].forEach(id=>put(id,0,0,'',0));}
+  wput('map_sgra',GALC.x,GALC.y+45,GALC.z,t('sgra'));
+  wput('map_scale',GALC.x-1350,GALC.y-10,GALC.z+1100,t('scale10k'));
+ }else{['map_cap','map_center','map_sun','map_per','map_sag','map_sgra','map_scale'].forEach(id=>put(id,0,0,'',0));}
  for(const b of BODIES){
   if(focusId==='mmap'){put(b.id,0,0,'',0);continue;}
   const b3=bodies3D[b.id];v.copy(b3.grp.position);
@@ -814,6 +858,8 @@ function frame(now){
  const glowI=1+0.06*Math.sin(now*0.004);
  glow.scale.set(55*glowI,55*glowI,1);
  for(const s of galAnim.spin)s.o.rotation.y+=dt*s.s;
+ if(galAnim.sgra){const sp3=1+0.3*Math.sin(now*0.006);galAnim.sgra.scale.set(60*sp3,60*sp3,1);}
+ for(const tw of galAnim.tw||[])tw.material.opacity=0.3+0.35*Math.abs(Math.sin(now*0.001+tw.userData.tw));
  if(galAnim.mark){const mp=1+0.22*Math.sin(now*0.005);galAnim.mark.scale.set(90*mp,90*mp,1);}
  for(const r of galAnim.rings){const ph=((now*0.00035)+r.userData.ph)%1;const sc=1+ph*2.6;r.scale.set(sc,sc,sc);r.material.opacity=0.75*(1-ph);}
  renderer.render(scene,camera);
