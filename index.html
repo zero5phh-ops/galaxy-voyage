@@ -4,18 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Galaxy Voyage · 銀河系漫遊</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%F0%9F%8C%8C%3C/text%3E%3C/svg%3E">
 <style>
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html{scroll-behavior:smooth}
   body{background:#020208;color:#e8f4ff;font-family:-apple-system,"PingFang HK","Microsoft JhengHei","Noto Sans TC",sans-serif;overflow-x:hidden}
   #hero{position:relative;height:100vh;min-height:640px;overflow:hidden}
   #gl{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
-  #bhdim{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;z-index:2}
-  #bhtint{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 42%,rgba(140,12,0,.6) 100%);opacity:0;pointer-events:none;z-index:2}
   #gl:active{cursor:grabbing}
+  #fade{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;z-index:8;transition:opacity .45s ease}
+  #vig{position:absolute;inset:0;pointer-events:none;z-index:3;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.55) 100%)}
   #labels{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:4}
   .lbl{position:absolute;transform:translate(-50%,-130%);font-size:12px;font-weight:800;color:#fff;white-space:nowrap;
-    text-shadow:0 1px 6px #000,0 0 10px rgba(0,229,255,.7);pointer-events:auto;cursor:pointer;padding:2px 6px}
+    text-shadow:0 1px 6px #000,0 0 10px rgba(0,229,255,.7);pointer-events:auto;cursor:pointer;padding:2px 6px;transition:opacity .3s}
+  .lbl.big{font-size:13.5px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:4px 10px;backdrop-filter:blur(4px)}
+  .lbl.big:hover{background:rgba(0,229,255,.25)}
   #loading{position:absolute;inset:0;z-index:30;display:flex;flex-direction:column;gap:14px;align-items:center;justify-content:center;background:#020208;transition:opacity .6s}
   #loading .spin{width:54px;height:54px;border-radius:50%;border:4px solid rgba(0,229,255,.2);border-top-color:#00e5ff;animation:sp 1s linear infinite}
   @keyframes sp{to{transform:rotate(360deg)}}
@@ -23,18 +26,24 @@
   #title{position:absolute;z-index:5;top:calc(14px + env(safe-area-inset-top));left:16px;right:16px;text-align:center;pointer-events:none}
   #title h1{font-size:clamp(24px,5.5vw,40px);font-weight:900;letter-spacing:2px;text-shadow:0 0 24px #00e5ff,0 2px 8px #000}
   #title p{font-size:clamp(12px,3vw,14px);color:#a5f3fc;margin-top:4px;text-shadow:0 1px 6px #000}
+  /* ---- 資訊彈窗 ---- */
   #info{position:absolute;z-index:7;left:10px;right:10px;bottom:calc(196px + env(safe-area-inset-bottom));max-width:560px;margin:0 auto;
-    background:rgba(5,10,25,.85);border:1px solid rgba(0,229,255,.4);border-radius:16px;padding:12px 14px;backdrop-filter:blur(8px);
-    max-height:34vh;overflow-y:auto}
+    background:rgba(5,10,25,.86);border:1px solid rgba(0,229,255,.4);border-radius:16px;padding:12px 14px;backdrop-filter:blur(10px);
+    max-height:26vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,.6),0 0 30px rgba(0,229,255,.12);
+    animation:pop .35s cubic-bezier(.2,.8,.2,1)}
+  @keyframes pop{from{opacity:0;transform:translateY(14px) scale(.96)}to{opacity:1;transform:none}}
   #info.hidden{display:none}
-  #info h3{font-size:19px;margin-bottom:4px}
+  #info h3{font-size:19px;margin-bottom:4px;padding-right:26px}
   #info .blurb{font-size:13.5px;line-height:1.8;color:#cfe8ff;margin-bottom:8px}
   #info table{width:100%;border-collapse:collapse;font-size:13px}
-  #info td{padding:3px 6px;border-bottom:1px solid rgba(255,255,255,.1)}
+  #info td{padding:3px 6px;border-bottom:1px solid rgba(255,255,255,.1);vertical-align:top}
   #info td.k{color:#8be9fd;width:38%}
-  #infoClose{float:right;background:none;border:none;color:#8be9fd;font-size:18px}
-  #infoImg{width:100%;border-radius:12px;margin:6px 0 2px;border:1px solid rgba(0,229,255,.3)}
-  #infoCap{font-size:11px;color:#7d93ad;margin-bottom:6px}
+  #infoClose{position:absolute;top:8px;right:10px;background:none;border:none;color:#8be9fd;font-size:18px;cursor:pointer}
+  #infoTag{display:inline-block;font-size:11px;color:#ffd166;border:1px solid rgba(255,209,102,.5);border-radius:999px;padding:1px 8px;margin-bottom:6px}
+  #infoTag:empty{display:none}
+  @media (min-width:900px){
+    #info{left:auto;right:14px;bottom:auto;top:calc(96px + env(safe-area-inset-top));width:350px;max-width:350px;max-height:calc(100vh - 330px);margin:0}
+  }
   #scaleBadge{position:absolute;z-index:6;top:calc(64px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);border:1px solid rgba(255,209,102,.6);color:#ffd166;border-radius:12px;padding:6px 14px;font-size:12.5px;font-weight:800;white-space:nowrap;max-width:94vw;overflow:hidden;text-overflow:ellipsis}
   .lbl small{font-size:10px;color:#ffd166;font-weight:800}
   #panel{position:absolute;z-index:6;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));
@@ -42,15 +51,17 @@
     border-radius:16px;padding:10px 12px;backdrop-filter:blur(8px)}
   #panel .row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;justify-content:center}
   .pbtn{background:rgba(0,229,255,.12);border:1px solid rgba(0,229,255,.5);color:#dffaff;border-radius:10px;
-    padding:7px 10px;font-size:12.5px;font-weight:800}
+    padding:7px 10px;font-size:12.5px;font-weight:800;cursor:pointer}
   .pbtn:active{transform:scale(.94);background:rgba(0,229,255,.3)}
   .pbtn.on{background:rgba(0,229,255,.32);border-color:#00e5ff}
+  #navRow .pbtn{font-size:13px;padding:8px 14px}
   select.pbtn{appearance:none;-webkit-appearance:none}
   select.pbtn option{color:#000}
   #panel label{font-size:12px;color:#8be9fd;display:flex;align-items:center;gap:6px;margin-top:8px}
   #panel input[type=range]{flex:1;accent-color:#00e5ff}
   #panel .val{font-size:12px;color:#ffd166;min-width:52px;text-align:right}
   #hint{margin-top:6px;font-size:11px;color:#7d93ad;text-align:center}
+  #planetRow:empty{display:none}
   section{max-width:720px;margin:0 auto;padding:44px 18px 10px}
   section h2{font-size:24px;margin-bottom:4px;text-shadow:0 0 14px rgba(0,229,255,.6)}
   section .sub{color:#8be9fd;font-size:14px;margin-bottom:14px}
@@ -67,9 +78,9 @@
 
 <div id="hero">
   <canvas id="gl"></canvas>
-  <div id="bhdim"></div>
-  <div id="bhtint"></div>
+  <div id="vig"></div>
   <div id="labels"></div>
+  <div id="fade"></div>
   <div id="loading"><div class="spin"></div><div id="loadTxt">Loading textures…</div></div>
   <div id="title">
     <h1 data-i18n="title_h1">🌌 Galaxy Voyage</h1>
@@ -79,20 +90,19 @@
   <div id="info" class="hidden">
     <button id="infoClose">✕</button>
     <h3 id="infoName"></h3>
-    <img id="infoImg" style="display:none" alt="map">
-    <div id="infoCap" style="display:none"></div>
+    <span id="infoTag"></span>
     <div class="blurb" id="infoBlurb"></div>
     <table id="infoStats"></table>
   </div>
   <div id="panel">
     <div class="row" id="navRow">
-      <button class="pbtn" id="bhBtn">🕳️</button>
-      <button class="pbtn" data-go="mmap">🗺️</button>
-      <button class="pbtn" data-go="system">☀️</button>
+      <button class="pbtn" data-go="galaxy" data-i18n="gal">🌌</button>
+      <button class="pbtn" data-go="sgra" data-i18n="bh">⚫</button>
+      <button class="pbtn" data-go="system" data-i18n="sys">☀️</button>
     </div>
     <div class="row" id="planetRow" style="margin-top:6px"></div>
     <label><span data-i18n="zoom_l">Zoom</span><input type="range" id="zoom" min="0" max="1000" value="1000"><span class="val" id="zoomRead"></span></label>
-    <label><span data-i18n="time_l">Time</span><input type="range" id="time" min="0" max="100" value="35"><span class="val" id="timeRead">1.0×</span></label>
+    <label id="timeRow"><span data-i18n="time_l">Time</span><input type="range" id="time" min="0" max="100" value="35"><span class="val" id="timeRead">1.0×</span></label>
     <div class="row" style="margin-top:8px">
       <select id="langSel" class="pbtn">
         <option value="zh">中文</option>
@@ -103,7 +113,7 @@
       </select>
       <button class="pbtn on" id="orbitBtn">🛰️</button>
       <button class="pbtn on" id="labelBtn">🏷️</button>
-      <button class="pbtn on" id="tourBtn">🧭</button>
+      <button class="pbtn" id="tourBtn">🧭</button>
       <button class="pbtn" id="distBtn" data-i18n="tb_dist">📏</button>
     </div>
     <div id="hint" data-i18n="hint">👆 Drag to orbit · scroll / pinch to zoom · tap a planet for details</div>
@@ -244,20 +254,52 @@ const BODIES=[
  blurb:{zh:'逆行衛星，可能係捉返嚟嘅古柏帶天體。有氮氣間歇泉噴8km高，表面-235°C。',en:'A backwards-orbiting moon, probably a captured Kuiper object. Nitrogen geysers erupt 8 km high; -235°C surface.',ms:'Bulan berorbit songsang, mungkin objek Kuiper yang ditangkap. Geiser nitrogen memancut 8 km tinggi; permukaan -235°C.',ko:'역행 위성으로 카이퍼벨트 출신일 거예요. 질소 간헐천이 8km 높이로 솟고 표면은 -235°C예요.',ja:'逆行衛星でカイパーベルト出身の可能性。窒素間欠泉が8km噴き上がり、表面-235°Cです。'}}];
 function bn(b){return b.name[LANG]||b.name.en;}
 
-/* ================= 三 принципиальная сцена ================= */
+
+/* ================= 額外 i18n ================= */
+I18N.zh.bh='⚫ 黑洞';I18N.en.bh='⚫ Black hole';I18N.ms.bh='⚫ Lubang hitam';I18N.ko.bh='⚫ 블랙홀';I18N.ja.bh='⚫ ブラックホール';
+I18N.zh.hint_gal='👆 拖拽環繞銀河 · 撳中心黑洞或「你喺度」飛入去';I18N.en.hint_gal='👆 Drag to orbit the Galaxy · tap the central black hole or "You are here" to fly in';
+I18N.ms.hint_gal='👆 Seret untuk mengorbit galaksi · sentuh lubang hitam tengah atau "Anda di sini"';I18N.ko.hint_gal='👆 드래그로 은하 회전 · 중심 블랙홀이나 "여기가 너희 집"을 눌러 진입';I18N.ja.hint_gal='👆 ドラッグで銀河を周回 · 中心のブラックホールか「君はここ」をタップ';
+I18N.zh.hint_bh='👆 拖拽環繞黑洞 · 滾輪/雙指 靚近事件視界 · 撳 🌌 返銀河';I18N.en.hint_bh='👆 Drag to orbit the black hole · scroll / pinch toward the horizon · 🌌 to go back';
+I18N.ms.hint_bh='👆 Seret mengorbit lubang hitam · skrol/cubit ke ufuk · 🌌 untuk kembali';I18N.ko.hint_bh='👆 드래그로 블랙홀 회전 · 스크롤/핀치로 지평선 접근 · 🌌 로 돌아가기';I18N.ja.hint_bh='👆 ドラッグでブラックホールを周回 · スクロール/ピンチで地平面へ · 🌌 で戻る';
+I18N.zh.tag_gal='你而家喺銀河系外面望入去';I18N.en.tag_gal='Viewing the Milky Way from outside';I18N.ms.tag_gal='Melihat Bima Sakti dari luar';I18N.ko.tag_gal='은하수를 바깥에서 보고 있어요';I18N.ja.tag_gal='天の川を外側から見ています';
+I18N.zh.tag_bh='銀河中心 · 放大了無數倍';I18N.en.tag_bh='Galactic center · magnified beyond count';I18N.ms.tag_bh='Pusat galaksi · dibesarkan tidak terkira';I18N.ko.tag_bh='은하 중심 · 엄청나게 확대됨';I18N.ja.tag_bh='銀河中心 · 大幅に拡大表示';
+I18N.zh.tag_sys='離銀心26,000光年 · 獵戶支臂';I18N.en.tag_sys='26,000 ly from the center · Orion Spur';I18N.ms.tag_sys='26,000 tc dari pusat · Taji Orion';I18N.ko.tag_sys='은하 중심에서 26,000광년 · 오리온 지류';I18N.ja.tag_sys='銀河中心から26,000光年 · オリオン腕';
+I18N.zh.mapnor='🌀 矩尺座旋臂';I18N.en.mapnor='🌀 Norma Arm';I18N.ms.mapnor='🌀 Lengan Norma';I18N.ko.mapnor='🌀 직각자자리 나선팔';I18N.ja.mapnor='🌀 じょうぎ座腕';
+I18N.zh.mapsct='🌀 盾牌-半人馬旋臂';I18N.en.mapsct='🌀 Scutum–Centaurus Arm';I18N.ms.mapsct='🌀 Lengan Scutum–Centaurus';I18N.ko.mapsct='🌀 방패-센타우루스 나선팔';I18N.ja.mapsct='🌀 たて-ケンタウルス腕';
+I18N.zh.sgra_s='⚫ 人馬座A* 黑洞 · 撳入去';I18N.en.sgra_s='⚫ Sagittarius A* black hole · tap';I18N.ms.sgra_s='⚫ Lubang hitam Sagittarius A* · sentuh';I18N.ko.sgra_s='⚫ 궁수자리A* 블랙홀 · 탭';I18N.ja.sgra_s='⚫ いて座A* ブラックホール · タップ';
+I18N.zh.maplmc='☁️ 大麥哲倫雲';I18N.en.maplmc='☁️ Large Magellanic Cloud';I18N.ms.maplmc='☁️ Awan Magellan Besar';I18N.ko.maplmc='☁️ 대마젤란은하';I18N.ja.maplmc='☁️ 大マゼラン雲';
+
+/* ---------- 太陽系資訊卡 ---------- */
+const SYS={
+ name:{zh:'☀️ 太陽系',en:'☀️ Solar System',ms:'☀️ Sistem Suria',ko:'☀️ 태양계',ja:'☀️ 太陽系'},
+ stats:{
+  zh:[['年齡','46億年'],['行星','8粒：4粒岩石 + 4粒巨行星'],['已知衛星','290+'],['範圍','奧爾特雲直徑約2光年'],['繞銀心','230 km/s · 一圈2.3億年'],['最近恆星','比鄰星 · 4.2光年']],
+  en:[['Age','4.6 billion years'],['Planets','8: four rocky + four giants'],['Known moons','290+'],['Extent','Oort Cloud ~2 light-years across'],['Around the Galaxy','230 km/s · one lap every 230M years'],['Nearest star','Proxima Centauri · 4.2 ly']],
+  ms:[['Umur','4.6 bilion tahun'],['Planet','8: empat berbatu + empat gergasi'],['Bulan diketahui','290+'],['Saiz','Awan Oort ~2 tahun cahaya'],['Mengelilingi galaksi','230 km/s · sekali setiap 230J tahun'],['Bintang terdekat','Proxima Centauri · 4.2 tc']],
+  ko:[['나이','46억 년'],['행성','8개: 암석형 4 + 거대행성 4'],['알려진 위성','290+'],['크기','오르트 구름 지름 약 2광년'],['은하 공전','230 km/s · 한 바퀴 2.3억 년'],['가장 가까운 별','프록시마 센타우리 · 4.2광년']],
+  ja:[['年齢','46億年'],['惑星','8個：岩石4+巨大4'],['既知の衛星','290+'],['広がり','オールトの雲 直径約2光年'],['銀河周回','230 km/s · 1周2.3億年'],['最近の恒星','プロキシマ・ケンタウリ · 4.2光年']]},
+ blurb:{
+  zh:'我哋屋企。太陽帶住8粒行星、幾百粒衛星、小行星帶、柯伊伯帶同奧爾特雲，喺獵戶支臂以每秒230km繞銀心轉。3D入面嘅大細同距離經過壓縮 —— 撳任何一粒星球睇詳解。',
+  en:'Home. The Sun carries 8 planets, hundreds of moons, the asteroid belt, the Kuiper Belt and the Oort Cloud around the Galaxy at 230 km/s along the Orion Spur. Sizes and distances here are compressed — tap any body for details.',
+  ms:'Rumah kita. Matahari membawa 8 planet, ratusan bulan, jalur asteroid, Jalur Kuiper dan Awan Oort mengelilingi galaksi pada 230 km/s di Taji Orion. Saiz dan jarak dimampatkan — sentuh mana-mana jasad.',
+  ko:'우리 집. 태양은 8개 행성과 수백 개 위성, 소행성대, 카이퍼벨트, 오르트 구름을 이끌고 오리온 지류를 따라 초속 230km로 은하를 돌아요. 크기와 거리는 압축됨 — 천체를 눌러 보세요.',
+  ja:'私たちの家。太陽は8つの惑星、数百の衛星、小惑星帯、カイパーベルト、オールトの雲を連れてオリオン腕を秒速230kmで周回。サイズと距離は圧縮表示 —— 天体をタップで解説。'}};
+
+/* ================= 3D 場景 ================= */
 const canvas=$('gl');
-const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
 renderer.outputEncoding=THREE.sRGBEncoding;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
+renderer.autoClear=false;
 const scene=new THREE.Scene();
 const camera=new THREE.PerspectiveCamera(55,1,0.1,80000);
-const ambL=new THREE.AmbientLight(0x33405e,0.5);
-scene.add(ambL);
-const sunLight=new THREE.PointLight(0xffe2b0,1.8,0,0);
-scene.add(sunLight);
-const rim=new THREE.DirectionalLight(0x4a6fc8,0.5);
-rim.position.set(-1,0.4,-0.6);scene.add(rim);
+const ambL=new THREE.AmbientLight(0x33405e,0.5);scene.add(ambL);
+const sunLight=new THREE.PointLight(0xffe2b0,1.8,0,0);scene.add(sunLight);
+const rim=new THREE.DirectionalLight(0x4a6fc8,0.5);rim.position.set(-1,0.4,-0.6);scene.add(rim);
+/* 兩個獨立世界：太陽系 / 銀河系 —— 永遠只顯示一個，唔會再互相穿越 */
+const sysGrp=new THREE.Group(),galaxyGrp=new THREE.Group();
+scene.add(sysGrp);scene.add(galaxyGrp);
 
 /* ---------- 程序紋理 ---------- */
 function cnv(w,h){const c=document.createElement('canvas');c.width=w;c.height=h;return c;}
@@ -285,15 +327,10 @@ function rockTex(base,dark,nC,seed){
 function earthTex(){
  const w=1024,h=512,c=cnv(w,h),g=c.getContext('2d'),rnd=R(42);
  g.fillStyle='#0b3d91';g.fillRect(0,0,w,h);
- const blobs=28;
- for(let i=0;i<blobs;i++){const x=rnd()*w,y=h*0.15+rnd()*h*0.7,r=30+rnd()*110;
-  const gr=g.createRadialGradient(x,y,5,x,y,r);
-  const land=rnd()<0.6;
+ for(let i=0;i<28;i++){const x=rnd()*w,y=h*0.15+rnd()*h*0.7,r=30+rnd()*110;
+  const gr=g.createRadialGradient(x,y,5,x,y,r);const land=rnd()<0.6;
   gr.addColorStop(0,land?'#3d7a2d':'#8a6f3c');gr.addColorStop(1,'rgba(11,61,145,0)');
   g.fillStyle=gr;g.beginPath();g.arc(x,y,r,0,7);g.fill();}
- g.fillStyle='#7a5c30';
- for(let i=0;i<12;i++){const x=rnd()*w,y=h*0.35+rnd()*h*0.3;
-  g.globalAlpha=0.5;g.beginPath();g.ellipse(x,y,20+rnd()*60,12+rnd()*25,0,0,7);g.fill();g.globalAlpha=1;}
  const ice=g.createLinearGradient(0,0,0,h);
  ice.addColorStop(0,'rgba(255,255,255,.95)');ice.addColorStop(0.12,'rgba(255,255,255,0)');
  ice.addColorStop(0.88,'rgba(255,255,255,0)');ice.addColorStop(1,'rgba(255,255,255,.95)');
@@ -301,7 +338,6 @@ function earthTex(){
  return tex(c);}
 function cloudTex(){
  const w=512,h=256,c=cnv(w,h),g=c.getContext('2d'),rnd=R(7);
- g.clearRect(0,0,w,h);
  for(let i=0;i<130;i++){const x=rnd()*w,y=rnd()*h,r=8+rnd()*30;
   const gr=g.createRadialGradient(x,y,1,x,y,r);
   gr.addColorStop(0,'rgba(255,255,255,.75)');gr.addColorStop(1,'rgba(255,255,255,0)');
@@ -328,33 +364,31 @@ function dotTex(){
  gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(1,'rgba(255,255,255,0)');
  g.fillStyle=gr;g.fillRect(0,0,32,32);
  return tex(c);}
+function softTex(){ // 高斯軟光斑（星雲/星團用）
+ const c=cnv(64,64),g=c.getContext('2d');
+ const gr=g.createRadialGradient(32,32,0,32,32,32);
+ gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(0.2,'rgba(255,255,255,.6)');gr.addColorStop(0.5,'rgba(255,255,255,.18)');gr.addColorStop(1,'rgba(255,255,255,0)');
+ g.fillStyle=gr;g.fillRect(0,0,64,64);
+ return tex(c);}
+function dustTex(){ // 乘法混合用：中心暗、邊緣白 → 遮暗背後嘅光
+ const c=cnv(64,64),g=c.getContext('2d');
+ const gr=g.createRadialGradient(32,32,0,32,32,32);
+ gr.addColorStop(0,'rgb(105,80,70)');gr.addColorStop(0.4,'rgb(185,165,155)');gr.addColorStop(1,'rgb(255,255,255)');
+ g.fillStyle=gr;g.fillRect(0,0,64,64);
+ const t=new THREE.CanvasTexture(c);return t;}
 function ringTex(){
  const c=cnv(256,8),g=c.getContext('2d'),rnd=R(5);
  for(let x=0;x<256;x++){
   const u=x/256;
-  let a=0.25+0.6*Math.abs(Math.sin(u*40+rnd()*0))* (0.5+0.5*Math.sin(u*13));
-  if(u>0.62&&u<0.70)a=0.03; // 卡西尼環縫
+  let a=0.25+0.6*Math.abs(Math.sin(u*40+rnd()*0))*(0.5+0.5*Math.sin(u*13));
+  if(u>0.62&&u<0.70)a=0.03;
   if(u<0.06)a*=u/0.06;
   const shade=180+Math.floor(60*Math.sin(u*90));
   g.fillStyle=`rgba(${shade},${shade-20},${shade-60},${Math.max(0,Math.min(1,a))})`;
   g.fillRect(x,0,1,8);}
  return tex(c);}
-function galaxyTex(){
- const c=cnv(512,512),g=c.getContext('2d'),rnd=R(2024);
- g.clearRect(0,0,512,512);
- const gr=g.createRadialGradient(256,256,4,256,256,60);
- gr.addColorStop(0,'rgba(255,250,230,.95)');gr.addColorStop(1,'rgba(255,250,230,0)');
- g.fillStyle=gr;g.beginPath();g.arc(256,256,60,0,7);g.fill();
- for(let a=0;a<2;a++)for(let i=0;i<900;i++){
-  const th=rnd()*Math.PI*4+a*Math.PI,r=40+rnd()*200;
-  const rr=40+Math.pow(rnd(),0.6)*200;
-  const x=256+Math.cos(th+rr*0.012)*rr,y=256+Math.sin(th+rr*0.012)*rr*0.62;
-  const s=rnd();
-  g.fillStyle=s<0.75?`rgba(160,190,255,${0.25+rnd()*0.5})`:(s<0.9?`rgba(255,220,180,${0.3+rnd()*0.5})`:`rgba(255,150,200,${0.3+rnd()*0.4})`);
-  const sz=rnd()<0.92?1:2;g.fillRect(x,y,sz,sz);}
- return tex(c);}
 
-/* ---------- 場景搭建 ---------- */
+/* ================= 太陽系 ================= */
 const TEXMAP={
  sun:()=>sunTex(),
  mercury:()=>rockTex('#8a8078','#4a4440',90,11),
@@ -379,7 +413,6 @@ const TEXMAP={
  rhea:()=>rockTex('#96908a','#4e4a46',70,161),
  iapetus:()=>rockTex('#7a6a58','#3a322a',60,171)};
 const bodies3D={};
-/* ---------- 真實NASA紋理(同源tex/,失敗自動保留程序紋理) ---------- */
 const loadMan=new THREE.LoadingManager();
 const texLoader=new THREE.TextureLoader(loadMan);
 loadMan.onProgress=(u,l,tt)=>{const el=$('loadTxt');if(el)el.textContent='Loading textures '+l+'/'+tt;};
@@ -387,11 +420,11 @@ loadMan.onLoad=()=>{const el=$('loading');if(el){el.style.opacity=0;setTimeout((
 loadMan.onError=()=>{};
 function srgbTx(x){x.encoding=THREE.sRGBEncoding;x.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());return x;}
 function realTex(f,ok){texLoader.load('tex/'+f,tx=>{ok(srgbTx(tx));},undefined,()=>{});}
-const REALTEX={sun:'sun.jpg',mercury:'mercury.jpg',venus:'venus.jpg',earth:'earth_day.jpg',moon:'moon.jpg',mars:'mars.jpg',jupiter:'jupiter.jpg',saturn:'saturn.jpg',uranus:'uranus.jpg',neptune:'neptune.jpg',io:'io.jpg',europa:'europa.jpg',ganymede:'ganymede.jpg',callisto:'callisto.jpg'};
+const REALTEX={sun:'sun.jpg',mercury:'mercury.jpg',venus:'venus.jpg',earth:'earth_day.jpg',moon:'moon.jpg',mars:'mars.jpg',jupiter:'jupiter.jpg',saturn:'saturn.jpg',uranus:'uranus.jpg',neptune:'neptune.jpg'};
 function loadReal(b,mat){
  const f=REALTEX[b.id];if(!f)return;
  realTex(f,tx=>{mat.map=tx;mat.needsUpdate=true;
-  if(b.id==='moon'||b.id==='mars'||b.id==='mercury'||b.id==='callisto'){mat.bumpMap=tx;mat.bumpScale=0.5;mat.needsUpdate=true;}
+  if(b.id==='moon'||b.id==='mars'||b.id==='mercury'){mat.bumpMap=tx;mat.bumpScale=0.5;mat.needsUpdate=true;}
   if(b.id==='earth'){
    realTex('earth_night.jpg',nt=>{const b3=bodies3D.earth;if(!b3)return;
     const tg=b3.grp.children.find(o=>o.type==='Group')||b3.grp;
@@ -404,10 +437,59 @@ function loadReal(b,mat){
   }
  });
 }
-realTex('milkyway.jpg',bg=>{
- const sky=new THREE.Mesh(new THREE.SphereGeometry(30000,32,24),
-  new THREE.MeshBasicMaterial({map:bg,side:THREE.BackSide,depthWrite:false}));
- sky.renderOrder=-10;scene.add(sky);});
+/* 由太陽系入面望出去嘅銀河全景 —— 只喺太陽系模式顯示；同時畀黑洞 shader 做重力透鏡背景 */
+let sky=null,skyTex=null;
+function vnoise2(){ // 2D value noise
+ const rnd=R(31337),N=256,tab=new Float32Array(N*N);for(let i=0;i<N*N;i++)tab[i]=rnd();
+ return (x,y)=>{const xi=Math.floor(x),yi=Math.floor(y),fx=x-xi,fy=y-yi,u=fx*fx*(3-2*fx),v=fy*fy*(3-2*fy);
+  const i0=(xi&255),i1=((xi+1)&255),j0=(yi&255)*N,j1=((yi+1)&255)*N;
+  const a=tab[j0+i0],b=tab[j0+i1],c=tab[j1+i0],d=tab[j1+i1];
+  return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v;};}
+function skyCanvas(img){ // 等距柱狀全景：真實星點底圖 + 程序銀河光帶（黑洞透鏡背景用）
+ const W=2048,H=1024,c=cnv(W,H),g=c.getContext('2d');
+ g.fillStyle='#000';g.fillRect(0,0,W,H);
+ if(img)g.drawImage(img,0,0,W,H);
+ const n=vnoise2(),small=cnv(512,256),sg=small.getContext('2d'),id=sg.createImageData(512,256),d=id.data;
+ const inc=1.05; // 銀河面傾角
+ for(let y=0;y<256;y++){const lat=(0.5-y/256)*Math.PI;
+  for(let x=0;x<512;x++){const lon=(x/512)*Math.PI*2;
+   // 銀河面：傾斜大圓，計算離帶心角距
+   const sx=Math.cos(lat)*Math.cos(lon),sy=Math.sin(lat),sz=Math.cos(lat)*Math.sin(lon);
+   const ny=Math.cos(inc),nz=Math.sin(inc);const dist=Math.abs(sx*0+sy*ny+sz*nz);
+   const along=Math.atan2(sz*ny-sy*nz,sx);
+   const f1=n(x*0.02+along*3,y*0.02),f2=n(x*0.06,y*0.06+7),f3=n(x*0.15+3,y*0.15),f4=n(x*0.4+9,y*0.4+2);
+   const width=0.09+0.08*f1;
+   let band=Math.exp(-(dist*dist)/(2*width*width));
+   const bulge=Math.exp(-((along-0.4)*(along-0.4))*0.9)*0.9+0.5;
+   band*=bulge*(0.5+0.6*f2)*(0.65+0.5*f3)*(0.75+0.5*f4);
+   const dust=Math.exp(-(dist*dist)/(2*0.05*0.05))*(0.35+0.65*n(x*0.05+11,y*0.09))*(0.6+0.6*n(x*0.2+5,y*0.3));
+   band*=1-0.85*Math.min(1,dust);
+   const v=Math.min(1,band*0.34);
+   const o=(y*512+x)*4;
+   d[o]=Math.round(255*Math.min(1,v*(0.86+0.14*f2)));d[o+1]=Math.round(255*Math.min(1,v*(0.80+0.1*f3)));d[o+2]=Math.round(255*Math.min(1,v*(0.9+0.1*f1)));d[o+3]=Math.round(255*Math.min(1,v*2));}}
+ sg.putImageData(id,0,0);
+ g.globalCompositeOperation='lighter';g.imageSmoothingEnabled=true;
+ g.drawImage(small,0,0,W,H);
+ // 額外星點（帶心密集）
+ const rnd=R(2718);
+ for(let i=0;i<14000;i++){
+  const x=rnd()*W,y=rnd()*H,lat=(0.5-y/H)*Math.PI,lon=(x/W)*Math.PI*2;
+  const sy=Math.sin(lat),sz=Math.cos(lat)*Math.sin(lon);const dist=Math.abs(sy*Math.cos(inc)+sz*Math.sin(inc));
+  if(rnd()>0.35+0.65*Math.exp(-dist*dist*12))continue;
+  const b=0.35+rnd()*0.65,r=rnd()<0.93?0.8:1.6;
+  const col=rnd()<0.6?`rgba(210,225,255,${b})`:rnd()<0.5?`rgba(255,235,205,${b})`:`rgba(255,200,170,${b})`;
+  g.fillStyle=col;g.beginPath();g.arc(x,y,r,0,7);g.fill();}
+ g.globalCompositeOperation='source-over';
+ const tx=new THREE.CanvasTexture(c);tx.encoding=THREE.sRGBEncoding;tx.wrapS=THREE.RepeatWrapping;tx.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
+ return tx;}
+function installSky(tx){
+ skyTex=tx;
+ sky=new THREE.Mesh(new THREE.SphereGeometry(30000,48,32),
+  new THREE.MeshBasicMaterial({map:tx,side:THREE.BackSide,depthWrite:false}));
+ sky.rotation.z=0.35;
+ sky.renderOrder=-10;sky.visible=(mode==='system');scene.add(sky);
+ bhMat.uniforms.u_sky.value=tx;bhMat.uniforms.u_hasSky.value=1;}
+{const im=new Image();im.onload=()=>installSky(skyCanvas(im));im.onerror=()=>installSky(skyCanvas(null));im.src='tex/milkyway.jpg';}
 function buildBody(b){
  const grp=new THREE.Group();
  const mat=b.sun?new THREE.MeshBasicMaterial({map:TEXMAP[b.id]()}):
@@ -425,43 +507,39 @@ function buildBody(b){
    uu.setXY(i,(rr-b.ring[0])/(b.ring[1]-b.ring[0]),0.5);}
   const rm=new THREE.Mesh(rg,new THREE.MeshBasicMaterial({map:ringTex(),transparent:true,side:THREE.DoubleSide,depthWrite:false}));
   rm.rotation.x=-Math.PI/2;grp.add(rm);}
- scene.add(grp);
+ sysGrp.add(grp);
  loadReal(b,mat);
  bodies3D[b.id]={def:b,grp,mesh,angle:Math.random()*Math.PI*2};
  return bodies3D[b.id];}
 BODIES.forEach(buildBody);
-// 太陽光暈
 const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex(),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
-glow.scale.set(55,55,1);scene.add(glow);
+glow.scale.set(55,55,1);sysGrp.add(glow);
 const ORBITS={};
-// 軌道線
 {
  const mat=new THREE.LineBasicMaterial({color:0x3a5a8a,transparent:true,opacity:0.55});
  for(const b of BODIES){if(!b.dist)continue;
   const pts=[];for(let i=0;i<=128;i++){const a=i/128*Math.PI*2;pts.push(new THREE.Vector3(Math.cos(a)*b.dist,0,Math.sin(a)*b.dist));}
   const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),mat);
-  line.name='orbit';ORBITS[b.id]={line,def:b};scene.add(line);}
+  line.name='orbit';ORBITS[b.id]={line,def:b};sysGrp.add(line);}
 }
-// 小行星帶
-{
+{ // 小行星帶
  const n=2200,pos=new Float32Array(n*3),rnd=R(1234);
  for(let i=0;i<n;i++){const a=rnd()*Math.PI*2,r=55+rnd()*8;
   pos[i*3]=Math.cos(a)*r;pos[i*3+1]=(rnd()-0.5)*3;pos[i*3+2]=Math.sin(a)*r;}
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));
  const belt=new THREE.Points(g,new THREE.PointsMaterial({color:0x998866,size:0.7,map:dotTex(),transparent:true,depthWrite:false}));
- belt.name='belt';scene.add(belt);bodies3D.belt={mesh:belt};
+ belt.name='belt';sysGrp.add(belt);bodies3D.belt={mesh:belt};
 }
-// 土星小衛星群(146粒中細粒化成光點跟住土星走)
-{
+{ // 土星細衛星群
  const n=90,pos=new Float32Array(n*3),rnd=R(20250);
  for(let i=0;i<n;i++){const a=rnd()*Math.PI*2,r=21+rnd()*6;
   pos[i*3]=Math.cos(a)*r;pos[i*3+1]=(rnd()-0.5)*2.5;pos[i*3+2]=Math.sin(a)*r;}
  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));
  const swarm=new THREE.Points(g,new THREE.PointsMaterial({color:0xd8cfae,size:0.5,map:dotTex(),transparent:true,depthWrite:false,opacity:0.9}));
  swarm.onBeforeRender=()=>{const s=bodies3D.saturn;if(s)swarm.position.copy(s.grp.position);};
- scene.add(swarm);
+ sysGrp.add(swarm);
 }
-// 星空
+/* ---------- 共用遠景：星空 + 星雲 ---------- */
 {
  const n=3500,pos=new Float32Array(n*3),rnd=R(777);
  for(let i=0;i<n;i++){const th=rnd()*Math.PI*2,ph=Math.acos(2*rnd()-1),r=15000+rnd()*4000;
@@ -473,160 +551,331 @@ const ORBITS={};
  g.setAttribute('color',new THREE.BufferAttribute(col,3));
  scene.add(new THREE.Points(g,new THREE.PointsMaterial({size:2.4,sizeAttenuation:false,map:dotTex(),vertexColors:true,transparent:true,depthWrite:false,opacity:0.95})));
 }
-// 遠景星雲(電影感底色)
 [[0x30408c,9000,-4000,-6000,0.14],[0x6e3a2a,-8000,2500,-7000,0.11],[0x2a5a6e,3000,-3000,8000,0.10]].forEach(nb=>{
  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:dotTex(),color:nb[0],transparent:true,opacity:nb[4],depthWrite:false}));
  sp.position.set(nb[1],nb[2],nb[3]);sp.scale.set(9000,9000,1);scene.add(sp);});
-/* ---------- 銀河系俯視結構圖(按真實結構繪製：棒+旋臂+太陽喺獵戶支臂) ---------- */
-const GALC={x:0,y:-8000,z:-1490};
-const GALR=1500,SUN_R=780,SUN_A=-0.85;
-const ARM_P1=0.6,ARM_P2=0.6+Math.PI;
-function galArmR(t){return 150*Math.exp(0.5*t);}
-function galArmPt(ph,t){const r=galArmR(t),a=ph+t;return [GALC.x+r*Math.cos(a),GALC.y,GALC.z+r*Math.sin(a)];}
-function galSun(){return [GALC.x+SUN_R*Math.cos(SUN_A),GALC.y,GALC.z+SUN_R*Math.sin(SUN_A)];}
-const galAnim={spin:[],rings:[],mark:null};
-{
- const RND=R(4242);
- const gauss=()=>(RND()+RND()+RND()-1.5)*1.2;
- const inner={n:0,p:[],c:[]},outer={n:0,p:[],c:[]};
- const pushStar=(cl,x,y,z,r,gcol,b)=>{cl.p.push(x,y,z);cl.c.push(Math.min(1,r),Math.min(1,gcol),Math.min(1,b));cl.n++;};
- for(let k=0;k<26000;k++){
-  const arm=k%2?ARM_P1:ARM_P2,t=0.3+RND()*4.3;
-  const r=150*Math.exp(0.5*t),a=arm+t;
-  const spread=40+r*0.055;
-  const rr=r+gauss()*spread,aa=a+gauss()*spread/Math.max(r,200);
-  const x=rr*Math.cos(aa),z=rr*Math.sin(aa);
-  const y=gauss()*(26+r*0.022);
-  const w=t/4.6,roll=RND();
-  let cr,cg2,cb;
-  if(roll<0.03){cr=1;cg2=0.55;cb=0.3;}
-  else if(roll<0.055&&t>1.5){cr=1;cg2=0.5;cb=0.7;}
-  else{cr=1-w*0.25+(RND()-0.5)*0.1;cg2=0.85-w*0.05+(RND()-0.5)*0.1;cb=0.62+w*0.33;}
-  pushStar(r<750?inner:outer,x,y,z,cr,cg2,cb);}
- const fin=(cl,size,spd)=>{const g=new THREE.BufferGeometry();
-  g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(cl.p),3));
-  g.setAttribute('color',new THREE.BufferAttribute(new Float32Array(cl.c),3));
-  const m=new THREE.Points(g,new THREE.PointsMaterial({size:size,sizeAttenuation:false,map:dotTex(),vertexColors:true,transparent:true,depthWrite:false,opacity:0.95}));
-  const grp=new THREE.Group();grp.add(m);grp.position.set(GALC.x,GALC.y,GALC.z);scene.add(grp);galAnim.spin.push({o:grp,s:spd});};
- fin(inner,3,0.030);fin(outer,2,0.016);
- {
-  const n=6000,p=new Float32Array(n*3),c=new Float32Array(n*3);
-  for(let i=0;i<n;i++){
-   const x=gauss()*300,y=gauss()*165,z=gauss()*300;
-   const bx=x*1.5,bz=z*0.8;
-   p[i*3]=bx*Math.cos(-0.45)-bz*Math.sin(-0.45);p[i*3+1]=y;p[i*3+2]=bx*Math.sin(-0.45)+bz*Math.cos(-0.45);
-   const w=RND();c[i*3]=1;c[i*3+1]=0.82+w*0.12;c[i*3+2]=0.6+w*0.2;}
-  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(p,3));g.setAttribute('color',new THREE.BufferAttribute(c,3));
-  const m=new THREE.Points(g,new THREE.PointsMaterial({size:2.5,sizeAttenuation:false,map:dotTex(),vertexColors:true,transparent:true,depthWrite:false,opacity:0.95}));
-  const grp=new THREE.Group();grp.add(m);grp.position.set(GALC.x,GALC.y,GALC.z);scene.add(grp);galAnim.spin.push({o:grp,s:0.022});
- }
- {
-  const n=2500,p=new Float32Array(n*3),c=new Float32Array(n*3);
-  for(let i=0;i<n;i++){const th=RND()*Math.PI*2,ph=Math.acos(2*RND()-1),r=900+RND()*1200;
-   p[i*3]=r*Math.sin(ph)*Math.cos(th);p[i*3+1]=r*Math.cos(ph)*0.8;p[i*3+2]=r*Math.sin(ph)*Math.sin(th);
-   const b2=0.3+RND()*0.4;c[i*3]=b2*0.8;c[i*3+1]=b2*0.85;c[i*3+2]=b2;}
-  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(p,3));g.setAttribute('color',new THREE.BufferAttribute(c,3));
-  const m=new THREE.Points(g,new THREE.PointsMaterial({size:2,sizeAttenuation:false,map:dotTex(),vertexColors:true,transparent:true,depthWrite:false,opacity:0.8}));
-  m.position.set(GALC.x,GALC.y,GALC.z);scene.add(m);
- }
- const core=new THREE.Sprite(new THREE.SpriteMaterial({map:dotTex(),color:0xffe8c0,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0.95}));
- core.position.set(GALC.x,GALC.y,GALC.z);core.scale.set(700,700,1);scene.add(core);
- const sp=galSun();
- const mark=new THREE.Sprite(new THREE.SpriteMaterial({map:dotTex(),color:0xffc040,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
- mark.position.set(sp[0],sp[1],sp[2]);mark.scale.set(90,90,1);scene.add(mark);galAnim.mark=mark;
- for(let i=0;i<2;i++){
-  const rg=new THREE.Mesh(new THREE.RingGeometry(58,66,64),
-   new THREE.MeshBasicMaterial({color:0xffb340,transparent:true,opacity:0.7,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
-  rg.rotation.x=-Math.PI/2;rg.position.set(sp[0],sp[1],sp[2]);
-  rg.userData.ph=i*0.5;scene.add(rg);galAnim.rings.push(rg);}
- galAnim.tw=[];
- {
-  const R2=R(777);
-  for(let i=0;i<36;i++){
-   const arm=i%2?ARM_P1:ARM_P2,t=1+R2()*3.2;
-   const p=galArmPt(arm,t);
-   const col=R2()<0.6?0xff7ab0:0x7ae8ff;
-   const s=new THREE.Sprite(new THREE.SpriteMaterial({map:dotTex(),color:col,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0.5}));
-   s.position.set(p[0]+(R2()-0.5)*120,p[1]+(R2()-0.5)*60,p[2]+(R2()-0.5)*120);
-   const sc=40+R2()*90;s.scale.set(sc,sc,1);scene.add(s);
-   if(i<8){s.userData.tw=R2()*6.28;galAnim.tw.push(s);}
-  }
- }
- {
-  const R3=R(999);
-  for(let i=0;i<36;i++){
-   const th=R3()*Math.PI*2,ph=Math.acos(2*R3()-1),r=1100+R3()*1300;
-   const s=new THREE.Sprite(new THREE.SpriteMaterial({map:dotTex(),color:0xcdd8ff,transparent:true,depthWrite:false,opacity:0.4}));
-   s.position.set(GALC.x+r*Math.sin(ph)*Math.cos(th),GALC.y+r*Math.cos(ph)*0.9,GALC.z+r*Math.sin(ph)*Math.sin(th));
-   const sc=50+R3()*70;s.scale.set(sc,sc,1);scene.add(s);
-  }
- }
- {
-  const mk=(dx,dy,dz,sc,op)=>{const s=new THREE.Sprite(new THREE.SpriteMaterial({map:dotTex(),color:0xaac4ff,transparent:true,depthWrite:false,opacity:op}));
-   s.position.set(GALC.x+dx,GALC.y+dy,GALC.z+dz);s.scale.set(sc,sc*0.7,1);scene.add(s);};
-  mk(2600,500,-1800,700,0.5);mk(3100,-300,-1200,420,0.45);
- }
- {
-  const g=new THREE.BufferGeometry().setFromPoints(
-   [new THREE.Vector3(GALC.x-1500,GALC.y-60,GALC.z+1100),new THREE.Vector3(GALC.x-1500+300,GALC.y-60,GALC.z+1100)]);
-  scene.add(new THREE.Line(g,new THREE.LineBasicMaterial({color:0xffd166,transparent:true,opacity:0.8})));
- }
- const sgra=new THREE.Sprite(new THREE.SpriteMaterial({map:dotTex(),color:0xffffff,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
- sgra.position.set(GALC.x,GALC.y,GALC.z);sgra.scale.set(60,60,1);scene.add(sgra);galAnim.sgra=sgra;
- {
-  const pts=[];for(let i=0;i<=128;i++){const a=i/128*Math.PI*2;pts.push(new THREE.Vector3(GALC.x+Math.cos(a)*SUN_R,GALC.y,GALC.z+Math.sin(a)*SUN_R));}
-  scene.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts),
-   new THREE.LineBasicMaterial({color:0xffb340,transparent:true,opacity:0.35})));
- }
-}
-const galBH={};
-function bhDiskTex(){
- const c=cnv(512,32),g=c.getContext('2d');
- const R9=R(555);
- const knots=[];for(let i=0;i<14;i++)knots.push([R9(),0.5+R9()*0.5]);
- for(let x=0;x<512;x++){
-  const u=x/512;
-  let r2,gc,bc,a;
-  if(u<0.10){r2=255;gc=252;bc=240;a=1;}
-  else if(u<0.30){r2=255;gc=205;bc=130;a=0.97;}
-  else if(u<0.55){r2=255;gc=145;bc=65;a=0.88;}
-  else if(u<0.82){r2=190;gc=75;bc=32;a=0.62;}
-  else{r2=0;gc=0;bc=0;a=0;}
-  let fl=0.72+0.28*Math.sin(u*97)*Math.sin(u*41+1.3);
-  for(const [ku,ka] of knots){const d=(u-ku)*40;fl+=ka*Math.exp(-d*d)*0.9;}
-  g.fillStyle=`rgba(${r2|0},${gc|0},${bc|0},${Math.min(1,a*fl).toFixed(2)})`;
-  g.fillRect(x,0,1,32);}
- const grd=g.createLinearGradient(0,0,0,32);
- grd.addColorStop(0,'rgba(0,0,0,1)');grd.addColorStop(0.25,'rgba(0,0,0,0)');
- grd.addColorStop(0.75,'rgba(0,0,0,0)');grd.addColorStop(1,'rgba(0,0,0,1)');
- g.globalCompositeOperation='destination-out';g.fillStyle=grd;g.fillRect(0,0,512,32);
+
+/* ================= 銀河系（多層粒子 · 真實結構） =================
+   棒旋星系：中央棒 + 2條主旋臂(英仙、盾牌-半人馬) + 2條次旋臂(人馬、矩尺)
+   層次：旋臂底圖 → 發光星雲粒子 → 暗塵帶(乘法混合) → 銳利星點 → 核球 → HII區 → 恆星暈/球狀星團 */
+const GALC={x:0,y:0,z:0};
+const GALR=1500,SUN_R=780,SUN_A=3.6;
+const ARM_K=0.28,ARM_R0=350;
+const ARMS=[{ph:0,w:1},{ph:Math.PI,w:1},{ph:Math.PI/2,w:0.55},{ph:Math.PI*1.5,w:0.55}];
+const ARM_TMAX=Math.log(GALR/ARM_R0)/ARM_K; // ≈5.2
+function galArmR(t){return ARM_R0*Math.exp(ARM_K*t);}
+function galArmPt(ph,t){const r=galArmR(t),a=ph+t;return [r*Math.cos(a),0,r*Math.sin(a)];}
+function galSun(){return [SUN_R*Math.cos(SUN_A),0,SUN_R*Math.sin(SUN_A)];}
+const galAnim={spin:[],rings:[],tw:[],mark:null,sgra:null};
+const galHit={};
+function galaxyHazeTex(){ // 1024² 旋臂底圖：柔和盤面、旋臂光帶、暗塵帶、中央棒
+ const S=1024,c=cnv(S,S),g=c.getContext('2d'),rnd=R(9001);
+ const px=r=>r/GALR*(S*0.47),cx=S/2,cy=S/2;
+ g.clearRect(0,0,S,S);
+ // 盤面
+ let gr=g.createRadialGradient(cx,cy,0,cx,cy,px(GALR));
+ gr.addColorStop(0,'rgba(255,225,185,.70)');gr.addColorStop(0.12,'rgba(235,205,175,.40)');gr.addColorStop(0.3,'rgba(150,160,225,.22)');gr.addColorStop(0.6,'rgba(90,110,200,.10)');gr.addColorStop(0.9,'rgba(60,80,170,.03)');gr.addColorStop(1,'rgba(60,80,160,0)');
+ g.fillStyle=gr;g.beginPath();g.arc(cx,cy,px(GALR),0,7);g.fill();
+ // 旋臂光帶
+ g.globalCompositeOperation='lighter';
+ for(const arm of ARMS){
+  for(let i=0;i<1400;i++){
+   const t=rnd()*ARM_TMAX,r=galArmR(t),a=arm.ph+t;
+   const spread=(28+r*0.075)*(0.6+rnd()*0.8);
+   const rr=r+(rnd()+rnd()-1)*spread,aa=a+(rnd()+rnd()-1)*spread/r;
+   const x=cx+px(rr)*Math.cos(aa),y=cy+px(rr)*Math.sin(aa);
+   const rad=px(14+r*0.05)*(0.7+rnd()*0.8),fade=1-t/ARM_TMAX*0.55;
+   const al=0.07*arm.w*fade;
+   const b=g.createRadialGradient(x,y,0,x,y,rad);
+   const blue=rnd()<0.6;
+   b.addColorStop(0,blue?`rgba(150,180,255,${al*1.5})`:`rgba(255,225,190,${al*1.2})`);b.addColorStop(0.5,blue?`rgba(120,150,240,${al*0.6})`:`rgba(230,200,170,${al*0.5})`);b.addColorStop(1,'rgba(100,130,230,0)');
+   g.fillStyle=b;g.beginPath();g.arc(x,y,rad,0,7);g.fill();}}
+ // 中央棒
+ g.save();g.translate(cx,cy);g.rotate(0);
+ gr=g.createRadialGradient(0,0,0,0,0,px(ARM_R0*1.1));
+ gr.addColorStop(0,'rgba(255,235,200,.95)');gr.addColorStop(0.3,'rgba(255,215,165,.55)');gr.addColorStop(0.7,'rgba(240,190,140,.18)');gr.addColorStop(1,'rgba(230,180,130,0)');
+ g.fillStyle=gr;g.beginPath();g.ellipse(0,0,px(ARM_R0*1.15),px(ARM_R0*0.5),0,0,7);g.fill();
+ g.restore();
+ // 暗塵帶（旋臂內緣）—— 喺發光層上面挖窿，等背景透出嚟
+ g.globalCompositeOperation='destination-out';
+ for(const arm of ARMS){
+  for(let i=0;i<1300;i++){
+   const t=0.3+rnd()*(ARM_TMAX-0.5),r=galArmR(t)*0.93,a=arm.ph+t;
+   const spread=(10+r*0.03)*(0.5+rnd());
+   const rr=r+(rnd()+rnd()-1)*spread,aa=a+(rnd()+rnd()-1)*spread/r;
+   const x=cx+px(rr)*Math.cos(aa),y=cy+px(rr)*Math.sin(aa);
+   const rad=px(8+r*0.03)*(0.6+rnd()*0.9);
+   const b=g.createRadialGradient(x,y,0,x,y,rad);
+   const al=0.55*arm.w;
+   b.addColorStop(0,`rgba(0,0,0,${al})`);b.addColorStop(0.5,`rgba(0,0,0,${al*0.4})`);b.addColorStop(1,'rgba(0,0,0,0)');
+   g.fillStyle=b;g.beginPath();g.arc(x,y,rad,0,7);g.fill();}}
  g.globalCompositeOperation='source-over';
  return tex(c);}
 {
- const g=new THREE.RingGeometry(30,96,72,1);
- const pp=g.attributes.position,uu=g.attributes.uv;
- for(let i=0;i<pp.count;i++){const rr=Math.hypot(pp.getX(i),pp.getY(i));
-  uu.setXY(i,(rr-30)/(96-30),0.5);}
- const tilt=new THREE.Group();tilt.position.set(GALC.x,GALC.y,GALC.z);tilt.rotation.x=1.05;tilt.rotation.y=0.3;
- tilt.add(new THREE.Mesh(new THREE.SphereGeometry(24,32,24),new THREE.MeshBasicMaterial({color:0x000000})));
- const disk=new THREE.Mesh(g,new THREE.MeshBasicMaterial({map:bhDiskTex(),color:new THREE.Color(1.5,1.35,1.15),transparent:true,side:THREE.DoubleSide,depthWrite:false}));
- tilt.add(disk);
- tilt.add(new THREE.Mesh(new THREE.RingGeometry(26,30,64),
-  new THREE.MeshBasicMaterial({color:0xffd9a0,transparent:true,opacity:0.85,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide})));
- const bglow=new THREE.Sprite(new THREE.SpriteMaterial({map:dotTex(),color:0xff9a40,transparent:true,opacity:0.4,blending:THREE.AdditiveBlending,depthWrite:false}));
- bglow.scale.set(420,420,1);tilt.add(bglow);
- scene.add(tilt);galBH.disk=disk;galBH.tilt=tilt;
+ const G=galaxyGrp;
+ const RND=R(4242);
+ const gauss=()=>(RND()+RND()+RND()-1.5)*1.2;
+ const soft=softTex(),dot=dotTex();
+ const armSample=(k)=>{ // 沿旋臂取樣一粒星：返回 [x,y,z,t,r,w]
+  const arm=ARMS[k%4],t=RND()*ARM_TMAX;
+  const r=galArmR(t),a=arm.ph+t;
+  const spread=(30+r*0.075)*(k%4>=2?0.9:1);
+  const rr=r+gauss()*spread,aa=a+gauss()*spread/Math.max(r,200);
+  return [rr*Math.cos(aa),gauss()*(14+r*0.02),rr*Math.sin(aa),t,rr,arm.w];};
+ const mkPoints=(p,c,sz,opt)=>{const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(p),3));
+  g.setAttribute('color',new THREE.BufferAttribute(new Float32Array(c),3));
+  if(sz)g.setAttribute('size',new THREE.BufferAttribute(new Float32Array(sz),1));
+  return new THREE.Points(g,new THREE.PointsMaterial(Object.assign({vertexColors:true,transparent:true,depthWrite:false},opt)));};
+ // ① 旋臂底圖（3層微錯位 → 有厚度）
+ const haze=galaxyHazeTex();
+ [[0,0.72],[-14,0.28],[14,0.28]].forEach(([y,op])=>{
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(GALR*2.13,GALR*2.13),
+   new THREE.MeshBasicMaterial({map:haze,color:0xd8e2ff,transparent:true,opacity:op,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending}));
+  m.rotation.x=-Math.PI/2;m.position.y=y;m.renderOrder=1;G.add(m);});
+ // ② 發光星雲粒子（加法混合、有透視大小）
  {
-  const beam=new THREE.Sprite(new THREE.SpriteMaterial({map:dotTex(),color:0xffe0b0,transparent:true,opacity:0.6,blending:THREE.AdditiveBlending,depthWrite:false}));
-  beam.scale.set(80,80,1);beam.position.set(48,0,2);tilt.add(beam);galBH.beam=beam;
-  const arcM=new THREE.MeshBasicMaterial({color:0xff9a50,transparent:true,opacity:0.45,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide});
-  const arc1=new THREE.Mesh(new THREE.RingGeometry(38,50,64,1,Math.PI*0.1,Math.PI*0.8),arcM);
-  arc1.position.z=58;tilt.add(arc1);
-  const arc2=new THREE.Mesh(new THREE.RingGeometry(38,50,64,1,Math.PI*1.1,Math.PI*0.8),arcM.clone());
-  arc2.position.z=-58;tilt.add(arc2);
+  const p=[],c=[];const n=26000;
+  for(let k=0;k<n;k++){
+   const [x,y,z,t,r,w]=armSample(k);
+   if(RND()>w)continue;
+   p.push(x,y,z);
+   const young=RND()<0.6-t/ARM_TMAX*0.15;
+   const b=0.35+RND()*0.5;
+   if(young)c.push(0.45*b,0.62*b,1.0*b);else c.push(1.0*b,0.82*b,0.6*b);}
+  // 盤面散星（旋臂之間）
+  for(let k=0;k<9000;k++){
+   const r=Math.pow(RND(),0.55)*GALR*0.98,a=RND()*Math.PI*2;
+   p.push(r*Math.cos(a),gauss()*(12+r*0.018),r*Math.sin(a));
+   const b=0.25+RND()*0.35;c.push(1.0*b,0.85*b,0.65*b);}
+  const m=mkPoints(p,c,null,{size:62,sizeAttenuation:true,map:soft,blending:THREE.AdditiveBlending,opacity:0.2});
+  m.renderOrder=2;G.add(m);
  }
+ // ③ 暗塵帶：乘法混合，遮暗後面嘅光（沿旋臂內緣）
+ {
+  const p=[],c=[];
+  for(let k=0;k<9000;k++){
+   const arm=ARMS[k%4],t=0.25+RND()*(ARM_TMAX-0.45);
+   const r=galArmR(t)*0.93,a=arm.ph+t;
+   const spread=(6+r*0.022);
+   const rr=r+gauss()*spread,aa=a+gauss()*spread/r;
+   if(RND()>arm.w*0.9)continue;
+   p.push(rr*Math.cos(aa),gauss()*6,rr*Math.sin(aa));
+   const d=0.8+RND()*0.2;c.push(d,d*0.96,d*0.93);}
+  const m=mkPoints(p,c,null,{size:72,sizeAttenuation:true,map:dustTex(),blending:THREE.MultiplyBlending,opacity:1});
+  m.renderOrder=3;G.add(m);
+ }
+ // ④ 銳利星點（無透視大小 → 遠望仍然係一粒粒星）
+ {
+  const p=[],c=[];
+  for(let k=0;k<11000;k++){
+   const [x,y,z,t,r,w]=armSample(k);if(RND()>w)continue;
+   p.push(x,y,z);
+   const roll=RND(),b=0.35+RND()*0.5;
+   if(roll<0.06)c.push(1*b,0.55*b,0.35*b);          // 紅巨星
+   else if(roll<0.5)c.push(0.7*b,0.8*b,1*b);           // 藍白年輕星
+   else c.push(1*b,0.95*b,0.85*b);}
+  for(let k=0;k<4000;k++){
+   const r=Math.pow(RND(),0.6)*GALR,a=RND()*Math.PI*2;
+   p.push(r*Math.cos(a),gauss()*(12+r*0.02),r*Math.sin(a));
+   const b=0.3+RND()*0.45;c.push(1*b,0.92*b,0.8*b);}
+  const m=mkPoints(p,c,null,{size:1.5,sizeAttenuation:false,map:dot,blending:THREE.AdditiveBlending,opacity:0.45});
+  m.renderOrder=4;G.add(m);
+ }
+ // ⑤ 核球 + 中央棒（暖色、3D橢球）
+ {
+  const p=[],c=[];
+  for(let i=0;i<16000;i++){
+   const u=Math.pow(RND(),1.6);
+   let x=gauss()*ARM_R0*0.55*(0.4+u),y=gauss()*120*(0.4+u),z=gauss()*ARM_R0*0.28*(0.4+u);
+   if(i%3===0){x=gauss()*70;y=gauss()*60;z=gauss()*70;} // 核心密集
+   p.push(x,y,z);
+   const b=0.4+RND()*0.45;c.push(1*b,0.8*b,0.52*b);}
+  const m=mkPoints(p,c,null,{size:30,sizeAttenuation:true,map:soft,blending:THREE.AdditiveBlending,opacity:0.26});
+  m.renderOrder=2;G.add(m);
+  const m2=mkPoints(p,c,null,{size:1.4,sizeAttenuation:false,map:dot,blending:THREE.AdditiveBlending,opacity:0.5});
+  m2.renderOrder=4;G.add(m2);
+ }
+ // ⑥ HII 星雲區（粉紅）+ 年輕藍星團 沿旋臂
+ {
+  for(let i=0;i<70;i++){
+   const arm=ARMS[i%4],t=0.6+RND()*(ARM_TMAX-0.9);
+   const pt=galArmPt(arm.ph,t);const r=galArmR(t);
+   const pink=RND()<0.6;
+   const s=new THREE.Sprite(new THREE.SpriteMaterial({map:soft,color:pink?0xff7aa8:0x8fd8ff,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:pink?0.42:0.35}));
+   const sp=20+r*0.05;
+   s.position.set(pt[0]+gauss()*sp,gauss()*10,pt[2]+gauss()*sp);
+   const sc=(30+RND()*70)*(0.7+arm.w*0.3);s.scale.set(sc,sc,1);s.renderOrder=5;G.add(s);
+   if(i<12){s.userData.tw=RND()*6.28;s.userData.base=s.material.opacity;galAnim.tw.push(s);}}
+ }
+ // ⑦ 恆星暈 + 球狀星團
+ {
+  const p=[],c=[];
+  for(let i=0;i<3500;i++){const th=RND()*Math.PI*2,ph=Math.acos(2*RND()-1),r=500+Math.pow(RND(),1.5)*1700;
+   p.push(r*Math.sin(ph)*Math.cos(th),r*Math.cos(ph)*0.75,r*Math.sin(ph)*Math.sin(th));
+   const b=0.25+RND()*0.4;c.push(b*0.9,b*0.9,b);}
+  const m=mkPoints(p,c,null,{size:1.4,sizeAttenuation:false,map:dot,transparent:true,opacity:0.7});
+  m.renderOrder=0;G.add(m);
+  for(let i=0;i<40;i++){
+   const th=RND()*Math.PI*2,ph=Math.acos(2*RND()-1),r=700+RND()*1500;
+   const s=new THREE.Sprite(new THREE.SpriteMaterial({map:soft,color:0xe8e0ff,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0.5}));
+   s.position.set(r*Math.sin(ph)*Math.cos(th),r*Math.cos(ph)*0.8,r*Math.sin(ph)*Math.sin(th));
+   const sc=18+RND()*30;s.scale.set(sc,sc,1);G.add(s);}
+ }
+ // ⑧ 核心光暈 + 人馬座A*（可撳）
+ const core=new THREE.Sprite(new THREE.SpriteMaterial({map:soft,color:0xffd2a0,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0.42}));
+ core.scale.set(560,560,1);core.renderOrder=6;G.add(core);
+ const core2=new THREE.Sprite(new THREE.SpriteMaterial({map:soft,color:0xfff0d8,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0.6}));
+ core2.scale.set(150,150,1);core2.renderOrder=6;G.add(core2);
+ const sgra=new THREE.Sprite(new THREE.SpriteMaterial({map:dot,color:0xffffff,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
+ sgra.scale.set(50,50,1);sgra.renderOrder=7;G.add(sgra);galAnim.sgra=sgra;
+ // ⑨ 大/小麥哲倫雲
+ const mk=(dx,dy,dz,sc,op)=>{const s=new THREE.Sprite(new THREE.SpriteMaterial({map:soft,color:0xaac4ff,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:op}));
+  s.position.set(dx,dy,dz);s.scale.set(sc,sc*0.7,1);G.add(s);return s;};
+ galAnim.lmc=mk(2600,-700,-1800,520,0.55);mk(3100,-950,-1200,300,0.5);
+ // ⑩ 太陽系標記（脈動 + 擴散環）+ 太陽軌道
+ const sp=galSun();
+ const mark=new THREE.Sprite(new THREE.SpriteMaterial({map:dot,color:0xffc040,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
+ mark.position.set(sp[0],sp[1],sp[2]);mark.scale.set(70,70,1);mark.renderOrder=8;G.add(mark);galAnim.mark=mark;
+ for(let i=0;i<2;i++){
+  const rg=new THREE.Mesh(new THREE.RingGeometry(44,50,64),
+   new THREE.MeshBasicMaterial({color:0xffb340,transparent:true,opacity:0.7,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
+  rg.rotation.x=-Math.PI/2;rg.position.set(sp[0],sp[1],sp[2]);rg.renderOrder=8;
+  rg.userData.ph=i*0.5;G.add(rg);galAnim.rings.push(rg);}
+ {
+  const pts=[];for(let i=0;i<=160;i++){const a=i/160*Math.PI*2;pts.push(new THREE.Vector3(Math.cos(a)*SUN_R,0,Math.sin(a)*SUN_R));}
+  const l=new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:0xffb340,transparent:true,opacity:0.28}));
+  l.renderOrder=8;G.add(l);
+ }
+ { // 比例尺 10,000 光年（≈300 單位）
+  const g=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-1500,-40,1150),new THREE.Vector3(-1200,-40,1150)]);
+  G.add(new THREE.Line(g,new THREE.LineBasicMaterial({color:0xffd166,transparent:true,opacity:0.8})));
+ }
+ // ⑪ 隱形點擊目標
+ const hitMat=new THREE.MeshBasicMaterial({colorWrite:false,depthWrite:false});
+ galHit.center=new THREE.Mesh(new THREE.SphereGeometry(150,12,8),hitMat);G.add(galHit.center);
+ galHit.sun=new THREE.Mesh(new THREE.SphereGeometry(110,12,8),hitMat);galHit.sun.position.set(sp[0],sp[1],sp[2]);G.add(galHit.sun);
 }
-// 銀河系：太陽系喺佢入面，所以唔再放獨立旋渦模型 —— 全景銀河背景(milkyway)就係由入面望出去嘅盤面
+
+/* ================= 人馬座A* 黑洞：光線追蹤 shader（重力透鏡 + 吸積盤 + 多普勒增亮） ================= */
+const BH_FRAG=`
+varying vec2 v_uv;
+uniform vec2 u_res;uniform float u_time;uniform float u_dist;
+uniform vec2 u_ang;uniform float u_bend;uniform float u_steps;uniform float u_alpha;uniform vec2 u_off;
+uniform sampler2D u_sky;uniform float u_hasSky;
+float hash(vec3 p){p=fract(p*0.3183099+.1);p*=17.0;return fract(p.x*p.y*p.z*(p.x+p.y+p.z));}
+float noise(vec3 x){vec3 i=floor(x);vec3 f=fract(x);f=f*f*(3.-2.*f);
+ return mix(mix(mix(hash(i),hash(i+vec3(1.,0.,0.)),f.x),mix(hash(i+vec3(0.,1.,0.)),hash(i+vec3(1.,1.,0.)),f.x),f.y),
+ mix(mix(hash(i+vec3(0.,0.,1.)),hash(i+vec3(1.,0.,1.)),f.x),mix(hash(i+vec3(0.,1.,1.)),hash(i+vec3(1.,1.,1.)),f.x),f.y),f.z);}
+vec3 aces(vec3 x){return clamp((x*(2.51*x+0.03))/(x*(2.43*x+0.59)+0.14),0.,1.);}
+/* 背景：真實銀河全景（等距柱狀投影）+ 程序星點 */
+vec3 sky(vec3 d){
+ vec3 col=vec3(0.);
+ if(u_hasSky>0.5){
+  vec2 uv=vec2(atan(d.z,d.x)/6.2831853+0.5,asin(clamp(d.y,-1.,1.))/3.1415927+0.5);
+  vec3 s=texture2D(u_sky,uv).rgb;
+  col+=s*1.1+s*s*0.4;
+ }else{
+  float band=exp(-pow(dot(d,normalize(vec3(0.3,1.,0.2)))*3.,2.));
+  col+=vec3(.11,.13,.20)*band*(0.55+0.45*noise(d*7.));
+ }
+ vec3 g=d*140.;vec3 id=floor(g);
+ float h=hash(id);
+ if(h>0.93){
+  vec3 c=fract(g)-0.5;
+  float s=smoothstep(0.08,0.,length(c))*smoothstep(0.93,1.,h);
+  float tw=0.8+0.2*sin(u_time*3.+h*40.);
+  vec3 tint=mix(vec3(.75,.85,1.),vec3(1.,.88,.72),fract(h*7.));
+  col+=tint*s*tw*(0.6+fract(h*13.))*1.6;
+ }
+ return col;}
+/* 吸積盤：溫度隨半徑下降（內白熾→橙→暗紅）、細條紋、開普勒差速旋轉 */
+const float DIN=1.9;const float DOUT=7.5;
+vec3 disk(float r,float a,out float bright){
+ float x=clamp((r-DIN)/(DOUT-DIN),0.,1.);
+ float w=1.6/pow(r,1.5);                 // 開普勒角速度
+ float ang=a+u_time*w;
+ float s1=noise(vec3(r*2.2,ang*1.5,u_time*0.15));
+ float s2=noise(vec3(r*11.,ang*4.,1.7+u_time*0.05));
+ float s3=noise(vec3(r*38.,ang*1.2,3.1));           // 細環紋
+ float s4=noise(vec3(r*6.,ang*24.,5.));             // 方位條紋
+ float rad=pow(DIN/r,1.9);                           // 亮度向內急升
+ float edge=smoothstep(0.,0.05,x)*smoothstep(1.,0.55,x);
+ bright=edge*rad*(0.45+0.9*s1)*(0.55+0.7*s2)*(0.7+0.6*s3)*(0.8+0.4*s4);
+ vec3 c=mix(vec3(1.,.96,.9),vec3(1.,.72,.36),smoothstep(0.,0.12,x));
+ c=mix(c,vec3(1.,.45,.14),smoothstep(0.12,0.4,x));
+ c=mix(c,vec3(.6,.16,.05),smoothstep(0.4,1.,x));
+ return c;}
+void main(){
+ vec2 uv=v_uv*2.-1.+u_off;uv.x*=u_res.x/u_res.y;
+ float th=u_ang.x,ph=u_ang.y;
+ vec3 ro=vec3(sin(ph)*cos(th),cos(ph),sin(ph)*sin(th))*u_dist;
+ vec3 fw=normalize(-ro);
+ vec3 rt=normalize(cross(fw,vec3(0.,1.,0.)));
+ vec3 up=cross(rt,fw);
+ vec3 rd=normalize(uv.x*rt+uv.y*up+1.3*fw);
+ vec3 p=ro,v=rd;
+ vec3 h=cross(p,v);
+ float h2=dot(h,h);
+ vec3 col=vec3(0.);
+ float alpha=0.;
+ float minR=1e9;
+ float prevY=p.y+0.0001;
+ int STEPS=int(u_steps+0.5);
+ for(int i=0;i<220;i++){
+  if(i>=STEPS)break;
+  float r2=dot(p,p);
+  float r=sqrt(r2);
+  if(r<minR)minR=r;
+  if(r<1.){alpha=1.;break;}
+  float step=0.085*(0.35+0.22*r);
+  v=normalize(v-p*(u_bend*h2/(r2*r2*r))*step);   // 史瓦西測地線
+  vec3 np=p+v*step;
+  if((prevY>0.)!=(np.y>0.)){
+   float t=prevY/(prevY-np.y);
+   vec3 hit=mix(p,np,t);
+   float hr=length(hit.xz);
+   if(hr>DIN&&hr<DOUT){
+    float ang=atan(hit.z,hit.x);
+    float br;vec3 dc=disk(hr,ang,br);
+    vec3 tang=normalize(vec3(-hit.z,0.,hit.x));
+    float vorb=sqrt(0.5/hr);                       // 圓軌道速度 (c=1, rs=1)
+    float gam=1./sqrt(max(0.05,1.-vorb*vorb));
+    vec3 toCam=normalize(ro-hit);
+    float D=1./(gam*(1.-vorb*dot(tang,toCam)));   // 多普勒因子
+    float gred=sqrt(max(0.,1.-1./hr));             // 重力紅移
+    float I=pow(clamp(D,0.,2.4),3.0)*gred;          // 相對論性增亮
+    dc=mix(dc,vec3(.85,.9,1.),clamp((D-1.)*0.9,0.,0.45));   // 迎面：偏藍白
+    dc=mix(dc,vec3(1.,.3,.08),clamp((1.-D)*1.2,0.,0.6));    // 背面：偏紅暗
+    float trans=clamp(br*1.8,0.,1.)*0.92;
+    col+=dc*I*br*1.15*(1.-alpha)*trans;
+    alpha+=(1.-alpha)*trans;
+    if(alpha>0.99)break;
+   }
+  }
+  p=np;prevY=np.y;
+  if(dot(p,p)>4900.)break;
+ }
+ vec3 bg=sky(normalize(v));
+ col+=bg*(1.-alpha);
+ // 光子環：光繞黑洞兜圈嘅極薄亮環
+ float ring=smoothstep(0.16,0.,abs(minR-1.5))*1.6+smoothstep(0.6,0.,abs(minR-1.5))*0.25;
+ col+=vec3(1.,.88,.7)*ring*(1.-alpha);
+ // 近視界暗角（重力拖曳感）
+ vec2 q=v_uv-0.5;
+ col*=1.-dot(q,q)*0.45;
+ col=aces(col*0.95);
+ col=pow(col,vec3(0.92));
+ gl_FragColor=vec4(col,u_alpha);
+}`;
+const BH_VERT='varying vec2 v_uv;void main(){v_uv=position.xy*0.5+0.5;gl_Position=vec4(position.xy,0.,1.);}';
+const bhScene=new THREE.Scene(),bhCam=new THREE.Camera();
+const bhMat=new THREE.ShaderMaterial({vertexShader:BH_VERT,fragmentShader:BH_FRAG,transparent:true,depthTest:false,depthWrite:false,
+ uniforms:{u_res:{value:new THREE.Vector2(1,1)},u_time:{value:0},u_dist:{value:12},u_ang:{value:new THREE.Vector2(0.6,1.05)},
+  u_bend:{value:1.5},u_steps:{value:110},u_alpha:{value:0},u_off:{value:new THREE.Vector2(0,0)},u_sky:{value:null},u_hasSky:{value:0}}});
+{const q=new THREE.Mesh(new THREE.PlaneGeometry(2,2),bhMat);q.frustumCulled=false;bhScene.add(q);}
+const isMobile=/Android|iPhone|iPad|Mobile/i.test(navigator.userAgent)||Math.min(screen.width,screen.height)<700;
+let bhSteps=isMobile?80:120;bhMat.uniforms.u_steps.value=bhSteps;
 
 /* ---------- 真實AU距離 ---------- */
 const AUD={mercury:0.39,venus:0.72,earth:1,mars:1.52,jupiter:5.2,saturn:9.5,uranus:19.19,neptune:30.07};
@@ -634,18 +883,15 @@ const AU_U=28;
 let scaleMix=0,scaleMixT=0;
 function effDist(d){const tr=(d.id&&AUD[d.id])?AUD[d.id]*AU_U:(d.dist||0);return (d.dist||0)*(1-scaleMix)+tr*scaleMix;}
 /* ---------- 位置更新 ---------- */
-const YEAR_K=365/90; // 地球1年=90秒(1×時)
 function bodyPos(b3,out){
  const d=b3.def;
  if(d.sun)return out.set(0,0,0);
- if(d.parent){const p=bodies3D[d.parent].mesh; // 月球繞行星
+ if(d.parent){const p=bodies3D[d.parent].mesh;
   p.getWorldPosition(out);
   out.x+=Math.cos(b3.angle)*d.orbitR;out.z+=Math.sin(b3.angle)*d.orbitR;return out;}
- const R=effDist(d);
- out.set(Math.cos(b3.angle)*R,0,Math.sin(b3.angle)*R);return out;}
+ const Rr=effDist(d);
+ out.set(Math.cos(b3.angle)*Rr,0,Math.sin(b3.angle)*Rr);return out;}
 const _v=new THREE.Vector3();
-const _bv=new THREE.Vector3();
-const BHV=new THREE.Vector3(GALC.x,GALC.y,GALC.z);
 function updateBodies(dt){
  for(const id in bodies3D){const b3=bodies3D[id];if(id==='belt'){b3.mesh.rotation.y+=dt*0.004*timeScale;continue;}
   const d=b3.def;
@@ -653,33 +899,72 @@ function updateBodies(dt){
   bodyPos(b3,_v);b3.grp.position.copy(_v);
   b3.mesh.rotation.y+=dt*(d.spin||0.2)*timeScale;
   if(b3.def.clouds)b3.def.clouds.rotation.y+=dt*0.06*timeScale;}
- // 土星環永遠向住大致方向(跟組) — 已在組內,自動跟隨
 }
 
-/* ---------- 相機+控制 ---------- */
-let camT=1.57,camP=1.05,camD=2300,tgtD=2300;
-let focusId='system',timeScale=1,showOrbit=true,showLabel=true,autoRot=true,tourOn=true,tourT=0,tourIdx=-1;
-const TOUR=['mmap','sgra','galaxy','system','sun','earth','moon','mars','jupiter','saturn','uranus','neptune'];
+/* ================= 模式 / 相機 / 控制 =================
+   mode: 'galaxy' → 由外面望成個銀河 · 'sgra' → 中心黑洞（shader） · 'system' → 太陽系 */
+let mode='galaxy';
+let camT=0.9,camP=0.92,camD=12000,tgtD=3400;
+let bhD=70,bhDT=11,bhAlpha=0,bhAlphaT=0,bhTime=0;
+let focusId='galaxy',timeScale=1,showOrbit=true,showLabel=true,tourOn=false,tourT=0,tourIdx=-1;
+const TOUR=['galaxy','sgra','system','sun','earth','moon','mars','jupiter','saturn','uranus','neptune'];
+function dRange(){return mode==='sgra'?[2.05,80]:mode==='galaxy'?[350,9000]:[6,2600];}
+function clampD(v){const [a,b]=dRange();return Math.max(a,Math.min(b,v));}
+function getTgt(){return mode==='sgra'?bhDT:tgtD;}
+function setTgt(v){v=clampD(v);if(mode==='sgra')bhDT=v;else tgtD=v;}
+function curD(){return mode==='sgra'?bhD:camD;}
+function fitGalaxy(){const a=canvas.clientWidth/Math.max(1,canvas.clientHeight);return clampD(a<0.9?3000/(a*1.0):3300/Math.min(1,a*1.05));}
 function focusTarget(out){
- if(focusId==='galaxy')return out.set(0,0,0); // 銀河視角：拉遠睇成個太陽系鄰域+背後銀河盤面
- if(focusId==='mmap')return out.set(GALC.x,GALC.y,GALC.z);
- if(focusId==='sgra')return out.set(GALC.x,GALC.y,GALC.z);
- if(focusId==='system')return out.set(0,0,0);
+ if(mode!=='system'||focusId==='system')return out.set(0,0,0);
  const b3=bodies3D[focusId];if(!b3)return out.set(0,0,0);
- out.copy(b3.grp.position);return out;}
-function focusDist(){
- if(focusId==='mmap')return 2500;
- if(focusId==='sgra')return 150;
- if(focusId==='galaxy')return 2400;
- if(focusId==='system')return 200;
- const d=bodies3D[focusId].def;return Math.max(5,(d.size||2)*5);}
-function enterMap(){focusId='mmap';const a=canvas.clientWidth/Math.max(1,canvas.clientHeight);tgtD=3169/Math.min(1,a);camP=1.15;showMilky();}
-function goFocus(id){if(id==='mmap'){tourOn=false;renderTour();enterMap();return;}focusId=id;tgtD=focusDist();tourOn=false;renderTour();
- if(id==='sgra')showSgra();else if(id==='galaxy')showMilky();else if(id!=='system')showInfo(id);else hideInfo();}
-function sliderToDist(v){return 6*Math.pow(2600/6,v/1000);}
-function distToSlider(d){return Math.round(1000*Math.log(Math.max(6,d)/6)/Math.log(2600/6));}
+ return out.copy(b3.grp.position);}
+function focusDist(id){
+ if(id==='system')return 200;
+ const b3=bodies3D[id];if(!b3)return 200;
+ const d=b3.def;return Math.max(5,(d.size||2)*5);}
+function setMode(m){
+ mode=m;
+ galaxyGrp.visible=(m!=='system');
+ sysGrp.visible=(m==='system');
+ if(sky)sky.visible=(m==='system');
+ bhAlphaT=(m==='sgra')?1:0;
+ sunLight.intensity=m==='system'?1.8:0;
+ $('planetRow').style.display=(m==='system')?'flex':'none';
+ $('distBtn').style.display=(m==='system')?'':'none';
+ $('orbitBtn').style.display=(m==='system')?'':'none';
+ $('timeRow').style.display=(m==='system')?'':'none';
+ $('scaleBadge').style.display=(m==='system'&&scaleMixT>0.5)?'block':'none';
+ document.querySelectorAll('#navRow [data-go]').forEach(b=>b.classList.toggle('on',b.dataset.go===m));
+ $('hint').innerHTML=m==='galaxy'?t('hint_gal'):m==='sgra'?t('hint_bh'):t('hint');
+ // 唔同模式下滑桿範圍唔同 → 重設滑桿
+ zoomSlider.value=distToSlider(getTgt());}
+function layoutInfo(){const info=$('info');if(innerWidth<900)info.style.bottom=($('panel').offsetHeight+18)+'px';else info.style.bottom='';}
+if(window.ResizeObserver)new ResizeObserver(layoutInfo).observe($('panel'));
+const fadeEl=$('fade');
+function blackFade(mid){fadeEl.style.opacity=1;setTimeout(()=>{mid();fadeEl.style.opacity=0;},470);}
+function goFocus(id,fromTour){
+ if(!fromTour){tourOn=false;renderTour();}
+ if(id==='galaxy'){
+  focusId='galaxy';
+  if(mode==='system')blackFade(()=>{setMode('galaxy');bhAlpha=0;camD=fitGalaxy()*3.2;tgtD=fitGalaxy();camP=0.92;});
+  else{setMode('galaxy');tgtD=fitGalaxy();bhDT=80;if(camD<600)camD=600;}
+  showMilky();return;}
+ if(id==='sgra'){
+  focusId='sgra';
+  if(mode==='system')blackFade(()=>{setMode('sgra');camD=900;tgtD=350;bhD=70;bhDT=11;camP=Math.max(0.35,Math.min(1.35,camP));});
+  else{setMode('sgra');tgtD=350;bhD=Math.max(bhD,60);bhDT=11;camP=Math.max(0.35,Math.min(1.35,camP));}
+  showSgra();return;}
+ // 太陽系 / 星球
+ const wasSys=(mode==='system');
+ const enter=()=>{setMode('system');bhAlpha=0;focusId=id;tgtD=focusDist(id);
+  if(!wasSys){camD=id==='system'?1500:tgtD*14;camP=1.05;}};
+ if(!wasSys)blackFade(enter);else enter();
+ if(id==='system')showSys();else showInfo(id);}
+/* 縮放滑桿：對數映射，範圍隨模式改變 */
+function sliderToDist(v){const [a,b]=dRange();return a*Math.pow(b/a,v/1000);}
+function distToSlider(d){const [a,b]=dRange();return Math.round(1000*Math.log(Math.max(a,Math.min(b,d))/a)/Math.log(b/a));}
 const zoomSlider=$('zoom');
-zoomSlider.addEventListener('input',()=>{tgtD=sliderToDist(+zoomSlider.value);tourOn=false;renderTour();});
+zoomSlider.addEventListener('input',()=>{setTgt(sliderToDist(+zoomSlider.value));tourOn=false;renderTour();});
 const timeSlider=$('time');
 timeSlider.addEventListener('input',()=>{const v=+timeSlider.value/100;
  timeScale=v<=0.02?0:0.05*Math.pow(80,v);$('timeRead').textContent=timeScale===0?'⏸':timeScale.toFixed(1)+'×';});
@@ -692,49 +977,53 @@ canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);
 canvas.addEventListener('pointermove',e=>{if(!drags.has(e.pointerId))return;
  const old=drags.get(e.pointerId);drags.set(e.pointerId,[e.clientX,e.clientY]);
  if(downXY&&Math.hypot(e.clientX-downXY[0],e.clientY-downXY[1])>10)movedFar=true;
- if(drags.size===1){camT+=(e.clientX-old[0])*0.005;camP=Math.max(0.08,Math.min(1.65,camP-(e.clientY-old[1])*0.004));tourOn=false;renderTour();}
+ if(drags.size===1){camT+=(e.clientX-old[0])*0.005;
+  const lo=mode==='sgra'?0.2:0.08,hi=mode==='sgra'?1.45:1.65;
+  camP=Math.max(lo,Math.min(hi,camP-(e.clientY-old[1])*0.004));tourOn=false;renderTour();}
  else if(drags.size===2){const p=[...drags.values()];
   const d=Math.hypot(p[0][0]-p[1][0],p[0][1]-p[1][1]);
-  if(pinchD>0)tgtD=Math.max(6,Math.min(2600,tgtD*pinchD/Math.max(1,d)));pinchD=d;tourOn=false;renderTour();}});
+  if(pinchD>0)setTgt(getTgt()*pinchD/Math.max(1,d));pinchD=d;tourOn=false;renderTour();}});
 const up=e=>{if(drags.has(e.pointerId)&&!movedFar&&drags.size===1)tapPick(e);drags.delete(e.pointerId);};
 canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',e=>drags.delete(e.pointerId));
 canvas.addEventListener('wheel',e=>{e.preventDefault();
- tgtD=Math.max(6,Math.min(2600,tgtD*Math.pow(1.0015,e.deltaY)));tourOn=false;renderTour();},{passive:false});
+ setTgt(getTgt()*Math.pow(1.0015,e.deltaY));tourOn=false;renderTour();},{passive:false});
 const ray=new THREE.Raycaster(),mouseV=new THREE.Vector2();
 function tapPick(e){const r=canvas.getBoundingClientRect();
  mouseV.set(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1);
  ray.setFromCamera(mouseV,camera);
- const meshes=[];for(const id in bodies3D){const b=bodies3D[id];if(b.mesh)meshes.push(b.mesh);}
+ if(mode==='galaxy'){
+  const hit=ray.intersectObjects([galHit.center,galHit.sun],false)[0];
+  if(hit){goFocus(hit.object===galHit.center?'sgra':'system');}
+  return;}
+ if(mode!=='system')return;
+ const meshes=[];for(const id in bodies3D){const b=bodies3D[id];if(b.mesh&&id!=='belt')meshes.push(b.mesh);}
  const hit=ray.intersectObjects(meshes,false)[0];
- if(hit){for(const id in bodies3D)if(bodies3D[id].mesh===hit.object){audio();goFocus(id);break;}}}
-// 導覽+按鈕
+ if(hit){for(const id in bodies3D)if(bodies3D[id].mesh===hit.object){goFocus(id);break;}}}
 function renderTour(){$('tourBtn').classList.toggle('on',tourOn);}
-$('tourBtn').onclick=()=>{tourOn=!tourOn;renderTour();tourT=0;};
+$('tourBtn').onclick=()=>{tourOn=!tourOn;renderTour();tourT=0;if(tourOn){tourIdx=-1;tourT=8;}};
 $('orbitBtn').onclick=function(){showOrbit=!showOrbit;this.classList.toggle('on',showOrbit);
- scene.traverse(o=>{if(o.name==='orbit'||o.name==='belt')o.visible=showOrbit;});};
+ sysGrp.traverse(o=>{if(o.name==='orbit'||o.name==='belt')o.visible=showOrbit;});};
 $('labelBtn').onclick=function(){showLabel=!showLabel;this.classList.toggle('on',showLabel);};
 $('distBtn').onclick=function(){scaleMixT=scaleMixT>0.5?0:1;this.classList.toggle('on',scaleMixT>0.5);
  const bd=$('scaleBadge');
  if(scaleMixT>0.5){bd.innerHTML=t('scalemode');bd.style.display='block';if(focusId==='system')tgtD=1000;}
  else bd.style.display='none';};
-document.querySelectorAll('#navRow [data-go]').forEach(b=>b.onclick=()=>{audio();hideInfo();goFocus(b.dataset.go);});
-$('bhBtn').onclick=()=>window.open('https://zero5phh-ops.github.io/blackhole-voyage/','_blank');
+document.querySelectorAll('#navRow [data-go]').forEach(b=>b.onclick=()=>goFocus(b.dataset.go));
 function buildPlanetBtns(){const row=$('planetRow');row.innerHTML='';
  for(const b of BODIES){if(b.sun||b.parent)continue;
   const btn=document.createElement('button');btn.className='pbtn';btn.textContent=bn(b);
-  btn.onclick=()=>{audio();goFocus(b.id);};row.appendChild(btn);}}
-function audio(){return null;}
+  btn.onclick=()=>goFocus(b.id);row.appendChild(btn);}}
 
 /* ---------- 標籤 ---------- */
 const labelLayer=$('labels'),labelDivs={};
 function buildLabels(){
- const ids=['galaxy','system'].concat(BODIES.map(b=>b.id));
+ const ids=['system'].concat(BODIES.map(b=>b.id));
  for(const id of ids){const d=document.createElement('div');d.className='lbl';d.style.display='none';
   d.onclick=()=>goFocus(id);labelLayer.appendChild(d);labelDivs[id]=d;}
- const maps=[['map_cap',null],['map_center',null],['map_sun','system'],['map_per',null],['map_sag',null],['map_sgra',null],['map_scale',null]];
- for(const [id,go] of maps){const d=document.createElement('div');d.className='lbl';d.style.display='none';
-  d.onclick=()=>{if(go)goFocus(go);else showMilky();};labelLayer.appendChild(d);labelDivs[id]=d;}
- labelDivs.map_sgra.onclick=()=>window.open('https://zero5phh-ops.github.io/blackhole-voyage/','_blank');}
+ const maps=[['map_sun','system',true],['map_sgra','sgra',true],['map_per',null],['map_sag',null],['map_nor',null],['map_sct',null],['map_lmc',null],['map_scale',null]];
+ for(const [id,go,big] of maps){const d=document.createElement('div');d.className='lbl'+(big?' big':'');d.style.display='none';
+  d.onclick=()=>{if(go)goFocus(go);};labelLayer.appendChild(d);labelDivs[id]=d;}}
+const MAPL=['map_sun','map_sgra','map_per','map_sag','map_nor','map_sct','map_lmc','map_scale'];
 function updateLabels(){
  const W=canvas.clientWidth,H=canvas.clientHeight;
  const put=(id,x,y,txt,op)=>{const d=labelDivs[id];if(!d)return;
@@ -743,100 +1032,91 @@ function updateLabels(){
   if(d.innerHTML!==txt)d.innerHTML=txt;};
  const proj=(v)=>{_v.copy(v).project(camera);
   return[( _v.x*0.5+0.5)*W,(-_v.y*0.5+0.5)*H,_v.z<1];};
+ const wput=(id,wx,wy,wz,txt,op)=>{_v.set(wx,wy,wz);_v.applyMatrix4(galaxyGrp.matrixWorld);const pr=proj(_v);put(id,pr[0],pr[1]-16,txt,pr[2]?(op===undefined?0.95:op):0);};
+ const galOp=(mode==='galaxy')?Math.max(0,1-bhAlpha*2):0;
+ const galPx=GALR*(H/2)/(Math.max(1,camD)*Math.tan(camera.fov*Math.PI/360)); // 銀河半徑喺螢幕上幾多px
+ const armOp=galPx<220?0:Math.min(1,(galPx-220)/120);
+ if(galOp>0){
+  const ssp=galSun();wput('map_sun',ssp[0],ssp[1]+70,ssp[2],t('mapsun'),galOp);
+  wput('map_sgra',0,60,0,t('sgra_s'),galOp);
+  const pp=galArmPt(0,3.9);wput('map_per',pp[0],pp[1]+40,pp[2],t('mapper'),galOp*0.85*armOp);
+  const sp2=galArmPt(Math.PI/2,2.2);wput('map_sag',sp2[0],sp2[1]+40,sp2[2],t('mapsag'),galOp*0.85*armOp);
+  const sp3=galArmPt(Math.PI,3.9);wput('map_sct',sp3[0],sp3[1]+40,sp3[2],t('mapsct'),galOp*0.85*armOp);
+  const sp4=galArmPt(Math.PI*1.5,2.2);wput('map_nor',sp4[0],sp4[1]+40,sp4[2],t('mapnor'),galOp*0.85*armOp);
+  if(galAnim.lmc)wput('map_lmc',galAnim.lmc.position.x,galAnim.lmc.position.y+200,galAnim.lmc.position.z,t('maplmc'),galOp*0.8*armOp);
+  wput('map_scale',-1350,-40,1150,t('scale10k'),galOp*0.9*armOp);
+ }else MAPL.forEach(id=>put(id,0,0,'',0));
+ // 太陽系
  const far=camD>500;
- let v=new THREE.Vector3();
- // 太陽系標記
- v.set(0,0,0);let [sx2,sy2,ok2]=proj(v);
- put('system',sx2,sy2-30,t('sys'),(ok2&&camD>420&&focusId!=='mmap'&&focusId!=='sgra')?0.95:0);
- const wput=(id,wx,wy,wz,txt)=>{_v.set(wx,wy,wz);const pr=proj(_v);put(id,pr[0],pr[1]-16,txt,pr[2]?0.95:0);};
- if(focusId==='mmap'){
-  put('map_cap',W/2,84,t('mapcap2'),0.95);
-  wput('map_center',GALC.x,GALC.y+130,GALC.z,t('mapcenter'));
-  const ssp=galSun();wput('map_sun',ssp[0],ssp[1]+95,ssp[2],t('mapsun'));
-  const pp=galArmPt(ARM_P1,4.15);wput('map_per',pp[0],pp[1]+70,pp[2],t('mapper'));
-  const sp2=galArmPt(ARM_P2,3.3);wput('map_sag',sp2[0],sp2[1]+70,sp2[2],t('mapsag'));
-  wput('map_sgra',GALC.x,GALC.y+45,GALC.z,t('sgra'));
-  wput('map_scale',GALC.x-1350,GALC.y-10,GALC.z+1100,t('scale10k'));
- }else if(focusId==='sgra'){
-  ['map_cap','map_center','map_sun','map_per','map_sag','map_scale'].forEach(id=>put(id,0,0,'',0));
-  wput('map_sgra',GALC.x,GALC.y+60,GALC.z,t('sgra'));
- }else{['map_cap','map_center','map_sun','map_per','map_sag','map_sgra','map_scale'].forEach(id=>put(id,0,0,'',0));}
- for(const b of BODIES){
- if(focusId==='mmap'||focusId==='sgra'){put(b.id,0,0,'',0);continue;}
-  const b3=bodies3D[b.id];v.copy(b3.grp.position);
-  if(b.parent)v.y+=b.size+1.5;else v.y+=b.size+2;
-  let [x,y,ok3]=proj(v);if(!ok3){put(b.id,0,0,'',0);continue;}
-  let op=0;
-  if(far){op=(b.sun)?0.9:0;}
-  else if(b.parent){op=camD<90?0.9:0;}
-  else{op=camD<500?0.9:0;}
-  put(b.id,x,y,(scaleMix>0.5&&!b.parent&&b.stats.dis)?bn(b)+'<br><small>'+b.stats.dis+'</small>':bn(b),op);}
- $('zoomRead').textContent=Math.round(camD)+'u';}
+ if(mode==='system'){
+  _v.set(0,0,0);const [sx2,sy2,ok2]=proj(_v);
+  put('system',sx2,sy2-30,t('sys'),(ok2&&camD>420)?0.95:0);
+  for(const b of BODIES){
+   const b3=bodies3D[b.id];_v.copy(b3.grp.position);
+   if(b.parent)_v.y+=b.size+1.5;else _v.y+=b.size+2;
+   const [x,y,ok3]=proj(_v);if(!ok3){put(b.id,0,0,'',0);continue;}
+   let op=0;
+   if(far){op=(b.sun)?0.9:0;}
+   else if(b.parent){op=camD<90?0.9:0;}
+   else{op=camD<500?0.9:0;}
+   put(b.id,x,y,(scaleMix>0.5&&!b.parent&&b.stats.dis)?bn(b)+'<br><small>'+b.stats.dis+'</small>':bn(b),op);}
+ }else{put('system',0,0,'',0);for(const b of BODIES)put(b.id,0,0,'',0);}
+ $('zoomRead').textContent=mode==='sgra'?bhD.toFixed(1)+' rs':Math.round(camD)+'u';}
 
-/* ---------- 銀河系(我哋住喺入面) ---------- */
+/* ---------- 銀河系資訊 ---------- */
 const MILKY={
  name:{zh:'🌌 銀河系',en:'🌌 Milky Way',ms:'🌌 Bima Sakti',ko:'🌌 은하수',ja:'🌌 天の川'},
  stats:{
-  zh:[['直徑','約10萬光年'],['太陽位置','離中心約25,000光年 · 獵戶座-天鵝座旋臂'],['恆星數量','1000–4000億粒'],['銀河年','太陽繞一圈要2.3億年']],
-  en:[['Diameter','~100,000 light-years'],['Where is the Sun','~25,000 ly from center · Orion–Cygnus Arm'],['Stars','100–400 billion'],['Galactic year','Sun orbits once every 230M years']],
-  ms:[['Diameter','~100,000 tahun cahaya'],['Kedudukan Matahari','~25,000 tc dari pusat · Lengan Orion–Cygnus'],['Bintang','100–400 bilion'],['Tahun galaksi','Matahari mengelilingi sekali setiap 230J tahun']],
-  ko:[['지름','약 10만 광년'],['태양 위치','중심에서 약 25,000광년 · 오리온-백조자리 나선팔'],['항성 수','1,000–4,000억 개'],['은하년','태양 공전 1회에 2.3억 년']],
-  ja:[['直径','約10万光年'],['太陽の位置','中心から約25,000光年 · オリオン-白鳥座腕'],['恒星数','1,000–4,000億個'],['銀河年','太陽の公転1周は2.3億年']]},
+  zh:[['類型','棒旋星系（SBbc）'],['直徑','約10萬光年 · 厚約1,000光年'],['恆星數量','1000–4000億粒'],['質量','約1.5萬億個太陽'],['太陽位置','離中心約26,000光年 · 獵戶支臂'],['銀河年','太陽繞一圈要2.3億年'],['中心','人馬座A*超大質量黑洞'],['鄰居','仙女座星系 250萬光年 · 45億年後相撞']],
+  en:[['Type','Barred spiral (SBbc)'],['Diameter','~100,000 ly · ~1,000 ly thick'],['Stars','100–400 billion'],['Mass','~1.5 trillion Suns'],['Where is the Sun','~26,000 ly from center · Orion Spur'],['Galactic year','One solar orbit every 230M years'],['Center','Sagittarius A* supermassive black hole'],['Neighbor','Andromeda 2.5M ly · collision in 4.5B yrs']],
+  ms:[['Jenis','Pilin berpalang (SBbc)'],['Diameter','~100,000 tc · tebal ~1,000 tc'],['Bintang','100–400 bilion'],['Jisim','~1.5 trilion Matahari'],['Kedudukan Matahari','~26,000 tc dari pusat · Taji Orion'],['Tahun galaksi','Satu orbit setiap 230J tahun'],['Pusat','Lubang hitam supermasif Sagittarius A*'],['Jiran','Andromeda 2.5J tc · bertembung 4.5B tahun lagi']],
+  ko:[['유형','막대나선은하 (SBbc)'],['지름','약 10만 광년 · 두께 약 1,000광년'],['항성 수','1,000–4,000억 개'],['질량','태양 약 1.5조 개'],['태양 위치','중심에서 약 26,000광년 · 오리온 지류'],['은하년','태양 공전 1회에 2.3억 년'],['중심','궁수자리 A* 초대질량 블랙홀'],['이웃','안드로메다 250만 광년 · 45억 년 후 충돌']],
+  ja:[['型','棒渦巻銀河（SBbc）'],['直径','約10万光年 · 厚さ約1,000光年'],['恒星数','1,000–4,000億個'],['質量','太陽約1.5兆個分'],['太陽の位置','中心から約26,000光年 · オリオン腕'],['銀河年','太陽の公転1周は2.3億年'],['中心','いて座A* 超大質量ブラックホール'],['隣人','アンドロメダ 250万光年 · 45億年後に衝突']]},
  blurb:{
-  zh:'重點糾正：太陽系唔喺銀河系出面 —— 我哋住喺入面！銀河係個棒旋星系。你而家見到橫跨天空嘅光帶，就係由入面向外望嘅銀河盤面。拉近，就會飛返去我哋屋企——太陽系。歐空局蓋亞任務正用十幾億粒星嘅數據繪製緊成個銀河地圖。',
-  en:'Correction: the Solar System is not outside the Milky Way — we live inside it! Ours is a barred spiral. The glowing band across the sky is the galactic disk seen from within. Zoom in to fly home to the Solar System. ESA’s Gaia mission is mapping the whole Galaxy from billions of stars.',
-  ms:'Pembetulan: Sistem Suria bukan di luar Bima Sakti — kita tinggal di dalamnya! Galaksi kita ialah pilin berpalang. Jalur cahaya merentasi langit ialah cakera galaksi dilihat dari dalam. Zum masuk untuk pulang ke Sistem Suria. Misi Gaia ESA sedang memetakan seluruh galaksi daripada bilion bintang.',
-  ko:'정정: 태양계는 은하수 밖에 있지 않아요 — 우리는 안에 살고 있어요! 우리 은하는 막대나선은하예요. 하늘을 가로지르는 빛의 띠가 안에서 본 은하 원반이죠. 확대하면 집(태양계)으로 돌아가요. ESA 가이아 탐사선이 수십억 개 별 데이터로 은하 전체를 그리고 있어요.',
-  ja:'訂正：太陽系は天の川の外ではありません —— 私たちは中に住んでいます！私たちの銀河は棒渦巻銀河。空を横切る光の帯が内側から見た銀河円盤です。ズームインで我が家（太陽系）へ帰りましょう。ESAガイアミッションが数十億の星データで銀河全体を描いています。'}};
-function showMilky(){
- lastInfo='@milky';
- $('infoImg').src='tex/milkyway_map.jpg';
- $('infoImg').style.display='block';
- $('infoCap').innerHTML=t('mapcap');
- $('infoCap').style.display='block';
- $('infoName').textContent=MILKY.name[LANG]||MILKY.name.en;
- $('infoBlurb').textContent=MILKY.blurb[LANG]||MILKY.blurb.en;
- let h='';for(const [k,v] of (MILKY.stats[LANG]||MILKY.stats.en))h+=`<tr><td class="k">${k}</td><td>${v}</td></tr>`;
+  zh:'我哋嘅屋企星系。你而家由外面望入去：中央係一條由老年黃色恆星組成嘅棒，四條旋臂由年輕藍白星、粉紅色氫氣星雲同暗塵帶勾出；周圍係球狀星團同暗物質暈。橙色脈動點就係太陽系 —— 撳落去飛返屋企；撳中心白點就去睇人馬座A*黑洞。',
+  en:'Our home galaxy, seen from outside. A bar of old yellow stars sits at the center; four spiral arms are traced by young blue-white stars, pink hydrogen nebulae and dark dust lanes; globular clusters and a dark-matter halo surround it all. The pulsing orange dot is the Solar System — tap it to fly home, or tap the bright center to visit the Sagittarius A* black hole.',
+  ms:'Galaksi rumah kita, dilihat dari luar. Palang bintang kuning tua di tengah; empat lengan pilin digariskan oleh bintang biru-putih muda, nebula hidrogen merah jambu dan jalur debu gelap; gugusan globul dan halo jirim gelap mengelilinginya. Titik oren berdenyut ialah Sistem Suria — sentuh untuk pulang, atau sentuh pusat untuk melawat lubang hitam Sagittarius A*.',
+  ko:'우리의 고향 은하를 바깥에서 본 모습. 중심에는 늙은 노란 별들의 막대, 네 개의 나선팔은 젊은 청백색 별과 분홍 수소 성운, 어두운 먼지띠로 그려지고, 구상성단과 암흑물질 헤일로가 둘러싸요. 깜빡이는 주황 점이 태양계 — 눌러서 집으로, 밝은 중심을 누르면 궁수자리 A* 블랙홀로 갑니다.',
+  ja:'私たちの故郷の銀河を外から見た姿。中心には老いた黄色い星の棒、4本の渦状腕は若い青白い星、ピンクの水素星雲、暗い塵の帯で描かれ、球状星団と暗黒物質ハローが取り囲みます。脈打つオレンジの点が太陽系 —— タップで帰宅、明るい中心をタップでいて座A*ブラックホールへ。'}};
+let lastInfo=null;
+function openInfo(name,tag,blurb,rows){
+ const el=$('info');el.classList.add('hidden');
+ $('infoName').textContent=name;$('infoTag').textContent=tag||'';
+ $('infoBlurb').textContent=blurb;
+ let h='';for(const [k,v] of rows)h+=`<tr><td class="k">${k}</td><td>${v}</td></tr>`;
  $('infoStats').innerHTML=h;
- $('info').classList.remove('hidden');}
+ void el.offsetWidth;el.classList.remove('hidden');el.scrollTop=0;}
+function showMilky(){lastInfo='@milky';openInfo(MILKY.name[LANG]||MILKY.name.en,t('tag_gal'),MILKY.blurb[LANG]||MILKY.blurb.en,MILKY.stats[LANG]||MILKY.stats.en);}
+function showSys(){lastInfo='@sys';openInfo(SYS.name[LANG]||SYS.name.en,t('tag_sys'),SYS.blurb[LANG]||SYS.blurb.en,SYS.stats[LANG]||SYS.stats.en);}
 
 /* ---------- 人馬座A*(銀河中心黑洞) ---------- */
 const SGRA={
  name:{zh:'⚫ 人馬座A*',en:'⚫ Sagittarius A*',ms:'⚫ Sagittarius A*',ko:'⚫ 궁수자리A*',ja:'⚫ いて座A*'},
  stats:{
-  zh:[['質量','430萬個太陽質量'],['距離','26,000光年（銀河中心）'],['視界直徑','約2,500萬km'],['照片','第二張黑洞相（EHT 2022）'],['光子球','1.5倍視界半徑 · 連光都兜圈'],['吸積盤','內緣近半光速 · 一邊光一邊暗（多普勒增亮）']],
-  en:[['Mass','4.3 million solar masses'],['Distance','26,000 ly (galactic center)'],['Horizon','~25M km across'],['Photo','2nd black hole imaged (EHT 2022)'],['Photon sphere','1.5 horizon radii — light itself orbits'],['Accretion disk','Inner rim near ½ light speed · brighter on one side (Doppler beaming)']],
-  ms:[['Jisim','4.3 juta jisim suria'],['Jarak','26,000 tc (pusat galaksi)'],['Ufuk','~25J km'],['Foto','Lubang ke-2 diimej (EHT 2022)'],['Sfera foton','1.5 jejari ufuk — cahaya sendiri mengorbit'],['Cakera akresi','Tepi dalam hampir ½ laju cahaya · sebelah lebih terang (pancaran Doppler)']],
-  ko:[['질량','태양 430만 배'],['거리','26,000광년（은하 중심)'],['지평선','지름 약 2,500만km'],['사진','두 번째로 촬영된 블랙홀 (EHT 2022)'],['광자구','지평선 반지름 1.5배 — 빛도 공전'],['강착원반','안쪽은 광속의 절반 · 한쪽이 밝음(도플러 증광)']],
-  ja:[['質量','太陽430万個分'],['距離','26,000光年（銀河中心）'],['地平面','直径約2,500万km'],['写真','2番目に撮影されたブラックホール（EHT2022）'],['光子球','地平面半径の1.5倍 — 光も周回'],['降着円盤','内縁は光速の半分 · 片側が明るい(ドップラー増光)']]},
+  zh:[['質量','430萬個太陽質量'],['距離','26,000光年（銀河中心）'],['視界直徑','約2,500萬km'],['照片','第二張黑洞相（EHT 2022）'],['光子球','1.5倍視界半徑 · 連光都兜圈'],['吸積盤','內緣近半光速 · 一邊光一邊暗（多普勒增亮）'],['你見到嘅','背後嘅銀河星空被重力扭曲成環']],
+  en:[['Mass','4.3 million solar masses'],['Distance','26,000 ly (galactic center)'],['Horizon','~25M km across'],['Photo','2nd black hole imaged (EHT 2022)'],['Photon sphere','1.5 horizon radii — light itself orbits'],['Accretion disk','Inner rim near ½ light speed · brighter on one side (Doppler beaming)'],['What you see','The Milky Way behind it, lensed into rings by gravity']],
+  ms:[['Jisim','4.3 juta jisim suria'],['Jarak','26,000 tc (pusat galaksi)'],['Ufuk','~25J km'],['Foto','Lubang ke-2 diimej (EHT 2022)'],['Sfera foton','1.5 jejari ufuk — cahaya sendiri mengorbit'],['Cakera akresi','Tepi dalam hampir ½ laju cahaya · sebelah lebih terang (pancaran Doppler)'],['Yang anda lihat','Bima Sakti di belakang, dibengkokkan graviti menjadi gelang']],
+  ko:[['질량','태양 430만 배'],['거리','26,000광년（은하 중심)'],['지평선','지름 약 2,500만km'],['사진','두 번째로 촬영된 블랙홀 (EHT 2022)'],['광자구','지평선 반지름 1.5배 — 빛도 공전'],['강착원반','안쪽은 광속의 절반 · 한쪽이 밝음(도플러 증광)'],['보이는 것','뒤편 은하수가 중력으로 고리처럼 휘어짐']],
+  ja:[['質量','太陽430万個分'],['距離','26,000光年（銀河中心）'],['地平面','直径約2,500万km'],['写真','2番目に撮影されたブラックホール（EHT2022）'],['光子球','地平面半径の1.5倍 — 光も周回'],['降着円盤','内縁は光速の半分 · 片側が明るい(ドップラー増光)'],['見えているもの','背後の天の川が重力で環状に歪む']]},
  blurb:{
-  zh:'銀河系中心嘅超大質量黑洞，上面個樣放大咗無數倍——真實佢細到喺呢幅圖完全睇唔到。2022年EHT拍到佢，附近氣體90分鐘繞一圈。事件視界係有去無回嘅邊界；1.5倍半徑處係光子球，連光都喺嗰度兜圈。撳🗺️返出去睇成個銀河。',
-  en:'The supermassive black hole at our Galaxy\u2019s heart — shown here magnified beyond count; the real thing is invisible at this scale. Imaged by EHT in 2022; nearby gas orbits every ~90 minutes. The event horizon is the point of no return; at 1.5 radii sits the photon sphere, where light itself goes into orbit.',
-  ms:'Lubang hitam supermasif di pusat galaksi kita — ditunjukkan di sini dibesarkan tidak terkira; yang sebenar tidak kelihatan pada skala ini. Diimej oleh EHT pada 2022; gas berdekatan mengorbit setiap ~90 minit. Ufuk peristiwa ialah titik tiada kembali; pada 1.5 jejari terletak sfera foton, tempat cahaya sendiri mengorbit.',
-  ko:'우리 은하 중심의 초대질량 블랙홀 — 셀 수 없이 확대해서 보여주는 중이라 실제 크기는 이 그림에서 안 보여요. 2022년 EHT가 촬영했고 주변 가스는 90분마다 한 바퀴를 돌아요. 사건의 지평선은 돌아올 수 없는 경계고, 1.5배 지점의 광자구에서는 빛조차 공전해요.',
-  ja:'私たちの銀河中心の超大質量ブラックホール — 数え切れないほど拡大表示しているので実物はこの図では見えません。2022年にEHTが撮影、周囲のガスは約90分で1周します。事象の地平面は帰還不能の境界で、1.5倍の光子球では光すら周回します。'}};
-function showSgra(){
- lastInfo='@sgra';
- $('infoName').textContent=SGRA.name[LANG]||SGRA.name.en;
- $('infoBlurb').textContent=SGRA.blurb[LANG]||SGRA.blurb.en;
- let h='';for(const [k,v] of (SGRA.stats[LANG]||SGRA.stats.en))h+=`<tr><td class="k">${k}</td><td>${v}</td></tr>`;
- $('infoStats').innerHTML=h;
- $('info').classList.remove('hidden');}
+  zh:'銀河系中心嘅超大質量黑洞，呢度放大咗無數倍——真實佢細到喺銀河圖完全睇唔到。你見到嘅係光線追蹤模擬：吸積盤被重力扭曲到上下都望得見、迎面轉過來嗰邊因多普勒效應特別光、背後嘅銀河被拉成光環。拖拽環繞，滾輪靚近事件視界。',
+  en:'The supermassive black hole at our Galaxy’s heart, magnified beyond count — the real thing is invisible on the galaxy map. This is a ray-traced simulation: gravity bends the accretion disk so you see its far side above and below, the side rotating toward you glows brighter (Doppler beaming), and the Milky Way behind is stretched into rings. Drag to orbit, scroll toward the horizon.',
+  ms:'Lubang hitam supermasif di pusat galaksi, dibesarkan tidak terkira — yang sebenar tidak kelihatan pada peta galaksi. Ini simulasi jejak sinar: graviti membengkokkan cakera akresi supaya sisi jauhnya kelihatan di atas dan bawah, sisi yang berputar ke arah anda lebih terang (pancaran Doppler), dan Bima Sakti di belakang diregang menjadi gelang.',
+  ko:'우리 은하 중심의 초대질량 블랙홀을 엄청나게 확대한 모습 — 실제로는 은하 지도에서 보이지 않아요. 광선 추적 시뮬레이션: 중력이 강착원반을 휘어 반대편이 위아래로 보이고, 나를 향해 도는 쪽이 도플러 효과로 더 밝고, 뒤편 은하수가 고리로 늘어나요. 드래그로 회전, 스크롤로 지평선 접근.',
+  ja:'銀河中心の超大質量ブラックホールを大幅に拡大 —— 実物は銀河図では見えません。これはレイトレーシングのシミュレーション：重力で降着円盤の裏側が上下に見え、手前へ回る側がドップラー効果で明るく、背後の天の川は環状に引き伸ばされます。ドラッグで周回、スクロールで地平面へ。'}};
+function showSgra(){lastInfo='@sgra';openInfo(SGRA.name[LANG]||SGRA.name.en,t('tag_bh'),SGRA.blurb[LANG]||SGRA.blurb.en,SGRA.stats[LANG]||SGRA.stats.en);}
 
-/* ---------- 資訊面板 ---------- */
+/* ---------- 星球資訊 ---------- */
 const STATL={dia:'k_dia',dis:'k_dis',year:'k_year',day:'k_day',moon:'k_moon',temp:'k_temp',extra:'k_extra'};
 function showInfo(id){
  const b=BODIES.find(x=>x.id===id);if(!b)return;
- $('infoImg').style.display='none';$('infoCap').style.display='none';
- $('infoName').textContent=bn(b);
- $('infoBlurb').textContent=b.blurb[LANG]||b.blurb.en;
- let h='';
+ lastInfo=id;
+ const rows=[];
  for(const k of['dia','dis','year','day','moon','temp','extra']){
   if(!b.stats[k])continue;
   const v=typeof b.stats[k]==='object'?(b.stats[k][LANG]||b.stats[k].en):b.stats[k];
-  h+=`<tr><td class="k">${t(STATL[k])}</td><td>${v}</td></tr>`;}
- $('infoStats').innerHTML=h;
- $('info').classList.remove('hidden');}
+  rows.push([t(STATL[k]),v]);}
+ openInfo(bn(b),'',b.blurb[LANG]||b.blurb.en,rows);}
 function hideInfo(){$('info').classList.add('hidden');}
 $('infoClose').onclick=hideInfo;
 
@@ -852,12 +1132,9 @@ function applyLang(){
  document.documentElement.lang=LANG==='zh'?'zh-Hant':LANG;
  document.querySelectorAll('[data-i18n]').forEach(el=>{el.innerHTML=t(el.dataset.i18n);});
  buildPlanetBtns();buildTable();
- if(!$('info').classList.contains('hidden')&&lastInfo){if(lastInfo==='@milky')showMilky();else if(lastInfo==='@sgra')showSgra();else showInfo(lastInfo);}
- $('langSel').value=LANG;
- drawNow=true;}
-let lastInfo=null;
-const _showInfo=showInfo;
-showInfo=function(id){lastInfo=id;_showInfo(id);};
+ $('hint').innerHTML=mode==='galaxy'?t('hint_gal'):mode==='sgra'?t('hint_bh'):t('hint');
+ if(!$('info').classList.contains('hidden')&&lastInfo){if(lastInfo==='@milky')showMilky();else if(lastInfo==='@sgra')showSgra();else if(lastInfo==='@sys')showSys();else showInfo(lastInfo);}
+ $('langSel').value=LANG;}
 $('langSel').value=LANG;
 $('langSel').addEventListener('change',function(){LANG=this.value;localStorage.setItem('gv_lang',LANG);applyLang();});
 
@@ -865,58 +1142,79 @@ $('langSel').addEventListener('change',function(){LANG=this.value;localStorage.s
 function size(){const r=canvas.parentElement.getBoundingClientRect();
  const w=Math.max(200,r.width),h=Math.max(200,r.height);
  renderer.setSize(w,h,false);
- camera.aspect=w/h;camera.updateProjectionMatrix();}
+ camera.aspect=w/h;
+ // 視覺重心偏移：直屏往上（避開底部面板+資訊卡），橫屏略偏左（資訊卡喺右邊）
+ let ox=0,oy=0;
+ if(w/h<0.9){oy=Math.round(h*0.13);}
+ else if(w>=900){ox=Math.round(w*0.08);oy=Math.round(h*0.03);}
+ else{oy=Math.round(h*0.05);}
+ camera.setViewOffset(w,h,ox,oy,w,h);
+ camera.updateProjectionMatrix();
+ bhMat.uniforms.u_off.value.set(ox/w*2,-oy/h*2);
+ layoutInfo();
+ bhMat.uniforms.u_res.value.set(canvas.width,canvas.height);
+ if(mode==='galaxy'&&focusId==='galaxy')tgtD=fitGalaxy();}
 addEventListener('resize',size);size();
 const camTarget=new THREE.Vector3(),camPos=new THREE.Vector3();
-let last=performance.now(),drawNow=false;
+let last=performance.now(),fpsA=60,lastQ=0;
 function frame(now){
  requestAnimationFrame(frame);
- let dt=(now-last)/1000;last=now;if(dt>0.05)dt=0.05;
+ let rdt=(now-last)/1000;last=now;if(rdt>1)rdt=1;   // 真實時間（相機/淡入淡出用）
+ let dt=Math.min(rdt,0.05);                          // 物理時間（軌道用）
+ fpsA=fpsA*0.95+(1/Math.max(dt,1e-3))*0.05;
  if(tourOn&&!document.hidden){tourT+=dt;
-  if(tourT>9){tourT=0;tourIdx=(tourIdx+1)%TOUR.length;
-   const id=TOUR[tourIdx];focusId=id;
-   if(id==='mmap')enterMap();else tgtD=focusDist();
-   if(id==='mmap'||id==='galaxy')showMilky();else if(id==='sgra')showSgra();else if(id!=='system')showInfo(id);else hideInfo();}}
+  if(tourT>11){tourT=0;tourIdx=(tourIdx+1)%TOUR.length;goFocus(TOUR[tourIdx],true);}}
  scaleMix+=(scaleMixT-scaleMix)*Math.min(1,dt*2);
  for(const id in ORBITS){const o=ORBITS[id];o.line.scale.setScalar(Math.max(0.001,effDist(o.def)/(o.def.dist||1)));}
  if(bodies3D.belt)bodies3D.belt.mesh.scale.setScalar(1+0.35*scaleMix);
  updateBodies(dt);
- const k=1-Math.pow(0.002,dt);
+ // 相機（主場景）
+ const k=1-Math.pow(0.002,rdt);
  camD+=(tgtD-camD)*k;
  focusTarget(camTarget);
  camPos.set(
   camTarget.x+camD*Math.sin(camP)*Math.cos(camT),
   camTarget.y+camD*Math.cos(camP),
   camTarget.z+camD*Math.sin(camP)*Math.sin(camT));
- camera.position.lerp(camPos,1-Math.pow(0.0001,dt));
+ camera.position.lerp(camPos,1-Math.pow(0.0001,rdt));
  camera.lookAt(camTarget);
- if(autoRot&&tourOn)camT+=dt*0.02;
- const glowI=1+0.06*Math.sin(now*0.004);
- glow.scale.set(55*glowI,55*glowI,1);
- for(const s of galAnim.spin)s.o.rotation.y+=dt*s.s;
- if(galBH.disk)galBH.disk.rotation.z+=dt*0.35;
- const bd=Math.max(0,Math.min(1,(700-camera.position.distanceTo(BHV))/550));
- $('bhdim').style.opacity=(bd*0.62).toFixed(2);
- $('bhtint').style.opacity=bd.toFixed(2);
- sunLight.intensity=1.8*(1-bd*0.85);
- rim.intensity=0.5*(1-bd);
- ambL.intensity=0.5*(1-bd*0.8);
- if(galBH.tilt&&galBH.beam){
-  galBH.tilt.updateWorldMatrix(true,false);
-  _bv.copy(camera.position);galBH.tilt.worldToLocal(_bv);
-  const phi=Math.atan2(_bv.y,_bv.x),a=phi-Math.PI/2;
-  galBH.beam.position.set(Math.cos(a)*48,Math.sin(a)*48,2);
-  galBH.beam.material.opacity=0.25+0.55*(1-Math.abs(_bv.z)/Math.max(1,_bv.length()));
+ if(mode==='galaxy'&&drags.size===0)camT+=dt*0.025;   // 銀河慢慢自轉展示
+ else if(tourOn)camT+=dt*0.02;
+ // 黑洞相機 + 淡入淡出
+ bhD+=(bhDT-bhD)*(1-Math.pow(0.003,rdt));
+ bhAlpha+=(bhAlphaT-bhAlpha)*Math.min(1,rdt*1.6);
+ if(Math.abs(bhAlpha-bhAlphaT)<0.004)bhAlpha=bhAlphaT;
+ if(bhAlpha>0.001){
+  bhTime+=dt*Math.max(0.15,Math.min(timeScale,3));
+  // 自適應品質：fps低就減步數
+  if(mode==='sgra'&&now-lastQ>2000){lastQ=now;
+   if(fpsA<26&&bhSteps>50){bhSteps-=10;bhMat.uniforms.u_steps.value=bhSteps;}
+   else if(fpsA>55&&bhSteps<(isMobile?90:140)){bhSteps+=10;bhMat.uniforms.u_steps.value=bhSteps;}}
  }
- if(galAnim.sgra){const sp3=1+0.3*Math.sin(now*0.006);galAnim.sgra.scale.set(60*sp3,60*sp3,1);}
- for(const tw of galAnim.tw||[])tw.material.opacity=0.3+0.35*Math.abs(Math.sin(now*0.001+tw.userData.tw));
- if(galAnim.mark){const mp=1+0.22*Math.sin(now*0.005);galAnim.mark.scale.set(90*mp,90*mp,1);}
- for(const r of galAnim.rings){const ph=((now*0.00035)+r.userData.ph)%1;const sc=1+ph*2.6;r.scale.set(sc,sc,sc);r.material.opacity=0.75*(1-ph);}
- renderer.render(scene,camera);
+ // 太陽系動畫
+ if(mode==='system'){const glowI=1+0.06*Math.sin(now*0.004);glow.scale.set(55*glowI,55*glowI,1);}
+ // 銀河動畫
+ if(galaxyGrp.visible){
+  galaxyGrp.rotation.y+=dt*0.004*Math.max(0.2,Math.min(timeScale,3));
+  if(galAnim.sgra){const sp3=1+0.35*Math.sin(now*0.006);galAnim.sgra.scale.set(50*sp3,50*sp3,1);}
+  for(const tw of galAnim.tw)tw.material.opacity=tw.userData.base*(0.7+0.5*Math.abs(Math.sin(now*0.001+tw.userData.tw)));
+  if(galAnim.mark){const mp=1+0.22*Math.sin(now*0.005);galAnim.mark.scale.set(70*mp,70*mp,1);}
+  for(const r of galAnim.rings){const ph=((now*0.00035)+r.userData.ph)%1;const sc=1+ph*2.6;r.scale.set(sc,sc,sc);r.material.opacity=0.75*(1-ph);}
+ }
+ // 渲染
+ renderer.clear();
+ if(bhAlpha<0.999)renderer.render(scene,camera);
+ if(bhAlpha>0.001){
+  const u=bhMat.uniforms;u.u_time.value=bhTime;u.u_dist.value=bhD;u.u_ang.value.set(camT,Math.max(0.2,Math.min(1.45,camP)));u.u_alpha.value=bhAlpha;
+  renderer.render(bhScene,bhCam);}
  updateLabels();
- if(Math.abs(tgtD-sliderToDist(+zoomSlider.value))>tgtD*0.05+1)zoomSlider.value=distToSlider(camD);
+ const cur=getTgt();
+ if(Math.abs(cur-sliderToDist(+zoomSlider.value))>cur*0.05+0.01)zoomSlider.value=distToSlider(curD());
 }
-buildLabels();buildPlanetBtns();buildTable();applyLang();
+buildLabels();buildPlanetBtns();buildTable();
+setMode('galaxy');tgtD=fitGalaxy();camD=tgtD*3.5;
+applyLang();
+setTimeout(showMilky,900);
 requestAnimationFrame(frame);
 </script>
 </body>
