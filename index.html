@@ -41,6 +41,48 @@
   #infoClose{position:absolute;top:8px;right:10px;background:none;border:none;color:#8be9fd;font-size:18px;cursor:pointer}
   #infoTag{display:inline-block;font-size:11px;color:#ffd166;border:1px solid rgba(255,209,102,.5);border-radius:999px;padding:1px 8px;margin-bottom:6px}
   #infoTag:empty{display:none}
+  #info .hd{cursor:pointer;position:relative;padding-right:26px}
+  #info .chev{position:absolute;right:0;top:2px;color:#8be9fd;font-size:16px;opacity:.7;transition:transform .25s;display:none}
+  #info.min .bd{display:none}
+  #info.min .chev{transform:rotate(180deg)}
+  #info .bd{max-height:inherit}
+  .facts{margin-top:10px;font-size:13px;line-height:1.75;color:#cfe8ff}
+  .facts b{color:#ffd166;display:block;margin-bottom:4px}
+  .facts ul{padding-left:18px}
+  .facts li{margin-bottom:4px}
+  #toast{position:absolute;z-index:9;left:50%;top:calc(110px + env(safe-area-inset-top));transform:translate(-50%,-10px);background:rgba(5,10,25,.9);border:1px solid rgba(255,209,102,.6);color:#ffd166;border-radius:12px;padding:8px 14px;font-size:13px;font-weight:700;max-width:92vw;text-align:center;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s}
+  #toast.show{opacity:1;transform:translate(-50%,0)}
+  #panel{position:relative}
+  #panelTog{position:absolute;top:-14px;right:14px;width:34px;height:26px;border-radius:10px;background:rgba(5,10,25,.9);border:1px solid rgba(0,229,255,.45);color:#8be9fd;font-size:16px;line-height:1;cursor:pointer;display:none}
+  #panel.min #planetRow,#panel.min label,#panel.min .row:not(#navRow),#panel.min #hint{display:none!important}
+  #panel.min{padding-bottom:8px}
+  @media (max-width:899px){
+    #info{max-height:32vh;padding:10px 12px}
+    #info .chev{display:block}
+    #info h3{font-size:17px}
+    #info .blurb{font-size:13px;line-height:1.7}
+    #panelTog{display:block}
+    #panel{padding:8px 10px}
+    #planetRow{flex-wrap:nowrap!important;overflow-x:auto;justify-content:flex-start!important;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+    #planetRow::-webkit-scrollbar{display:none}
+    #planetRow .pbtn{flex:0 0 auto}
+    .pbtn{padding:6px 9px;font-size:12px}
+    #navRow .pbtn{font-size:12.5px;padding:7px 11px}
+    #panel label{margin-top:6px}
+    #hint{margin-top:4px;font-size:10.5px}
+  }
+  /* ---- 知識專區 ---- */
+  #know{max-width:900px}
+  .kgroup{background:rgba(255,255,255,.035);border:1px solid rgba(0,229,255,.22);border-radius:14px;margin-bottom:12px;overflow:hidden}
+  .kgroup summary{cursor:pointer;list-style:none;padding:14px 16px;font-size:18px;font-weight:800;display:flex;flex-wrap:wrap;align-items:baseline;gap:10px}
+  .kgroup summary::-webkit-details-marker{display:none}
+  .kgroup summary small{font-size:12.5px;color:#8be9fd;font-weight:600}
+  .kgroup summary::after{content:'⌄';margin-left:auto;color:#8be9fd;font-size:18px;transition:transform .25s}
+  .kgroup[open] summary::after{transform:rotate(180deg)}
+  .kgroup .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;padding:0 12px 12px}
+  .kcard{background:rgba(5,10,25,.55);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 13px}
+  .kcard h4{color:#ffd166;font-size:15px;margin-bottom:6px}
+  .kcard p{font-size:13.5px;line-height:1.8;color:#cfe8ff}
   @media (min-width:900px){
     #info{left:auto;right:14px;bottom:auto;top:calc(96px + env(safe-area-inset-top));width:350px;max-width:350px;max-height:calc(100vh - 330px);margin:0}
   }
@@ -81,6 +123,7 @@
   <div id="vig"></div>
   <div id="labels"></div>
   <div id="fade"></div>
+  <div id="toast"></div>
   <div id="loading"><div class="spin"></div><div id="loadTxt">Loading textures…</div></div>
   <div id="title">
     <h1 data-i18n="title_h1">🌌 Galaxy Voyage</h1>
@@ -89,17 +132,22 @@
   <div id="scaleBadge" style="display:none"></div>
   <div id="info" class="hidden">
     <button id="infoClose">✕</button>
-    <h3 id="infoName"></h3>
-    <span id="infoTag"></span>
-    <div class="blurb" id="infoBlurb"></div>
-    <table id="infoStats"></table>
+    <div class="hd" id="infoHd"><h3 id="infoName"></h3><span id="infoTag"></span><span class="chev">⌄</span></div>
+    <div class="bd">
+      <div class="blurb" id="infoBlurb"></div>
+      <table id="infoStats"></table>
+      <div class="facts" id="infoFacts"></div>
+    </div>
   </div>
   <div id="panel">
     <div class="row" id="navRow">
       <button class="pbtn" data-go="galaxy" data-i18n="gal">🌌</button>
       <button class="pbtn" data-go="sgra" data-i18n="bh">⚫</button>
       <button class="pbtn" data-go="system" data-i18n="sys">☀️</button>
+      <button class="pbtn" id="diveBtn" data-i18n="dive" style="display:none">🕳️</button>
+      <button class="pbtn" id="knowBtn" data-i18n="more">📖</button>
     </div>
+    <button id="panelTog" title="collapse">⌄</button>
     <div class="row" id="planetRow" style="margin-top:6px"></div>
     <label><span data-i18n="zoom_l">Zoom</span><input type="range" id="zoom" min="0" max="1000" value="1000"><span class="val" id="zoomRead"></span></label>
     <label id="timeRow"><span data-i18n="time_l">Time</span><input type="range" id="time" min="0" max="100" value="35"><span class="val" id="timeRead">1.0×</span></label>
@@ -113,7 +161,7 @@
       </select>
       <button class="pbtn on" id="orbitBtn">🛰️</button>
       <button class="pbtn on" id="labelBtn">🏷️</button>
-      <button class="pbtn" id="tourBtn">🧭</button>
+      <button class="pbtn" id="tourBtn" data-i18n="tour">🧭</button>
       <button class="pbtn" id="distBtn" data-i18n="tb_dist">📏</button>
     </div>
     <div id="hint" data-i18n="hint">👆 Drag to orbit · scroll / pinch to zoom · tap a planet for details</div>
@@ -126,6 +174,8 @@
   <div class="card" style="overflow-x:auto"><table class="data" id="dataTable"></table></div>
   <div class="card" data-i18n="note"></div>
 </section>
+
+<section id="know"></section>
 
 <footer data-i18n="foot"></footer>
 
@@ -171,7 +221,7 @@ foot:'資料:NASA · 惑星テクスチャ:NASA画像 · 円軌道近似<br>🌌
 th_name:'天体',th_dia:'直径',th_dis:'太陽との距離',th_year:'公転',th_moon:'衛星',
 k_dia:'直径',k_dis:'太陽との距離',k_year:'公転周期',k_day:'自転',k_moon:'衛星',k_temp:'温度',k_extra:'一番'}};
 I18N.zh.tb_dist='📏 真實距離';I18N.en.tb_dist='📏 True scale';I18N.ms.tb_dist='📏 Skala sebenar';I18N.ko.tb_dist='📏 실제 거리';I18N.ja.tb_dist='📏 実スケール';
-I18N.zh.scalemode='📏 真實AU距離模式 · 行星大細同衛星距離為顯示而保留示意';I18N.en.scalemode='📏 True-AU mode · planet sizes & moon orbits kept schematic for visibility';I18N.ms.scalemode='📏 Mod jarak AU sebenar · saiz planet & orbit bulan kekal skematik';I18N.ko.scalemode='📏 실제 AU 거리 모드 · 행성 크기와 위성 궤도는 표시용';I18N.ja.scalemode='📏 実AU距離モード · 惑星サイズと衛星軌道は表示用';
+I18N.zh.scalemode='📏 真實模式：行星距離按 AU、大細按真實比例（木星＝地球11倍）· 太陽同衛星軌道為顯示而縮細';I18N.en.scalemode='📏 True scale: planet distances in AU and sizes in true proportion (Jupiter = 11 Earths) · Sun and moon orbits shrunk for visibility';I18N.ms.scalemode='📏 Skala sebenar: jarak planet dalam AU dan saiz mengikut nisbah sebenar (Musytari = 11 Bumi) · Matahari dan orbit bulan dikecilkan';I18N.ko.scalemode='📏 실제 비율: 행성 거리는 AU, 크기는 실제 비율(목성 = 지구 11배) · 태양과 위성 궤도는 축소 표시';I18N.ja.scalemode='📏 実スケール：惑星の距離はAU、サイズは実比率（木星＝地球11個分）· 太陽と衛星軌道は縮小表示';
 I18N.zh.mapcap='🎨 銀河系藝術想像圖：NASA（太陽位置已標示）';I18N.en.mapcap='🎨 Artist impression of the Milky Way: NASA (Sun marked)';I18N.ms.mapcap='🎨 Ilustrasi artis Bima Sakti: NASA (Matahari ditanda)';I18N.ko.mapcap='🎨 은하수 상상도: NASA(태양 위치 표시)';I18N.ja.mapcap='🎨 天の川想像図：NASA（太陽の位置を標示）';
 I18N.zh.mapcap2='銀河系立體結構模型 · 橙點係太陽系';I18N.en.mapcap2='3D Milky Way model · orange dot = Solar System';I18N.ms.mapcap2='Model 3D Bima Sakti · titik oren = Sistem Suria';I18N.ko.mapcap2='은하수 3D 모델 · 주황점 = 태양계';I18N.ja.mapcap2='天の川3Dモデル · オレンジ点=太陽系';
 I18N.zh.mapcenter='✨ 銀河中心';I18N.en.mapcenter='✨ Galactic Center';I18N.ms.mapcenter='✨ Pusat Galaksi';I18N.ko.mapcenter='✨ 은하 중심';I18N.ja.mapcenter='✨ 銀河中心';
@@ -243,12 +293,18 @@ const BODIES=[
 {id:'iapetus',parent:'saturn',orbitR:20,size:0.6,period:79.3,name:{zh:'☯️ 土衛八',en:'☯️ Iapetus',ms:'☯️ Iapetus',ko:'☯️ 이아페투스',ja:'☯️ イアペトゥス'},
  stats:{dia:'1,470 km',dis:'Saturn',year:'79.3 days',day:'locked',moon:'—',temp:'-180°C',extra:{zh:'太極臉·赤道山脊',en:'Yin-yang face·ridge',ms:'Wajah yin-yang·rabung',ko:'음양 얼굴·산맥',ja:'陰陽顔·尾根'}},
  blurb:{zh:'太極臉：一面黑一面白，赤道仲有一條13km高嘅山脊，成粒核桃咁。',en:'The yin-yang moon: one hemisphere dark as tar, the other bright ice, with a 13 km equatorial ridge like a walnut.',ms:'Bulan yin-yang: sebelah gelap seperti tar, sebelah ais cerah, dengan rabung khatulistiwa 13 km seperti walnut.',ko:'음양 달. 한쪽은 타르처럼 검고 한쪽은 밝은 얼음, 적도에는 13km 산맥이 호두처럼 둘러 있어요.',ja:'陰陽の月。片側はタール状に黒く、片側は明るい氷。赤道には13kmの尾根がクルミのように巡っています。'}},
-{id:'uranus',dist:120,size:2.6,period:30687,tilt:98,spin:0.5,name:{zh:'♅ 天王星',en:'♅ Uranus',ms:'♅ Uranus',ko:'♅ 천왕성',ja:'♅ 天王星'},
+{id:'uranus',dist:120,size:2.6,period:30687,tilt:98,spin:0.5,ring:[4.3,5.1],ringDark:true,name:{zh:'♅ 天王星',en:'♅ Uranus',ms:'♅ Uranus',ko:'♅ 천왕성',ja:'♅ 天王星'},
  stats:{dia:'50,724 km',dis:'19.2 AU',year:'84 yrs',day:'17.2 h',moon:'28',temp:'-224°C',extra:{zh:'瞓喺度轉·最凍大氣',en:'Rolls on its side·coldest air',ms:'Berguling·udara paling sejuk',ko:'누워서 자전·가장 추운 대기',ja:'横倒し自転·最低の大気温度'}},
  blurb:{zh:'成粒瞓喺度碌（傾98°），可能細個俾嘢撞歪咗。大氣-224°C係咁多行星最凍，甲烷令佢變藍綠色。',en:'Knocked on its side (98° tilt), rolling around the Sun. Its -224°C air is the coldest of all planets; methane paints it teal.',ms:'Terbaring mengiring (condong 98°), berguling mengelilingi Matahari. Udara -224°C paling sejuk; metana mewarnakannya firus.',ko:'98° 기울어져 누워서 굴러요. -224°C로 가장 추운 대기, 메탄 때문에 청록색이죠.',ja:'98°傾いて横倒しで公転。-224°Cで最も寒い大気、メタンで青緑色です。'}},
 {id:'neptune',dist:145,size:2.5,period:60190,tilt:28,spin:0.55,name:{zh:'♆ 海王星',en:'♆ Neptune',ms:'♆ Neptun',ko:'♆ 해왕성',ja:'♆ 海王星'},
  stats:{dia:'49,244 km',dis:'30.1 AU',year:'164.8 yrs',day:'16.1 h',moon:'16',temp:'-214°C',extra:{zh:'用數學搵到·2100km/h風',en:'Found by math·2,100 km/h winds',ms:'Ditemui dengan matematik·angin 2,100 km/j',ko:'수학으로 발견·시속 2100km 바람',ja:'数学で発見·時速2100kmの風'}},
  blurb:{zh:'1846年憑數學算出位置再望到嘅行星。超音速風時速2100km係太陽系最快。自轉一圈先164.8年，發現至今只行咗唔夠一圈！',en:'Found by mathematics in 1846 before anyone saw it. Supersonic 2,100 km/h winds — the fastest anywhere. One year is 164.8 Earth years: it hasn\u2019t finished a single lap since discovery!',ms:'Ditemui melalui matematik pada 1846 sebelum sesiapa melihatnya. Angin supersonik 2,100 km/j — terpantas. Setahun 164.8 tahun Bumi: belum lengkap sepusingan sejak ditemui!',ko:'1846년 수학으로 위치를 계산해 찾아냈어요. 시속 2100km 초음속 바람은 최고 기록. 1년이 164.8년이라 발견 이후 한 바퀴도 못 돌았어요!',ja:'1846年に数学で位置を割り出して発見。時速2100kmの超音速の風は最速。1年が164.8年なので発見からまだ1周していません!'}},
+{id:'pluto',dist:172,size:0.85,period:90560,tilt:120,spin:-0.06,dwarf:true,name:{zh:'🪐 冥王星',en:'🪐 Pluto',ms:'🪐 Pluto',ko:'🪐 명왕성',ja:'🪐 冥王星'},
+ stats:{dia:'2,377 km',dis:'39.5 AU',year:'248 yrs',day:'6.4 days ↺',moon:'5',temp:'-230°C',extra:{zh:'矮行星·心形冰原',en:'Dwarf planet·heart-shaped ice plain',ms:'Planet kerdil·dataran ais bentuk hati',ko:'왜소행성·하트 모양 얼음 평원',ja:'準惑星·ハート形の氷原'}},
+ blurb:{zh:'1930年發現、2006年「降級」為矮行星嘅冰凍世界，細過月球。軌道橢圓到有時比海王星更近太陽。2015年新視野號飛過，見到心形嘅「湯博區」氮冰平原、藍色薄霧同冰火山。同衛星卡戎互相潮汐鎖定，永遠面對面。',en:'Found in 1930 and reclassified as a dwarf planet in 2006, this frozen world is smaller than the Moon. Its stretched orbit sometimes brings it closer to the Sun than Neptune. New Horizons flew by in 2015, revealing the heart-shaped nitrogen-ice plain Tombaugh Regio, blue haze and ice volcanoes. Pluto and its moon Charon are locked face to face forever.',ms:'Ditemui 1930 dan diklasifikasi semula sebagai planet kerdil pada 2006, dunia beku ini lebih kecil daripada Bulan. New Horizons melintasinya pada 2015, mendedahkan dataran ais nitrogen berbentuk hati dan jerebu biru. Pluto dan bulannya Charon berkunci berhadapan selamanya.',ko:'1930년 발견, 2006년 왜소행성으로 재분류된 얼어붙은 세계로 달보다 작아요. 2015년 뉴호라이즌스가 하트 모양의 질소 얼음 평원과 푸른 안개를 발견했죠. 위성 카론과 영원히 마주 보며 돌아요.',ja:'1930年発見、2006年に準惑星へ再分類された凍った世界で月より小さい。2015年ニューホライズンズがハート形の窒素氷平原と青い霞を発見。衛星カロンと永遠に向き合って回る。'}},
+{id:'charon',parent:'pluto',orbitR:2.2,size:0.42,period:6.39,name:{zh:'🌑 卡戎',en:'🌑 Charon',ms:'🌑 Charon',ko:'🌑 카론',ja:'🌑 カロン'},
+ stats:{dia:'1,212 km',dis:'Pluto',year:'6.4 days',day:'locked',moon:'—',temp:'-220°C',extra:{zh:'相對母星最大嘅衛星',en:'Biggest moon relative to its planet',ms:'Bulan terbesar berbanding planetnya',ko:'모행성 대비 가장 큰 위성',ja:'母星比で最大の衛星'}},
+ blurb:{zh:'冥王星一半大嘅衛星，兩者其實係圍住中間一點互轉嘅「雙矮行星」。北極有一塊叫「魔多」嘅暗紅色區域，係由冥王星飄過去嘅甲烷凍住變色。',en:'Half the size of Pluto — the pair really orbit a point between them, a double dwarf planet. Its north pole wears a dark red cap called Mordor, methane that drifted over from Pluto and froze.',ms:'Separuh saiz Pluto — pasangan ini mengorbit titik di antara mereka. Kutub utaranya berwarna merah gelap, metana beku dari Pluto.',ko:'명왕성의 절반 크기 — 둘은 사이의 한 점을 도는 이중 왜소행성이에요. 북극엔 명왕성에서 날아와 얼어붙은 메탄의 검붉은 “모르도르”가 있어요.',ja:'冥王星の半分の大きさ —— 2つは間の一点を回る二重準惑星。北極には冥王星から飛来して凍ったメタンの暗赤色「モルドール」がある。'}},
 {id:'triton',parent:'neptune',orbitR:5,size:0.55,period:-5.88,name:{zh:'🌊 海衛一',en:'🌊 Triton',ms:'🌊 Triton',ko:'🌊 트리톤',ja:'🌊 トリトン'},
  stats:{dia:'2,707 km',dis:'Neptune',year:'5.9 days ↺',day:'locked',moon:'—',temp:'-235°C',extra:{zh:'逆行·氮間歇泉',en:'Retrograde·nitrogen geysers',ms:'Retrograd·geiser nitrogen',ko:'역공전·질소 간헐천',ja:'逆行·窒素間欠泉'}},
  blurb:{zh:'逆行衛星，可能係捉返嚟嘅古柏帶天體。有氮氣間歇泉噴8km高，表面-235°C。',en:'A backwards-orbiting moon, probably a captured Kuiper object. Nitrogen geysers erupt 8 km high; -235°C surface.',ms:'Bulan berorbit songsang, mungkin objek Kuiper yang ditangkap. Geiser nitrogen memancut 8 km tinggi; permukaan -235°C.',ko:'역행 위성으로 카이퍼벨트 출신일 거예요. 질소 간헐천이 8km 높이로 솟고 표면은 -235°C예요.',ja:'逆行衛星でカイパーベルト出身の可能性。窒素間欠泉が8km噴き上がり、表面-235°Cです。'}}];
@@ -259,7 +315,7 @@ function bn(b){return b.name[LANG]||b.name.en;}
 I18N.zh.bh='⚫ 黑洞';I18N.en.bh='⚫ Black hole';I18N.ms.bh='⚫ Lubang hitam';I18N.ko.bh='⚫ 블랙홀';I18N.ja.bh='⚫ ブラックホール';
 I18N.zh.hint_gal='👆 拖拽環繞銀河 · 撳中心黑洞或「你喺度」飛入去';I18N.en.hint_gal='👆 Drag to orbit the Galaxy · tap the central black hole or "You are here" to fly in';
 I18N.ms.hint_gal='👆 Seret untuk mengorbit galaksi · sentuh lubang hitam tengah atau "Anda di sini"';I18N.ko.hint_gal='👆 드래그로 은하 회전 · 중심 블랙홀이나 "여기가 너희 집"을 눌러 진입';I18N.ja.hint_gal='👆 ドラッグで銀河を周回 · 中心のブラックホールか「君はここ」をタップ';
-I18N.zh.hint_bh='👆 拖拽環繞黑洞 · 滾輪/雙指 靚近事件視界 · 撳 🌌 返銀河';I18N.en.hint_bh='👆 Drag to orbit the black hole · scroll / pinch toward the horizon · 🌌 to go back';
+I18N.zh.hint_bh='👆 拖拽環繞黑洞 · 滾輪/雙指 靚近事件視界 · 唔郁就會慢慢被引力扯埋去 · 🕳️ 跌落去';I18N.en.hint_bh='👆 Drag to orbit · scroll / pinch toward the horizon · stay still and gravity pulls you in · 🕳️ to dive';
 I18N.ms.hint_bh='👆 Seret mengorbit lubang hitam · skrol/cubit ke ufuk · 🌌 untuk kembali';I18N.ko.hint_bh='👆 드래그로 블랙홀 회전 · 스크롤/핀치로 지평선 접근 · 🌌 로 돌아가기';I18N.ja.hint_bh='👆 ドラッグでブラックホールを周回 · スクロール/ピンチで地平面へ · 🌌 で戻る';
 I18N.zh.tag_gal='你而家喺銀河系外面望入去';I18N.en.tag_gal='Viewing the Milky Way from outside';I18N.ms.tag_gal='Melihat Bima Sakti dari luar';I18N.ko.tag_gal='은하수를 바깥에서 보고 있어요';I18N.ja.tag_gal='天の川を外側から見ています';
 I18N.zh.tag_bh='銀河中心 · 放大了無數倍';I18N.en.tag_bh='Galactic center · magnified beyond count';I18N.ms.tag_bh='Pusat galaksi · dibesarkan tidak terkira';I18N.ko.tag_bh='은하 중심 · 엄청나게 확대됨';I18N.ja.tag_bh='銀河中心 · 大幅に拡大表示';
@@ -284,6 +340,320 @@ const SYS={
   ms:'Rumah kita. Matahari membawa 8 planet, ratusan bulan, jalur asteroid, Jalur Kuiper dan Awan Oort mengelilingi galaksi pada 230 km/s di Taji Orion. Saiz dan jarak dimampatkan — sentuh mana-mana jasad.',
   ko:'우리 집. 태양은 8개 행성과 수백 개 위성, 소행성대, 카이퍼벨트, 오르트 구름을 이끌고 오리온 지류를 따라 초속 230km로 은하를 돌아요. 크기와 거리는 압축됨 — 천체를 눌러 보세요.',
   ja:'私たちの家。太陽は8つの惑星、数百の衛星、小惑星帯、カイパーベルト、オールトの雲を連れてオリオン腕を秒速230kmで周回。サイズと距離は圧縮表示 —— 天体をタップで解説。'}};
+
+
+/* ================= 知識庫 ================= */
+I18N.zh.tour='🧭 自動導覽';I18N.en.tour='🧭 Auto tour';I18N.ms.tour='🧭 Lawatan auto';I18N.ko.tour='🧭 자동 투어';I18N.ja.tour='🧭 自動ツアー';
+I18N.zh.tour_on='🧭 自動導覽開始：每 11 秒飛去下一站，再撳一次停止';I18N.en.tour_on='🧭 Auto tour started: next stop every 11 s — tap again to stop';I18N.ms.tour_on='🧭 Lawatan auto dimulakan: destinasi seterusnya setiap 11 s — sentuh lagi untuk berhenti';I18N.ko.tour_on='🧭 자동 투어 시작: 11초마다 다음 장소로 — 다시 누르면 정지';I18N.ja.tour_on='🧭 自動ツアー開始：11秒ごとに次の場所へ —— もう一度タップで停止';
+I18N.zh.tour_off='⏸ 自動導覽已停止';I18N.en.tour_off='⏸ Auto tour stopped';I18N.ms.tour_off='⏸ Lawatan auto dihentikan';I18N.ko.tour_off='⏸ 자동 투어 정지';I18N.ja.tour_off='⏸ 自動ツアー停止';
+I18N.zh.dive='🕳️ 跌落去';I18N.en.dive='🕳️ Dive in';I18N.ms.dive='🕳️ Terjun';I18N.ko.dive='🕳️ 뛰어들기';I18N.ja.dive='🕳️ 飛び込む';
+I18N.zh.dive_on='🕳️ 開始跌向事件視界 —— 時間會越行越慢，畫面偏紅…（拖拽或縮放可以逃走）';I18N.en.dive_on='🕳️ Falling toward the event horizon — time slows, light reddens… (drag or zoom to escape)';I18N.ms.dive_on='🕳️ Jatuh ke ufuk peristiwa — masa perlahan, cahaya memerah… (seret atau zum untuk lari)';I18N.ko.dive_on='🕳️ 사건의 지평선으로 추락 중 — 시간이 느려지고 빛이 붉어져요… (드래그/줌으로 탈출)';I18N.ja.dive_on='🕳️ 事象の地平面へ落下中 —— 時間が遅れ、光が赤くなる…（ドラッグかズームで脱出）';
+I18N.zh.more='📖 更多知識';I18N.en.more='📖 Learn more';I18N.ms.more='📖 Ketahui lagi';I18N.ko.more='📖 더 알아보기';I18N.ja.more='📖 もっと知る';
+I18N.zh.facts_h='🔎 你知道嗎';I18N.en.facts_h='🔎 Did you know';I18N.ms.facts_h='🔎 Tahukah anda';I18N.ko.facts_h='🔎 알고 있나요';I18N.ja.facts_h='🔎 知ってた？';
+I18N.zh.mapsmc='☁️ 小麥哲倫雲';I18N.en.mapsmc='☁️ Small Magellanic Cloud';I18N.ms.mapsmc='☁️ Awan Magellan Kecil';I18N.ko.mapsmc='☁️ 소마젤란은하';I18N.ja.mapsmc='☁️ 小マゼラン雲';
+I18N.zh.tag_arm='旋臂 · 撳其他標籤睇更多';I18N.en.tag_arm='Spiral arm · tap other labels for more';I18N.ms.tag_arm='Lengan pilin · sentuh label lain';I18N.ko.tag_arm='나선팔 · 다른 라벨도 눌러보세요';I18N.ja.tag_arm='渦状腕 · 他のラベルもタップ';
+I18N.zh.tag_sat='銀河系嘅衛星星系';I18N.en.tag_sat='Satellite galaxy of the Milky Way';I18N.ms.tag_sat='Galaksi satelit Bima Sakti';I18N.ko.tag_sat='은하수의 위성은하';I18N.ja.tag_sat='天の川の伴銀河';
+I18N.zh.know_h='📖 宇宙知識庫';I18N.en.know_h='📖 Cosmic knowledge base';I18N.ms.know_h='📖 Pangkalan ilmu kosmos';I18N.ko.know_h='📖 우주 지식 창고';I18N.ja.know_h='📖 宇宙の知識ベース';
+I18N.zh.know_sub='黑洞、銀河系、麥哲倫雲、太陽系、宇宙尺度 —— 撳每個題目展開';I18N.en.know_sub='Black holes, the Milky Way, the Magellanic Clouds, the Solar System and cosmic scale — tap a topic to expand';I18N.ms.know_sub='Lubang hitam, Bima Sakti, Awan Magellan, Sistem Suria dan skala kosmos — sentuh topik untuk buka';I18N.ko.know_sub='블랙홀, 은하수, 마젤란은하, 태양계, 우주의 크기 — 주제를 눌러 펼치기';I18N.ja.know_sub='ブラックホール、天の川、マゼラン雲、太陽系、宇宙のスケール —— トピックをタップで展開';
+
+/* ---- 資訊卡「你知道嗎」 ---- */
+const FACTS={
+ milky:{
+  zh:['你喺地球夜空見到嘅每一粒星，全部都係銀河系嘅成員 —— 用肉眼永遠望唔到出面嘅星。','銀河系自己都喺郁：以每秒600km向長蛇座方向飛，係「巨引源」嘅引力拉住。','銀河盤面有啲「彎曲」，好似一隻扭曲嘅飛碟，係俾衛星星系經過時拉歪嘅。','約2013年起ESA蓋亞衛星量度咗18億粒星嘅位置同速度，係史上最精細嘅銀河地圖。','銀河系直徑10萬光年，但厚度只有約1,000光年 —— 比例好似一隻薄餅。'],
+  en:['Every star you can see with the naked eye belongs to the Milky Way — no star outside it is visible unaided.','The whole Galaxy is moving at ~600 km/s toward the constellation Hydra, pulled by the Great Attractor.','The disk is warped like a bent frisbee, twisted by passing satellite galaxies.','ESA’s Gaia satellite has measured positions and motions of ~1.8 billion stars — the most detailed galactic map ever.','It is 100,000 ly across but only ~1,000 ly thick — proportionally as thin as a pizza.'],
+  ms:['Setiap bintang yang anda lihat dengan mata kasar milik Bima Sakti — tiada bintang luar yang kelihatan.','Seluruh galaksi bergerak ~600 km/s ke arah Hydra, ditarik oleh Penarik Besar.','Cakera galaksi melengkung seperti frisbee bengkok, dipulas oleh galaksi satelit.','Satelit Gaia ESA telah mengukur ~1.8 bilion bintang — peta galaksi paling terperinci.','Lebarnya 100,000 tc tetapi tebal ~1,000 tc — senipis piza.'],
+  ko:['맨눈으로 보이는 모든 별은 은하수의 별이에요 — 바깥의 별은 맨눈으로 못 봐요.','은하 전체가 초속 600km로 바다뱀자리 쪽으로 이동 중 — “거대 인력체”가 끌어당겨요.','은하 원반은 휘어진 프리스비처럼 뒤틀려 있어요. 위성은하가 지나가며 비틀었죠.','ESA 가이아 위성이 약 18억 개 별을 측정 — 역사상 가장 정밀한 은하 지도.','지름 10만 광년, 두께 약 1,000광년 — 비율로 보면 피자처럼 얇아요.'],
+  ja:['肉眼で見える星はすべて天の川銀河の星 —— 外の星は肉眼では見えません。','銀河全体がうみへび座方向へ秒速600kmで移動中、「グレートアトラクター」に引かれています。','円盤は曲がったフリスビーのように歪み、通過する伴銀河にねじられました。','ESAガイア衛星が約18億個の星を計測 —— 史上最精密な銀河地図。','直径10万光年、厚さ約1,000光年 —— 比率はピザほど薄い。']},
+ sgra:{
+  zh:['「A*」讀作「A星」，1974年發現時係人馬座最強嘅電波源。','2020年諾貝爾物理獎頒俾Genzel同Ghez，就係憑追蹤附近恆星S2繞黑洞16年一圈嘅軌道證實佢存在。','S2恆星最接近時以每秒7,650km（光速2.5%）飛過，愛因斯坦預言嘅重力紅移都量到。','如果人馬座A*放喺太陽位置，事件視界只到水星軌道嘅一半左右 —— 「大」係質量，唔係體積。','佢好安靜：每日只食掉極少物質，亮度比其他星系中心黑洞暗好多，係「食唔飽」嘅黑洞。'],
+  en:['The “A*” is read “A-star”; it was found in 1974 as the strongest radio source in Sagittarius.','The 2020 Nobel Prize in Physics went to Genzel and Ghez for tracking star S2 through a full 16-year orbit around it.','At closest approach S2 races past at 7,650 km/s (2.5% of light speed) — Einstein’s gravitational redshift was measured there.','Placed at the Sun, its event horizon would reach only about half-way to Mercury — “supermassive” is about mass, not size.','It is a quiet eater: it swallows very little each day and is far dimmer than most galactic-centre black holes.'],
+  ms:['“A*” dibaca “A-star”; ditemui pada 1974 sebagai sumber radio terkuat di Sagittarius.','Hadiah Nobel Fizik 2020 diberi kepada Genzel dan Ghez kerana menjejak bintang S2 mengorbitnya selama 16 tahun.','Pada titik terdekat S2 melaju 7,650 km/s (2.5% laju cahaya) — anjakan merah graviti Einstein diukur di sini.','Jika diletak di Matahari, ufuknya hanya sampai separuh jalan ke Utarid — “supermasif” tentang jisim, bukan saiz.','Ia pemakan yang senyap: menelan sangat sedikit setiap hari dan jauh lebih malap daripada lubang hitam pusat lain.'],
+  ko:['“A*”는 “A-스타”로 읽어요. 1974년 궁수자리 최강 전파원으로 발견됐죠.','2020년 노벨물리학상은 별 S2가 16년에 한 번 도는 궤도를 추적한 겐첼과 게즈에게.','S2는 최근접 때 초속 7,650km(광속의 2.5%)로 지나가요 — 아인슈타인의 중력 적색편이가 측정됐죠.','태양 자리에 놓으면 사건의 지평선은 수성 궤도 절반 정도 — “초대질량”은 질량 얘기, 크기가 아니에요.','조용한 포식자: 하루에 아주 조금만 삼키고, 다른 은하 중심 블랙홀보다 훨씬 어두워요.'],
+  ja:['「A*」は「エースター」と読み、1974年にいて座最強の電波源として発見。','2020年ノーベル物理学賞はゲンツェルとゲズへ —— 星S2が16年で1周する軌道を追跡した功績。','S2は最接近時に秒速7,650km（光速の2.5%）で通過、アインシュタインの重力赤方偏移も測定。','太陽の位置に置くと地平面は水星軌道の半分ほど —— 「超大質量」は質量の話でサイズではない。','静かな食べ手：1日にごく少量しか飲み込まず、他の銀河中心ブラックホールよりずっと暗い。']},
+ sys:{
+  zh:['太陽系99.86%質量喺太陽；剩低嘅入面木星又佔咗七成。','如果太陽係一個籃球，地球係2米外一粒芝麻，海王星喺60米外。','太陽系嘅邊界唔係海王星：柯伊伯帶、奧爾特雲一直伸到約2光年外。','1977年發射嘅航海家1號已飛出日球層，係人類最遠嘅物件，離地球超過240億km。','太陽每11年一個活動週期；50億年後會脹成紅巨星，吞掉水星同金星。'],
+  en:['99.86% of the system’s mass is in the Sun; of what is left, Jupiter takes 70%.','If the Sun were a basketball, Earth would be a sesame seed 2 m away and Neptune 60 m away.','The system does not end at Neptune: the Kuiper Belt and Oort Cloud stretch out to ~2 light-years.','Voyager 1, launched in 1977, has left the heliosphere — humanity’s farthest object, over 24 billion km away.','The Sun has an 11-year activity cycle; in ~5 billion years it will swell into a red giant and swallow Mercury and Venus.'],
+  ms:['99.86% jisim sistem ada pada Matahari; daripada bakinya Musytari mengambil 70%.','Jika Matahari sebiji bola keranjang, Bumi ialah biji bijan 2 m jauhnya dan Neptun 60 m jauhnya.','Sistem tidak berakhir di Neptun: Jalur Kuiper dan Awan Oort menjangkau ~2 tahun cahaya.','Voyager 1, dilancarkan 1977, telah keluar dari heliosfera — objek terjauh manusia, lebih 24 bilion km.','Matahari ada kitaran 11 tahun; dalam ~5 bilion tahun ia akan menjadi gergasi merah dan menelan Utarid dan Zuhrah.'],
+  ko:['태양계 질량의 99.86%는 태양에, 나머지의 70%는 목성에 있어요.','태양이 농구공이면 지구는 2m 밖의 참깨, 해왕성은 60m 밖이에요.','태양계는 해왕성에서 끝나지 않아요: 카이퍼벨트와 오르트 구름이 약 2광년까지 뻗어요.','1977년 발사된 보이저 1호는 태양권을 벗어났어요 — 인류의 가장 먼 물체, 240억 km 이상.','태양은 11년 주기로 활동하고, 약 50억 년 뒤 적색거성이 되어 수성과 금성을 삼켜요.'],
+  ja:['太陽系の質量の99.86%は太陽、残りの7割は木星。','太陽がバスケットボールなら地球は2m先のゴマ、海王星は60m先。','太陽系は海王星で終わらない：カイパーベルトとオールトの雲は約2光年先まで。','1977年打ち上げのボイジャー1号は太陽圏を脱出 —— 人類最遠の物体、240億km以上。','太陽は11年周期で活動し、約50億年後に赤色巨星となって水星と金星を飲み込む。']}};
+
+/* ---- 銀河內可撳目標：大小麥哲倫雲、四條旋臂 ---- */
+const KB={
+ lmc:{name:{zh:'☁️ 大麥哲倫雲',en:'☁️ Large Magellanic Cloud',ms:'☁️ Awan Magellan Besar',ko:'☁️ 대마젤란은하',ja:'☁️ 大マゼラン雲'},tag:'tag_sat',
+  stats:{zh:[['距離','16萬光年'],['直徑','約14,000光年'],['質量','銀河系嘅1/100'],['類型','不規則棒旋矮星系'],['睇得到？','南半球肉眼可見 · 似一片斷開嘅銀河']],
+   en:[['Distance','160,000 ly'],['Diameter','~14,000 ly'],['Mass','~1/100 of the Milky Way'],['Type','Irregular barred dwarf'],['Visible?','Naked eye from the southern hemisphere — looks like a detached piece of Milky Way']],
+   ms:[['Jarak','160,000 tc'],['Diameter','~14,000 tc'],['Jisim','~1/100 Bima Sakti'],['Jenis','Kerdil berpalang tak sekata'],['Kelihatan?','Mata kasar dari hemisfera selatan']],
+   ko:[['거리','16만 광년'],['지름','약 14,000광년'],['질량','은하수의 약 1/100'],['유형','불규칙 막대 왜소은하'],['보이나요?','남반구에서 맨눈으로 보임']],
+   ja:[['距離','16万光年'],['直径','約14,000光年'],['質量','天の川の約1/100'],['型','不規則棒渦巻矮小銀河'],['見える？','南半球で肉眼で見える']]},
+  blurb:{zh:'銀河系最大嘅衛星星系，1519年麥哲倫環球航行時記錄落嚟而得名。入面有蜘蛛星雲（劍魚座30）—— 本星系群最劇烈嘅恆星工廠，如果放喺獵戶座大星雲嘅位置，會大到投影到地面。1987年呢度爆發嘅超新星SN 1987A係400年來最近嘅一粒。',
+   en:'The Milky Way’s largest satellite, named after Magellan’s 1519 voyage. It holds the Tarantula Nebula (30 Doradus), the most violent star factory in the Local Group — at the Orion Nebula’s distance it would cast shadows. Supernova SN 1987A exploded here, the closest in 400 years.',
+   ms:'Satelit terbesar Bima Sakti, dinamakan sempena pelayaran Magellan 1519. Mengandungi Nebula Tarantula, kilang bintang paling ganas dalam Kumpulan Tempatan. Supernova SN 1987A meletup di sini — yang terdekat dalam 400 tahun.',
+   ko:'은하수의 가장 큰 위성은하. 1519년 마젤란 항해에서 기록되어 이름이 붙었어요. 국부은하군에서 가장 격렬한 별 공장인 타란툴라 성운이 있고, 1987년엔 400년 만에 가장 가까운 초신성 SN 1987A가 폭발했어요.',
+   ja:'天の川最大の伴銀河。1519年のマゼラン航海の記録から命名。局部銀河群で最も激しい星の工場「タランチュラ星雲」があり、1987年には400年で最も近い超新星SN 1987Aが爆発しました。'},
+  facts:{zh:['佈滿宇宙嘅「宇宙距離梯」—— 就係用大麥哲倫雲嘅造父變星校準距離嘅。','大約20億年後會俾銀河系吞併，仲可能將太陽系踢出去更外圍。'],en:['It anchors the cosmic distance ladder — Cepheid stars here calibrate distances across the Universe.','In ~2 billion years it will merge into the Milky Way, possibly nudging the Solar System outward.'],ms:['Ia menjadi asas tangga jarak kosmik melalui bintang Cepheid.','Dalam ~2 bilion tahun ia akan bercantum dengan Bima Sakti.'],ko:['여기의 세페이드 변광성이 우주 거리 사다리의 기준이 돼요.','약 20억 년 뒤 은하수에 합병될 거예요.'],ja:['ここのセファイド変光星が宇宙の距離はしごの基準。','約20億年後に天の川へ合体する。']}},
+ smc:{name:{zh:'☁️ 小麥哲倫雲',en:'☁️ Small Magellanic Cloud',ms:'☁️ Awan Magellan Kecil',ko:'☁️ 소마젤란은하',ja:'☁️ 小マゼラン雲'},tag:'tag_sat',
+  stats:{zh:[['距離','20萬光年'],['直徑','約7,000光年'],['恆星','幾億粒'],['特別之處','同大麥哲倫雲之間有一條氫氣「麥哲倫橋」'],['麥哲倫流','兩雲身後拖住一條60萬光年長嘅氣體尾巴']],
+   en:[['Distance','200,000 ly'],['Diameter','~7,000 ly'],['Stars','a few hundred million'],['Special','Joined to the LMC by a hydrogen “Magellanic Bridge”'],['Magellanic Stream','A 600,000-ly gas tail trails behind both clouds']],
+   ms:[['Jarak','200,000 tc'],['Diameter','~7,000 tc'],['Bintang','beberapa ratus juta'],['Istimewa','Dihubungkan ke LMC oleh “Jambatan Magellan” hidrogen'],['Arus Magellan','Ekor gas 600,000 tc']],
+   ko:[['거리','20만 광년'],['지름','약 7,000광년'],['항성','수억 개'],['특징','대마젤란과 수소 “마젤란 다리”로 연결'],['마젤란 흐름','60만 광년 길이의 가스 꼬리']],
+   ja:[['距離','20万光年'],['直径','約7,000光年'],['恒星','数億個'],['特徴','大マゼラン雲と水素の「マゼラン橋」で接続'],['マゼラン流','60万光年のガスの尾']]},
+  blurb:{zh:'大麥哲倫雲嘅細佬，一個被銀河系同大麥哲倫雲潮汐力扯到變形嘅矮星系。佈滿年輕藍星同氫氣雲；哈勃望遠鏡發現佢正俾拉開成兩截。1912年天文學家勒維特就係研究呢度嘅造父變星，發現「週期—光度關係」，令人類第一次量得出宇宙距離。',
+   en:'The LMC’s little sibling, a dwarf galaxy warped by tides from both the Milky Way and the LMC. Rich in young blue stars and hydrogen; Hubble shows it being torn in two. In 1912 Henrietta Leavitt studied its Cepheid stars and found the period–luminosity law that first let humans measure cosmic distances.',
+   ms:'Adik LMC, galaksi kerdil yang dipulas pasang Bima Sakti dan LMC. Kaya bintang biru muda; Hubble menunjukkan ia terbelah dua. Pada 1912 Henrietta Leavitt mengkaji bintang Cepheid di sini dan menemui hukum tempoh–kecerahan.',
+   ko:'대마젤란의 동생. 은하수와 대마젤란의 조석력에 뒤틀린 왜소은하로, 젊은 청색 별과 수소가 풍부해요. 1912년 헨리에타 레빗이 여기의 세페이드 변광성으로 주기-광도 관계를 발견했어요.',
+   ja:'大マゼラン雲の弟分。天の川と大マゼラン雲の潮汐で歪んだ矮小銀河で、若い青い星と水素が豊富。1912年ヘンリエッタ・リービットがここのセファイド変光星から周期光度関係を発見しました。'},
+  facts:{zh:['南半球嘅水手幾百年來都靠佢同大麥哲倫雲定南方 —— 因為南天冇「北極星」。'],en:['Southern sailors used the two clouds to find south for centuries — the southern sky has no pole star.'],ms:['Pelayar selatan menggunakan kedua awan untuk mencari selatan — langit selatan tiada bintang kutub.'],ko:['남반구 항해사들은 수백 년간 두 은하로 남쪽을 찾았어요 — 남쪽 하늘엔 북극성이 없거든요.'],ja:['南半球の船乗りは何世紀も2つの雲で南を知った —— 南天には北極星がない。']}},
+ arm_per:{name:{zh:'🌀 英仙座旋臂',en:'🌀 Perseus Arm',ms:'🌀 Lengan Perseus',ko:'🌀 페르세우스자리 나선팔',ja:'🌀 ペルセウス腕'},tag:'tag_arm',
+  stats:{zh:[['類型','兩條主旋臂之一'],['離太陽','約6,400光年（向外）'],['長度','約10萬光年'],['名物','雙星團h+χ、心臟星雲、蟹狀星雲、W51星雲']],en:[['Type','One of two major arms'],['From the Sun','~6,400 ly outward'],['Length','~100,000 ly'],['Landmarks','Double Cluster, Heart Nebula, Crab Nebula, W51']],ms:[['Jenis','Satu daripada dua lengan utama'],['Dari Matahari','~6,400 tc ke luar'],['Panjang','~100,000 tc'],['Mercu','Gugusan Berkembar, Nebula Hati, Nebula Ketam']],ko:[['유형','두 주요 나선팔 중 하나'],['태양에서','바깥쪽 약 6,400광년'],['길이','약 10만 광년'],['명소','이중성단, 하트 성운, 게 성운']],ja:[['型','2本の主腕の1つ'],['太陽から','外側へ約6,400光年'],['長さ','約10万光年'],['名所','二重星団、ハート星雲、かに星雲']]},
+  blurb:{zh:'太陽系外側最近嘅主旋臂。冬季夜空好多亮星同星雲都喺呢邊，包括1054年中國史書記載嘅「天關客星」爆炸留低嘅蟹狀星雲。旋臂唔係實物 —— 係恆星「塞車」嘅密度波，星星穿過旋臂時受壓形成，之後又離開。',
+   en:'The nearest major arm outward from the Sun. Much of the winter sky lies here, including the Crab Nebula — the remains of a supernova Chinese astronomers recorded in 1054. Arms are not solid: they are density waves, cosmic traffic jams where gas is squeezed into new stars that later drift on.',
+   ms:'Lengan utama terdekat di luar Matahari. Banyak langit musim sejuk terletak di sini, termasuk Nebula Ketam — sisa supernova yang dicatat ahli astronomi China pada 1054. Lengan ialah gelombang ketumpatan, bukan objek pepejal.',
+   ko:'태양 바깥쪽에서 가장 가까운 주요 나선팔. 겨울 밤하늘의 많은 부분이 여기에 있고, 1054년 중국 천문학자가 기록한 초신성의 잔해 게 성운도 있어요. 나선팔은 실체가 아니라 밀도파, 즉 우주의 교통 체증이에요.',
+   ja:'太陽の外側で最も近い主腕。冬の夜空の多くがここにあり、1054年に中国の天文学者が記録した超新星の残骸「かに星雲」もある。腕は実体ではなく密度波、宇宙の交通渋滞です。'},
+  facts:{zh:['旋臂會慢慢轉，但轉得比恆星慢 —— 所以太陽每幾千萬年就穿過一次旋臂。'],en:['Arms rotate more slowly than the stars, so the Sun crosses an arm every few tens of millions of years.'],ms:['Lengan berputar lebih perlahan daripada bintang; Matahari melintasi lengan setiap beberapa puluh juta tahun.'],ko:['나선팔은 별보다 느리게 돌아서 태양은 수천만 년마다 팔을 통과해요.'],ja:['腕は星より遅く回るため、太陽は数千万年ごとに腕を横切る。']}},
+ arm_sag:{name:{zh:'🌀 人馬座旋臂',en:'🌀 Sagittarius Arm',ms:'🌀 Lengan Sagittarius',ko:'🌀 궁수자리 나선팔',ja:'🌀 いて座腕'},tag:'tag_arm',
+  stats:{zh:[['類型','次旋臂（主要係氣體同年輕星）'],['離太陽','約5,000光年（向內）'],['名物','鷹狀星雲「創生之柱」、礁湖星雲、三裂星雲、天鵝星雲'],['夏季','夏夜銀河最光嗰段就係向住佢同銀心']],en:[['Type','Minor arm (mostly gas and young stars)'],['From the Sun','~5,000 ly inward'],['Landmarks','Eagle Nebula “Pillars of Creation”, Lagoon, Trifid, Omega nebulae'],['Summer','The brightest summer Milky Way looks through it toward the centre']],ms:[['Jenis','Lengan kecil (gas dan bintang muda)'],['Dari Matahari','~5,000 tc ke dalam'],['Mercu','Nebula Helang “Tiang Penciptaan”, Lagun, Trifid'],['Musim panas','Bima Sakti paling terang memandang melaluinya']],ko:[['유형','부속 나선팔(주로 가스와 젊은 별)'],['태양에서','안쪽 약 5,000광년'],['명소','독수리 성운 “창조의 기둥”, 라군, 삼렬 성운'],['여름','가장 밝은 여름 은하수가 이쪽을 향해요']],ja:[['型','副腕（主にガスと若い星）'],['太陽から','内側へ約5,000光年'],['名所','わし星雲「創造の柱」、干潟星雲、三裂星雲'],['夏','最も明るい夏の天の川はこの方向']]},
+  blurb:{zh:'太陽系內側最近嘅旋臂，望向銀心必經之路。夏天夜晚見到嘅那條最光最濃嘅銀河，就係穿過呢條旋臂望入去。哈勃最出名嘅「創生之柱」照片，就係呢度嘅鷹狀星雲。2021年NASA仲喺呢條旋臂發現一條3,000光年長嘅「斷裂」，好似旋臂上一條刺。',
+   en:'The nearest arm inward, on the line of sight to the galactic centre. The dense, bright summer Milky Way is this arm seen edge-on. Hubble’s famous “Pillars of Creation” are in its Eagle Nebula. In 2021 NASA found a 3,000-ly “break” sticking out of it like a splinter.',
+   ms:'Lengan terdekat ke dalam, pada garis pandangan ke pusat galaksi. Bima Sakti musim panas yang padat ialah lengan ini. “Tiang Penciptaan” Hubble terletak di Nebula Helangnya.',
+   ko:'안쪽으로 가장 가까운 팔이며 은하 중심 방향에 있어요. 짙고 밝은 여름 은하수가 바로 이 팔이죠. 허블의 유명한 “창조의 기둥”이 이곳 독수리 성운에 있어요.',
+   ja:'内側で最も近い腕で、銀河中心への視線上にある。濃く明るい夏の天の川はこの腕。ハッブルの有名な「創造の柱」はここのわし星雲にあります。'},
+  facts:{zh:['喺呢方向望出去，塵埃太厚，可見光只能穿透約幾千光年 —— 所以我哋一直到20世紀先知道銀心喺邊。'],en:['Dust here is so thick that visible light penetrates only a few thousand light-years — we did not locate the galactic centre until the 20th century.'],ms:['Debu di sini begitu tebal sehingga cahaya nampak hanya menembusi beberapa ribu tahun cahaya.'],ko:['이 방향은 먼지가 너무 짙어 가시광선이 수천 광년밖에 못 가요 — 은하 중심 위치는 20세기에야 알았죠.'],ja:['この方向は塵が厚く可視光は数千光年しか届かない —— 銀河中心の位置は20世紀まで不明だった。']}},
+ arm_sct:{name:{zh:'🌀 盾牌-半人馬旋臂',en:'🌀 Scutum–Centaurus Arm',ms:'🌀 Lengan Scutum–Centaurus',ko:'🌀 방패-센타우루스 나선팔',ja:'🌀 たて-ケンタウルス腕'},tag:'tag_arm',
+  stats:{zh:[['類型','兩條主旋臂之一'],['起點','中央棒嘅一端'],['名物','手槍星（銀河最光恆星之一）、Westerlund 1超星團'],['對面','同英仙座旋臂差不多對稱']],en:[['Type','One of two major arms'],['Starts at','One end of the central bar'],['Landmarks','Pistol Star, Westerlund 1 super star cluster'],['Mirror','Roughly symmetric with the Perseus Arm']],ms:[['Jenis','Satu daripada dua lengan utama'],['Bermula di','Hujung palang pusat'],['Mercu','Bintang Pistol, gugusan super Westerlund 1'],['Cermin','Hampir simetri dengan Lengan Perseus']],ko:[['유형','두 주요 나선팔 중 하나'],['시작점','중앙 막대의 한쪽 끝'],['명소','피스톨 별, 웨스터룬드 1 초성단'],['대칭','페르세우스팔과 대체로 대칭']],ja:[['型','2本の主腕の1つ'],['起点','中央棒の一端'],['名所','ピストル星、ウェスタールンド1超星団'],['対称','ペルセウス腕とほぼ対称']]},
+  blurb:{zh:'由中央棒一端伸出嘅主旋臂，同英仙座旋臂互相對稱，係銀河系嘅「骨架」。呢度恆星密度高，有全銀河最重最光嘅一批恆星。2008年NASA史匹哲望遠鏡用紅外線數星，先確定銀河係「兩條主臂+兩條次臂」，唔係以前以為嘅四條一樣粗。',
+   en:'A major arm springing from one end of the central bar, mirroring the Perseus Arm — together they are the Galaxy’s skeleton. It is crowded with some of the heaviest, brightest stars known. In 2008 NASA’s Spitzer telescope counted stars in infrared and showed the Milky Way has two major arms plus two minor ones, not four equal arms.',
+   ms:'Lengan utama dari hujung palang pusat, mencerminkan Lengan Perseus — bersama-sama menjadi rangka galaksi. Pada 2008 teleskop Spitzer NASA menunjukkan Bima Sakti mempunyai dua lengan utama dan dua lengan kecil.',
+   ko:'중앙 막대 한쪽 끝에서 뻗은 주요 팔로 페르세우스팔과 대칭 — 둘이 은하의 골격이에요. 2008년 NASA 스피처 망원경이 적외선으로 별을 세어 은하수가 주요 팔 2개+부속 팔 2개임을 밝혔죠.',
+   ja:'中央棒の一端から伸びる主腕でペルセウス腕と対称 —— 2本で銀河の骨格。2008年NASAスピッツァー望遠鏡が赤外線で星を数え、天の川は主腕2本＋副腕2本と判明。'},
+  facts:{zh:['喺呢條旋臂發現嘅Westerlund 1星團入面有幾十粒超巨星，每一粒都大過太陽幾百倍。'],en:['Westerlund 1 in this arm holds dozens of supergiants, each hundreds of times the Sun’s size.'],ms:['Westerlund 1 di lengan ini mempunyai berpuluh bintang super gergasi.'],ko:['이 팔의 웨스터룬드 1 성단에는 태양 수백 배 크기의 초거성이 수십 개 있어요.'],ja:['この腕のウェスタールンド1には太陽の数百倍の超巨星が数十個。']}},
+ arm_nor:{name:{zh:'🌀 矩尺座旋臂',en:'🌀 Norma Arm',ms:'🌀 Lengan Norma',ko:'🌀 직각자자리 나선팔',ja:'🌀 じょうぎ座腕'},tag:'tag_arm',
+  stats:{zh:[['類型','次旋臂 · 靚近銀心'],['又叫','3千秒差距臂（3-kpc Arm）'],['特別之處','有一部分以每秒50km向外膨脹，可能係中央棒推動'],['觀測','只能用電波同紅外線望到']],en:[['Type','Minor arm, close to the centre'],['Also called','The 3-kpc Arm'],['Special','Part of it expands outward at 50 km/s, likely driven by the central bar'],['Seen with','Radio and infrared only']],ms:[['Jenis','Lengan kecil, dekat pusat'],['Juga dikenali','Lengan 3-kpc'],['Istimewa','Sebahagiannya mengembang keluar 50 km/s'],['Dilihat dengan','Radio dan inframerah sahaja']],ko:[['유형','부속 팔 · 중심 가까이'],['별칭','3-kpc 팔'],['특징','일부가 초속 50km로 바깥으로 팽창'],['관측','전파와 적외선으로만 보임']],ja:[['型','副腕 · 中心近く'],['別名','3kpc腕'],['特徴','一部が秒速50kmで外側へ膨張'],['観測','電波と赤外線のみ']]},
+  blurb:{zh:'最靚近銀心嘅內側旋臂，由地球望去完全俾塵埃遮住，只能靚電波望穿。呢度氣體受中央棒嘅引力攪動，好多地方喺高速膨脹或者流入銀心，係銀河系「引擎室」嘅一部分。名字嚟自南天嘅矩尺座 —— 一個代表木匠直角尺嘅細星座。',
+   en:'The innermost arm, hidden from optical view by dust and mapped only in radio. Gas here is stirred by the central bar, expanding or streaming into the centre — part of the Galaxy’s engine room. It is named after Norma, a small southern constellation representing a carpenter’s square.',
+   ms:'Lengan paling dalam, tersembunyi oleh debu dan dipetakan hanya dengan radio. Gas di sini dikacau oleh palang pusat — sebahagian daripada bilik enjin galaksi. Dinamakan sempena buruj Norma, sesiku tukang kayu.',
+   ko:'가장 안쪽 팔로 먼지에 가려 전파로만 지도를 그렸어요. 중앙 막대가 가스를 휘저어 팽창하거나 중심으로 흘러들죠 — 은하의 기관실. 이름은 목수의 직각자를 뜻하는 남쪽 별자리 직각자자리에서 왔어요.',
+   ja:'最も内側の腕で、塵に隠れ電波でのみ観測。中央棒がガスをかき混ぜ、膨張したり中心へ流れ込む —— 銀河の機関室。名は大工の直角定規を表す南天の小星座じょうぎ座から。'},
+  facts:{zh:['銀河中心方向嘅氣體有一半係咁樣俾棒「掃」入去，最終餵飽咗中心嘅星團同黑洞。'],en:['About half the gas near the centre is swept inward by the bar this way, feeding the central star clusters and the black hole.'],ms:['Kira-kira separuh gas dekat pusat disapu ke dalam oleh palang.'],ko:['중심 근처 가스의 절반가량이 이렇게 막대에 쓸려 들어가 중심 성단과 블랙홀을 먹여요.'],ja:['中心付近のガスの約半分がこうして棒に掃き込まれ、中心の星団とブラックホールを養う。']}}};
+function showKB(id){const k=KB[id];if(!k)return;lastInfo='#'+id;
+ openInfo(k.name[LANG]||k.name.en,t(k.tag),k.blurb[LANG]||k.blurb.en,k.stats[LANG]||k.stats.en,k.facts&&(k.facts[LANG]||k.facts.en));}
+
+/* ---- 頁底知識專區 ---- */
+const KNOW={
+zh:[
+{h:'⚫ 黑洞',sub:'宇宙最極端嘅天體',cards:[
+ ['黑洞係乜？','一個引力強到連光都逃唔出嘅區域。大質量恆星燒完燃料，核心塌縮到體積近乎零，密度無限大，就形成黑洞。愛因斯坦1915年嘅廣義相對論預言咗佈，但佢本人都唔太相信會真係存在。'],
+ ['事件視界','「有去無回」嘅邊界。喺呢條線外面你仲可以逃走；跨過之後，去到中心奇點係唯一嘅未來 —— 就好似時間一樣，冇得倒退。視界半徑（史瓦西半徑）同質量成正比：地球質量嘅黑洞只有9毫米，太陽嘅係3公里。'],
+ ['光子球同黑洞陰影','喺視界外1.5倍半徑處，光可以圍住黑洞兜圈。EHT 2019年拍到M87*、2022年拍到人馬座A*嘅「甜甜圈」相，中間黑影其實係光子球投影，比事件視界大2.6倍。'],
+ ['吸積盤同噴流','被吸入嘅氣體唔會直接跌落去，而係好似浴缸去水咁旋轉成盤，磨擦到幾百萬度發出X光。部分物質仲會沿磁場向兩極以近光速噴出，長達幾百萬光年 —— 呢啲噴流係宇宙最亮嘅嘢之一（類星體）。'],
+ ['意大利麵化','靚近黑洞，你雙腳受嘅引力遠大過頭部，會被拉長壓窄成一條麵。細黑洞越危險：恆星級黑洞喺視界外已經撕碎你；超大質量黑洞（如人馬座A*）反而可以「舒服」跨過視界先死。'],
+ ['時間膨脹','越靚近黑洞，時間行得越慢。喺視界附近逗留一小時，出面可能已經過咗幾十年 ——《星際效應》嘅情節係真嘅。GPS衛星都要修正地球引力造成嘅微細時間差。'],
+ ['霍金輻射','1974年霍金提出黑洞唔係全黑：量子效應令佈慢慢「蒸發」。但速度極慢 —— 一個太陽質量黑洞要10⁶⁷年先蒸發完，遠長過宇宙年齡。'],
+ ['黑洞有幾多種？','恆星級（3–100個太陽質量，由超新星形成）、中等質量（幾百到幾十萬）、超大質量（幾百萬到幾百億，喺星系中心）。2015年LIGO首次探測到兩個黑洞合併嘅重力波，開啟「重力波天文學」。']]},
+{h:'🌌 銀河系',sub:'我哋嘅屋企星系',cards:[
+ ['結構：棒、盤、暈','中央係一條約27,000光年長嘅恆星棒同核球；外面係薄薄嘅盤（旋臂所在）；再外面係球形嘅恆星暈，有150幾個球狀星團；成個包喺一個巨大嘅暗物質暈裡面，暗物質佔銀河系質量九成。'],
+ ['旋臂點解會轉唔散？','如果旋臂係固定嘅一堆星，幾億年就會捲成一團。實際上旋臂係「密度波」—— 好似高速公路塞車：車（恆星）不斷穿過，但塞車帶（旋臂）本身慢慢移動。氣體穿過旋臂時受壓，形成年輕藍星，所以旋臂特別光。'],
+ ['銀河年','太陽以每秒230km繞銀心一圈要2.3億年。太陽誕生至今只轉咗約20圈。上一次太陽喺依家嘅位置時，地球仲係三疊紀，恐龍先啱啱出現。'],
+ ['幾多粒星？','估計1,000至4,000億粒。大部分係比太陽細嘅紅矮星。銀河每年大約誕生3至7粒新星 —— 已經係「中年」星系，高峰期過咗好多。'],
+ ['銀河系嘅童年','約136億年前形成，幾乎同宇宙一樣老。100億年前吞併咗一個叫「蓋亞-恩克拉多斯」嘅星系，形成今日嘅內暈；之後仲食咗好多矮星系，人馬座矮星系正喺被消化中。'],
+ ['同仙女座相撞','仙女座星系以每秒110km衝過嚟，約45億年後相撞，融合成一個橢圓星系（外號Milkomeda）。但恆星之間太空曠，幾乎冇兩粒星會真正碰到。'],
+ ['銀心：星星最密嘅地方','中心幾光年內有幾百萬粒恆星，密度係太陽附近嘅百萬倍。仲有一對由銀心向上下噴出、各高25,000光年嘅「費米泡」，係幾百萬年前黑洞大爆發嘅痕跡。'],
+ ['蓋亞任務','2013年發射，量度18億粒星嘅位置、距離、速度，精度相當於喺地球量月球上一粒硬幣。靚佈我哋第一次可以「倒帶」睇銀河點樣演變。']]},
+{h:'☁️ 大小麥哲倫雲',sub:'兩個跟住銀河系走嘅矮星系',cards:[
+ ['點解叫麥哲倫？','南半球肉眼可見兩片「斷開嘅雲」，古代南方民族早就認識。1519年麥哲倫環球航行嘅船員記錄落嚟，歐洲先知道，所以用佢個名。'],
+ ['大麥哲倫雲','16萬光年遠，直徑14,000光年，質量係銀河1/100，係本星系群第四大星系。入面嘅蜘蛛星雲係本星系群最劇烈嘅恆星工廠，中心星團R136有全宇宙已知最重嘅恆星（超過200個太陽質量）。'],
+ ['小麥哲倫雲','20萬光年遠，被銀河系同大雲嘅潮汐力扯到變形，正俾撕開成兩截。兩雲之間有一條氫氣「麥哲倫橋」相連。'],
+ ['麥哲倫流','兩雲身後拖住一條長達60萬光年嘅氣體尾巴，橫跨南天半個天空，係佈幾十億年前互相碰撞加上銀河系引力扯出嚟嘅。'],
+ ['SN 1987A','1987年2月大麥哲倫雲一粒藍超巨星爆炸，係1604年以來最近嘅超新星，肉眼可見幾個月。人類第一次探測到超新星嘅微中子 —— 比光早3小時到達地球。'],
+ ['宇宙距離嘅尺','1912年勒維特研究小麥哲倫雲嘅造父變星，發現越光嘅變星脈動週期越長。有咗呢條規律，哈勃先量到仙女座嘅距離，證實銀河系以外仲有其他星系。'],
+ ['未來','兩雲正俾銀河系慢慢扯埋，約20億年後大麥哲倫雲會撞入銀河系，令中心黑洞暴食、質量增8倍，仲可能將太陽系推到更外圍。']]},
+{h:'☀️ 太陽系',sub:'由塵埃到八大行星',cards:[
+ ['誕生','46億年前，一團氣體塵埃雲（可能俾附近超新星震盪）塌縮旋轉成盤。中心壓縮成太陽，剩低嘅塵埃碰撞黏合成行星。整個過程只用咗幾千萬年。'],
+ ['雪線：內外行星嘅分界','太陽附近太熱，冰蒸發，只剩岩石同金屬 → 四粒細細嘅岩石行星。木星軌道以外夠凍，冰可以保存，加上氫氦氣體 → 四粒巨行星。分界線叫「雪線」，大概喺小行星帶附近。'],
+ ['小行星帶','火星同木星之間，幾百萬粒岩石，但總質量只有月球4%。最大嘅穀神星（950km）已被歸類為矮行星。唔係「碎咗嘅行星」，而係俾木星引力阻止咗聚合嘅材料。'],
+ ['柯伊伯帶同冥王星','海王星以外30–50 AU嘅冰凍天體帶，冥王星、鬩神星、鳥神星都喺呢度。冥王星2006年被重新定義為矮行星 —— 因為佈「清唔到自己嘅軌道」。新視野號2015年飛過，見到心形冰原同藍色大氣。'],
+ ['奧爾特雲','包住成個太陽系嘅球形冰塊殼，2,000到100,000 AU（近2光年），係長週期彗星嘅老家。太陽系嘅真正邊界喺呢度 —— 航海家要3萬年先穿得過。'],
+ ['太陽風同日球層','太陽不斷噴出帶電粒子（太陽風），吹出一個保護泡「日球層」，擋住大部分銀河宇宙線。地球磁場再擋一次，撞落大氣就變極光。航海家1號2012年穿出日球層，進入星際空間。'],
+ ['旅程時間表','光由太陽到地球8分20秒、到木星43分鐘、到海王星4小時、到比鄰星4.2年。最快嘅探測器帕克太陽探測器時速69萬km，去比鄰星都要6,600年。'],
+ ['太陽嘅結局','太陽依家46億歲，燃料仲夠燒50億年。之後脹成紅巨星，大到吞掉水星金星、地球被烤焦；最後外層吹走成行星狀星雲，核心變成一粒地球大細嘅白矮星，慢慢冷卻幾萬億年。']]},
+{h:'📏 宇宙尺度',sub:'大到冇法想像，用比喻嚟感受',cards:[
+ ['光年係幾遠？','光一年行嘅距離：9.46萬億km。同太陽最近嘅恆星比鄰星4.2光年 —— 如果太陽係一粒芝麻，比鄰星喺30公里外。'],
+ ['由屋企出發','地球→月球1.3光秒 · →太陽8分 · →海王星4小時 · →奧爾特雲外緣2年 · →比鄰星4.2年 · →銀心26,000年 · →仙女座250萬年 · →可觀測宇宙邊緣465億年（因宇宙膨脹）。'],
+ ['我哋嘅地址','地球 → 太陽系 → 獵戶支臂 → 銀河系 → 本星系群（銀河+仙女座+80幾個矮星系）→ 室女座超星系團 → 拉尼亞凱亞超星系團（10萬個星系）→ 可觀測宇宙（約2萬億個星系）。'],
+ ['望遠鏡係時光機','你見到嘅太陽係8分鐘前嘅；仙女座係250萬年前嘅光，當時人類先啱啱學會用石器；韋伯望遠鏡見到嘅最遠星系係134億年前，宇宙先3億歲。']]}],
+en:[
+{h:'⚫ Black holes',sub:'The most extreme objects in the Universe',cards:[
+ ['What is a black hole?','A region where gravity is so strong that not even light escapes. When a massive star runs out of fuel its core collapses to almost zero volume and near-infinite density. Einstein’s 1915 general relativity predicted them — though he doubted they could really exist.'],
+ ['Event horizon','The point of no return. Outside it you can still escape; inside, the central singularity is your only future, as inevitable as tomorrow. Its radius (the Schwarzschild radius) scales with mass: an Earth-mass black hole is 9 mm across, a Sun-mass one 3 km.'],
+ ['Photon sphere & shadow','At 1.5 times the horizon radius light can orbit the hole. The EHT “doughnut” images of M87* (2019) and Sagittarius A* (2022) show a dark shadow that is actually the photon sphere’s silhouette — 2.6 times larger than the horizon itself.'],
+ ['Accretion disk & jets','Infalling gas does not drop straight in; it spirals like water down a drain, heating by friction to millions of degrees and blazing in X-rays. Some matter is flung along magnetic fields from the poles at near light speed in jets millions of light-years long — the engines of quasars.'],
+ ['Spaghettification','Near a black hole your feet feel far more gravity than your head, stretching you into a noodle. Smaller holes are deadlier: a stellar one shreds you outside the horizon, while a supermassive one like Sgr A* lets you cross the horizon intact — first.'],
+ ['Time dilation','Time runs slower the closer you are. An hour near the horizon may be decades outside — the plot of Interstellar is real physics. Even GPS satellites must correct for Earth’s tiny gravitational time shift.'],
+ ['Hawking radiation','In 1974 Hawking showed black holes are not quite black: quantum effects make them slowly evaporate. Slowly indeed — a Sun-mass hole needs 10⁶⁷ years, far longer than the age of the Universe.'],
+ ['How many kinds?','Stellar-mass (3–100 Suns, born in supernovae), intermediate (hundreds to hundreds of thousands) and supermassive (millions to tens of billions, at galaxy centres). In 2015 LIGO first detected gravitational waves from two merging black holes, opening gravitational-wave astronomy.']]},
+{h:'🌌 The Milky Way',sub:'Our home galaxy',cards:[
+ ['Structure: bar, disk, halo','A 27,000-ly bar of stars and a bulge at the centre; a thin disk carrying the spiral arms; a spherical stellar halo with 150+ globular clusters; all wrapped in a vast dark-matter halo holding ~90% of the mass.'],
+ ['Why don’t the arms wind up?','If arms were fixed groups of stars they would coil into a blur within a few hundred million years. Instead they are density waves — like a motorway traffic jam: cars (stars) pass through while the jam (arm) drifts slowly. Gas squeezed in the arms forms bright young blue stars.'],
+ ['The galactic year','The Sun circles the centre at 230 km/s, once every 230 million years, and has made only ~20 laps since birth. Last time it was here, Earth was in the Triassic and dinosaurs had just appeared.'],
+ ['How many stars?','100 to 400 billion, most of them red dwarfs smaller than the Sun. The Galaxy now forms only 3–7 new stars a year — a middle-aged galaxy well past its peak.'],
+ ['A galactic childhood','It formed ~13.6 billion years ago, nearly as old as the Universe. About 10 billion years ago it swallowed a galaxy called Gaia-Enceladus, building today’s inner halo; it has eaten many dwarfs since and is digesting the Sagittarius dwarf right now.'],
+ ['Collision with Andromeda','Andromeda approaches at 110 km/s and will collide in ~4.5 billion years, merging into an elliptical galaxy nicknamed Milkomeda. Stars are so far apart that almost none will actually hit.'],
+ ['The centre: the crowded core','Millions of stars crowd the inner few light-years, a million times the density around the Sun. Two “Fermi bubbles” 25,000 ly tall rise above and below the centre — scars of a black-hole outburst millions of years ago.'],
+ ['The Gaia mission','Launched in 2013, Gaia measures positions, distances and motions of 1.8 billion stars with a precision equal to spotting a coin on the Moon. For the first time we can “rewind” the Galaxy’s history.']]},
+{h:'☁️ The Magellanic Clouds',sub:'Two dwarf galaxies riding along with us',cards:[
+ ['Why “Magellanic”?','Two detached “clouds” visible to the naked eye from the southern hemisphere, long known to southern peoples. Magellan’s crew recorded them on the 1519 circumnavigation, bringing them to European attention.'],
+ ['Large Magellanic Cloud','160,000 ly away, 14,000 ly across, 1/100 of the Milky Way’s mass — the fourth-largest galaxy in the Local Group. Its Tarantula Nebula is the Group’s fiercest star factory; the cluster R136 at its heart holds the most massive stars known (over 200 Suns).'],
+ ['Small Magellanic Cloud','200,000 ly away, warped by tides from both the Milky Way and the LMC and being torn in two. A hydrogen “Magellanic Bridge” links the two clouds.'],
+ ['The Magellanic Stream','A 600,000-ly gas tail trailing both clouds across half the southern sky, torn out by their mutual collisions and the Milky Way’s gravity over billions of years.'],
+ ['SN 1987A','In February 1987 a blue supergiant in the LMC exploded — the closest supernova since 1604, visible to the naked eye for months. Its neutrinos were detected arriving 3 hours before the light.'],
+ ['A ruler for the Universe','In 1912 Henrietta Leavitt studied Cepheid stars in the SMC and found that brighter ones pulse more slowly. That law let Hubble measure Andromeda’s distance and prove other galaxies exist.'],
+ ['The future','Both clouds are being reeled in. In ~2 billion years the LMC will crash into the Milky Way, feeding the central black hole until it grows eightfold — and possibly nudging the Solar System outward.']]},
+{h:'☀️ The Solar System',sub:'From dust to eight planets',cards:[
+ ['Birth','4.6 billion years ago a cloud of gas and dust — perhaps nudged by a nearby supernova — collapsed into a spinning disk. The centre became the Sun; leftover dust clumped into planets, all within a few tens of millions of years.'],
+ ['The snow line','Near the Sun ice evaporated, leaving rock and metal — four small rocky planets. Beyond Jupiter it was cold enough for ice to survive and grab hydrogen and helium — four giants. The boundary, the snow line, sits near the asteroid belt.'],
+ ['The asteroid belt','Millions of rocks between Mars and Jupiter, yet only 4% of the Moon’s mass in total. Ceres (950 km) is now a dwarf planet. Not a shattered planet, but material Jupiter’s gravity never let assemble.'],
+ ['Kuiper Belt & Pluto','An icy belt 30–50 AU out, home to Pluto, Eris and Makemake. Pluto was reclassified as a dwarf planet in 2006 because it has not cleared its orbit. New Horizons flew past in 2015, revealing a heart-shaped ice plain and blue haze.'],
+ ['The Oort Cloud','A spherical shell of icy bodies from 2,000 to 100,000 AU (nearly 2 light-years) — the home of long-period comets and the true edge of the Solar System. Voyager needs 30,000 years to cross it.'],
+ ['Solar wind & heliosphere','The Sun blows a stream of charged particles that inflates a protective bubble, the heliosphere, blocking most galactic cosmic rays. Earth’s magnetic field adds a second shield; particles that get through paint the aurora. Voyager 1 left the heliosphere in 2012.'],
+ ['Travel times','Light takes 8m20s to Earth, 43 min to Jupiter, 4 h to Neptune, 4.2 years to Proxima Centauri. The fastest probe ever, Parker Solar Probe at 690,000 km/h, would still need 6,600 years to reach Proxima.'],
+ ['How the Sun ends','The Sun is 4.6 billion years old with fuel for 5 billion more. It will then swell into a red giant, swallowing Mercury and Venus and scorching Earth, before puffing off its outer layers as a planetary nebula and leaving an Earth-sized white dwarf that cools for trillions of years.']]},
+{h:'📏 Cosmic scale',sub:'Too big to imagine — so use analogies',cards:[
+ ['How far is a light-year?','The distance light travels in a year: 9.46 trillion km. The nearest star, Proxima Centauri, is 4.2 ly away — if the Sun were a sesame seed, Proxima would be 30 km away.'],
+ ['Leaving home','Earth→Moon 1.3 light-seconds · →Sun 8 min · →Neptune 4 h · →outer Oort Cloud 2 yr · →Proxima 4.2 yr · →galactic centre 26,000 yr · →Andromeda 2.5 million yr · →edge of the observable Universe 46.5 billion ly (thanks to expansion).'],
+ ['Our address','Earth → Solar System → Orion Spur → Milky Way → Local Group (Milky Way + Andromeda + 80-odd dwarfs) → Virgo Supercluster → Laniakea (100,000 galaxies) → observable Universe (~2 trillion galaxies).'],
+ ['Telescopes are time machines','You see the Sun as it was 8 minutes ago; Andromeda’s light left 2.5 million years ago when humans first shaped stone tools; the farthest galaxies Webb sees date from 13.4 billion years ago, when the Universe was 300 million years old.']]}],
+ms:[
+{h:'⚫ Lubang hitam',sub:'Objek paling ekstrem di alam semesta',cards:[
+ ['Apa itu lubang hitam?','Kawasan di mana graviti begitu kuat sehingga cahaya pun tak terlepas. Apabila bintang besar kehabisan bahan api, terasnya runtuh ke isipadu hampir sifar. Diramal oleh relativiti am Einstein pada 1915.'],
+ ['Ufuk peristiwa','Titik tiada kembali. Jejarinya (jejari Schwarzschild) berkadar dengan jisim: lubang hitam sejisim Bumi hanya 9 mm, sejisim Matahari 3 km.'],
+ ['Sfera foton & bayang','Pada 1.5 kali jejari ufuk, cahaya boleh mengorbit. Imej “donat” EHT bagi M87* (2019) dan Sagittarius A* (2022) menunjukkan bayang 2.6 kali lebih besar daripada ufuk.'],
+ ['Cakera akresi & jet','Gas berpusar seperti air ke longkang, panas berjuta darjah dan memancarkan sinar-X. Sebahagian dilontar dari kutub pada hampir laju cahaya sebagai jet berjuta tahun cahaya panjang — enjin kuasar.'],
+ ['Spaghettifikasi','Kaki anda merasa graviti jauh lebih kuat daripada kepala, meregangkan anda seperti mi. Lubang kecil lebih bahaya; lubang supermasif seperti Sgr A* membiarkan anda melintasi ufuk terlebih dahulu.'],
+ ['Pelebaran masa','Masa berjalan lebih perlahan berhampiran lubang hitam. Satu jam dekat ufuk boleh menjadi berdekad di luar — fizik filem Interstellar adalah benar.'],
+ ['Sinaran Hawking','Pada 1974 Hawking menunjukkan lubang hitam perlahan-lahan menyejat. Lubang sejisim Matahari perlukan 10⁶⁷ tahun.'],
+ ['Berapa jenis?','Jisim bintang (3–100 Matahari), pertengahan, dan supermasif (berjuta hingga berbilion, di pusat galaksi). LIGO mengesan gelombang graviti daripada dua lubang hitam bercantum pada 2015.']]},
+{h:'🌌 Bima Sakti',sub:'Galaksi rumah kita',cards:[
+ ['Struktur: palang, cakera, halo','Palang bintang 27,000 tc dan bonjol di tengah; cakera nipis dengan lengan pilin; halo bintang dengan 150+ gugusan globul; semuanya dalam halo jirim gelap (~90% jisim).'],
+ ['Kenapa lengan tak berbelit?','Lengan ialah gelombang ketumpatan — seperti kesesakan lebuh raya: kereta (bintang) melaluinya sementara kesesakan (lengan) bergerak perlahan. Gas dimampatkan membentuk bintang biru muda yang terang.'],
+ ['Tahun galaksi','Matahari mengelilingi pusat pada 230 km/s, sekali setiap 230 juta tahun — hanya ~20 pusingan sejak lahir. Kali terakhir di sini, dinosaur baru muncul.'],
+ ['Berapa bintang?','100 hingga 400 bilion, kebanyakannya kerdil merah. Galaksi kini hanya membentuk 3–7 bintang baharu setahun.'],
+ ['Zaman kanak-kanak galaksi','Terbentuk ~13.6 bilion tahun lalu. Kira-kira 10 bilion tahun lalu ia menelan galaksi Gaia-Enceladus; kini sedang mencerna kerdil Sagittarius.'],
+ ['Perlanggaran dengan Andromeda','Andromeda mendekat pada 110 km/s dan akan berlanggar dalam ~4.5 bilion tahun, membentuk galaksi elips “Milkomeda”. Hampir tiada bintang akan benar-benar bertembung.'],
+ ['Pusat yang sesak','Berjuta bintang dalam beberapa tahun cahaya dalaman. Dua “buih Fermi” setinggi 25,000 tc — parut letusan lubang hitam berjuta tahun lalu.'],
+ ['Misi Gaia','Dilancarkan 2013, mengukur 1.8 bilion bintang dengan ketepatan melihat syiling di Bulan.']]},
+{h:'☁️ Awan Magellan',sub:'Dua galaksi kerdil yang mengikut kita',cards:[
+ ['Kenapa “Magellan”?','Dua “awan” terpisah kelihatan dengan mata kasar dari hemisfera selatan, dicatat oleh kru Magellan pada 1519.'],
+ ['Awan Magellan Besar','160,000 tc jauh, 14,000 tc lebar, 1/100 jisim Bima Sakti. Nebula Tarantula ialah kilang bintang paling ganas dalam Kumpulan Tempatan; gugusan R136 mempunyai bintang paling berjisim diketahui.'],
+ ['Awan Magellan Kecil','200,000 tc jauh, dipulas oleh pasang dan sedang terbelah dua. “Jambatan Magellan” hidrogen menghubungkan kedua awan.'],
+ ['Arus Magellan','Ekor gas 600,000 tc di belakang kedua awan, merentasi separuh langit selatan.'],
+ ['SN 1987A','Februari 1987, bintang super gergasi biru di LMC meletup — supernova terdekat sejak 1604. Neutrinonya tiba 3 jam sebelum cahaya.'],
+ ['Pembaris alam semesta','Pada 1912 Henrietta Leavitt mengkaji bintang Cepheid di SMC dan menemui hukum tempoh–kecerahan yang membolehkan Hubble mengukur jarak Andromeda.'],
+ ['Masa depan','Dalam ~2 bilion tahun LMC akan berlanggar dengan Bima Sakti, membesarkan lubang hitam pusat lapan kali ganda.']]},
+{h:'☀️ Sistem Suria',sub:'Daripada debu kepada lapan planet',cards:[
+ ['Kelahiran','4.6 bilion tahun lalu awan gas dan debu runtuh menjadi cakera berputar. Pusatnya menjadi Matahari; debu selebihnya berkumpul menjadi planet dalam beberapa puluh juta tahun.'],
+ ['Garis salji','Dekat Matahari ais tersejat — empat planet berbatu kecil. Di luar Musytari ais kekal dan menangkap hidrogen serta helium — empat gergasi.'],
+ ['Jalur asteroid','Berjuta batu antara Marikh dan Musytari, tetapi hanya 4% jisim Bulan. Ceres (950 km) kini planet kerdil.'],
+ ['Jalur Kuiper & Pluto','Jalur berais 30–50 AU, rumah Pluto, Eris dan Makemake. Pluto diklasifikasi semula sebagai planet kerdil pada 2006. New Horizons melintasinya pada 2015.'],
+ ['Awan Oort','Cengkerang sfera jasad berais dari 2,000 hingga 100,000 AU (hampir 2 tahun cahaya) — rumah komet tempoh panjang dan sempadan sebenar Sistem Suria.'],
+ ['Angin suria & heliosfera','Matahari meniup zarah bercas yang membentuk buih pelindung. Zarah yang menembusi medan magnet Bumi mencipta aurora. Voyager 1 keluar dari heliosfera pada 2012.'],
+ ['Masa perjalanan','Cahaya: 8m20s ke Bumi, 43 min ke Musytari, 4 j ke Neptun, 4.2 tahun ke Proxima Centauri. Prob terpantas masih perlukan 6,600 tahun ke Proxima.'],
+ ['Pengakhiran Matahari','Dalam ~5 bilion tahun Matahari menjadi gergasi merah, menelan Utarid dan Zuhrah, kemudian meninggalkan kerdil putih sebesar Bumi.']]},
+{h:'📏 Skala kosmos',sub:'Terlalu besar untuk dibayangkan',cards:[
+ ['Sejauh mana tahun cahaya?','Jarak cahaya dalam setahun: 9.46 trilion km. Proxima Centauri 4.2 tc — jika Matahari sebiji bijan, Proxima 30 km jauhnya.'],
+ ['Meninggalkan rumah','Bumi→Bulan 1.3 saat cahaya · →Matahari 8 min · →Neptun 4 j · →Proxima 4.2 tahun · →pusat galaksi 26,000 tahun · →Andromeda 2.5 juta tahun · →pinggir alam semesta 46.5 bilion tc.'],
+ ['Alamat kita','Bumi → Sistem Suria → Taji Orion → Bima Sakti → Kumpulan Tempatan → Superkelompok Virgo → Laniakea → alam semesta boleh cerap (~2 trilion galaksi).'],
+ ['Teleskop ialah mesin masa','Matahari yang anda lihat ialah 8 minit lalu; cahaya Andromeda bertolak 2.5 juta tahun lalu; galaksi terjauh Webb berusia 13.4 bilion tahun.']]}],
+ko:[
+{h:'⚫ 블랙홀',sub:'우주에서 가장 극단적인 천체',cards:[
+ ['블랙홀이란?','빛조차 빠져나올 수 없을 만큼 중력이 강한 영역. 무거운 별이 연료를 다 쓰면 핵이 거의 0의 부피로 붕괴해요. 1915년 아인슈타인의 일반상대성이론이 예측했죠.'],
+ ['사건의 지평선','돌아올 수 없는 경계. 반지름(슈바르츠실트 반지름)은 질량에 비례해요: 지구 질량 블랙홀은 9mm, 태양 질량은 3km.'],
+ ['광자구와 그림자','지평선 반지름 1.5배에서 빛이 공전해요. EHT의 M87*(2019)와 궁수자리 A*(2022) “도넛” 사진의 그림자는 지평선보다 2.6배 커요.'],
+ ['강착원반과 제트','가스는 배수구 물처럼 소용돌이치며 수백만 도로 가열되어 X선을 내요. 일부는 극에서 광속에 가까운 제트로 수백만 광년 뻗어요 — 퀘이사의 엔진.'],
+ ['스파게티화','발이 머리보다 훨씬 강한 중력을 받아 국수처럼 늘어나요. 작은 블랙홀이 더 위험하고, 초대질량 블랙홀은 지평선을 먼저 무사히 넘게 해줘요.'],
+ ['시간 지연','가까울수록 시간이 느려져요. 지평선 근처의 한 시간이 바깥의 수십 년 — 영화 인터스텔라의 물리는 진짜예요.'],
+ ['호킹 복사','1974년 호킹은 블랙홀이 천천히 증발한다고 밝혔어요. 태양 질량 블랙홀은 10⁶⁷년이 걸려요.'],
+ ['종류는?','항성 질량(태양 3–100배), 중간 질량, 초대질량(수백만~수백억 배, 은하 중심). 2015년 LIGO가 두 블랙홀 합병의 중력파를 처음 검출했어요.']]},
+{h:'🌌 은하수',sub:'우리의 고향 은하',cards:[
+ ['구조: 막대, 원반, 헤일로','중심에 27,000광년 길이의 막대와 팽대부, 나선팔을 품은 얇은 원반, 구상성단 150여 개의 헤일로, 전체를 감싼 암흑물질 헤일로(질량의 약 90%).'],
+ ['나선팔이 감기지 않는 이유','나선팔은 밀도파 — 고속도로 정체처럼 차(별)는 지나가고 정체(팔)는 천천히 움직여요. 압축된 가스가 밝은 청색 별을 만들죠.'],
+ ['은하년','태양은 초속 230km로 2.3억 년에 한 바퀴, 탄생 후 약 20바퀴만 돌았어요. 지난번 이 자리에 있을 때 공룡이 막 등장했죠.'],
+ ['별은 몇 개?','1,000억~4,000억 개, 대부분 적색왜성. 지금은 1년에 별 3~7개만 만드는 중년 은하예요.'],
+ ['은하의 어린 시절','약 136억 년 전 형성. 약 100억 년 전 가이아-엔켈라두스 은하를 삼켰고, 지금은 궁수자리 왜소은하를 소화 중이에요.'],
+ ['안드로메다와 충돌','안드로메다가 초속 110km로 접근, 약 45억 년 뒤 충돌해 타원은하 “밀코메다”가 돼요. 별끼리 실제로 부딪히는 일은 거의 없어요.'],
+ ['붐비는 중심','안쪽 몇 광년에 수백만 개 별. 위아래로 25,000광년 높이의 “페르미 거품” — 수백만 년 전 블랙홀 폭발의 흔적.'],
+ ['가이아 임무','2013년 발사, 18억 개 별을 달 위의 동전을 보는 정밀도로 측정.']]},
+{h:'☁️ 마젤란은하',sub:'우리를 따라오는 두 왜소은하',cards:[
+ ['왜 “마젤란”?','남반구에서 맨눈으로 보이는 두 “구름”. 1519년 마젤란 항해 선원들이 기록했어요.'],
+ ['대마젤란은하','16만 광년 거리, 지름 14,000광년, 은하수 질량의 1/100. 타란툴라 성운은 국부은하군 최대의 별 공장이고, R136 성단엔 태양 200배 넘는 가장 무거운 별들이 있어요.'],
+ ['소마젤란은하','20만 광년 거리, 조석력에 뒤틀려 둘로 찢어지는 중. 수소 “마젤란 다리”가 두 은하를 이어요.'],
+ ['마젤란 흐름','두 은하 뒤로 60만 광년 뻗은 가스 꼬리, 남쪽 하늘의 절반을 가로질러요.'],
+ ['SN 1987A','1987년 2월 대마젤란의 청색초거성 폭발 — 1604년 이후 가장 가까운 초신성. 중성미자가 빛보다 3시간 먼저 도착했어요.'],
+ ['우주의 잣대','1912년 헨리에타 레빗이 소마젤란의 세페이드 변광성에서 주기-광도 관계를 발견, 허블이 안드로메다 거리를 측정할 수 있게 됐어요.'],
+ ['미래','약 20억 년 뒤 대마젤란이 은하수에 충돌해 중심 블랙홀을 8배로 키울 거예요.']]},
+{h:'☀️ 태양계',sub:'먼지에서 여덟 행성까지',cards:[
+ ['탄생','46억 년 전 가스와 먼지 구름이 회전 원반으로 붕괴. 중심은 태양이 되고 남은 먼지가 수천만 년 안에 행성으로 뭉쳤어요.'],
+ ['눈 경계선','태양 근처는 얼음이 증발해 작은 암석 행성 4개, 목성 밖은 얼음이 남아 수소·헬륨을 붙잡은 거대행성 4개.'],
+ ['소행성대','화성과 목성 사이 수백만 개의 암석, 하지만 총질량은 달의 4%. 세레스(950km)는 왜소행성.'],
+ ['카이퍼벨트와 명왕성','30–50 AU의 얼음 천체 띠. 명왕성은 2006년 궤도를 정리하지 못해 왜소행성으로 재분류. 뉴호라이즌스가 2015년 통과.'],
+ ['오르트 구름','2,000~100,000 AU(거의 2광년)의 얼음 껍질 — 장주기 혜성의 고향, 태양계의 진짜 경계.'],
+ ['태양풍과 태양권','태양이 뿜는 대전 입자가 보호 거품을 만들어요. 지구 자기장을 뚫은 입자는 오로라가 되죠. 보이저 1호는 2012년 태양권을 벗어났어요.'],
+ ['이동 시간','빛: 지구까지 8분 20초, 목성 43분, 해왕성 4시간, 프록시마 센타우리 4.2년. 가장 빠른 탐사선도 프록시마까지 6,600년.'],
+ ['태양의 끝','약 50억 년 뒤 적색거성이 되어 수성과 금성을 삼키고, 지구 크기의 백색왜성만 남아요.']]},
+{h:'📏 우주의 크기',sub:'상상하기엔 너무 커서 비유로',cards:[
+ ['1광년은 얼마나?','빛이 1년에 가는 거리 9.46조 km. 프록시마 센타우리는 4.2광년 — 태양이 참깨라면 프록시마는 30km 밖.'],
+ ['집을 떠나','지구→달 1.3광초 · →태양 8분 · →해왕성 4시간 · →프록시마 4.2년 · →은하 중심 26,000년 · →안드로메다 250만 년 · →관측 가능 우주 끝 465억 광년.'],
+ ['우리의 주소','지구 → 태양계 → 오리온 지류 → 은하수 → 국부은하군 → 처녀자리 초은하단 → 라니아케아 → 관측 가능 우주(약 2조 개 은하).'],
+ ['망원경은 타임머신','보이는 태양은 8분 전, 안드로메다는 250만 년 전의 빛, 웹 망원경의 가장 먼 은하는 134억 년 전.']]}],
+ja:[
+{h:'⚫ ブラックホール',sub:'宇宙で最も極端な天体',cards:[
+ ['ブラックホールとは？','光さえ逃げられないほど重力が強い領域。大質量星が燃料を使い切ると核がほぼ体積ゼロに崩壊する。1915年アインシュタインの一般相対性理論が予言。'],
+ ['事象の地平面','帰還不能の境界。半径（シュワルツシルト半径）は質量に比例：地球質量なら9mm、太陽質量なら3km。'],
+ ['光子球と影','地平面半径の1.5倍で光が周回。EHTのM87*（2019）といて座A*（2022）の「ドーナツ」画像の影は地平面の2.6倍。'],
+ ['降着円盤とジェット','ガスは排水口の水のように渦を巻き、数百万度に熱せられX線を放つ。一部は極から光速近くのジェットとして数百万光年 —— クエーサーのエンジン。'],
+ ['スパゲッティ化','足が頭よりずっと強い重力を受け麺のように伸びる。小さい穴ほど危険で、超大質量なら地平面を無事に越えられる —— まずは。'],
+ ['時間の遅れ','近いほど時間が遅く進む。地平面近くの1時間が外の数十年 —— 映画インターステラーの物理は本物。'],
+ ['ホーキング放射','1974年ホーキングはブラックホールがゆっくり蒸発すると示した。太陽質量なら10⁶⁷年。'],
+ ['種類は？','恒星質量（太陽3–100倍）、中間質量、超大質量（数百万〜数百億倍、銀河中心）。2015年LIGOが2つの合体の重力波を初検出。']]},
+{h:'🌌 天の川銀河',sub:'私たちの故郷',cards:[
+ ['構造：棒・円盤・ハロー','中心に27,000光年の棒とバルジ、渦状腕を持つ薄い円盤、球状星団150以上のハロー、全体を包む暗黒物質ハロー（質量の約90%）。'],
+ ['腕が巻き込まれない理由','腕は密度波 —— 高速道路の渋滞のように車（星）は通り抜け、渋滞（腕）はゆっくり動く。圧縮されたガスが明るい青い星を作る。'],
+ ['銀河年','太陽は秒速230kmで2.3億年に1周、誕生以来約20周のみ。前回ここにいた時、恐竜が現れたばかりだった。'],
+ ['星の数は？','1,000億〜4,000億個、大半は赤色矮星。今は年に3〜7個しか星を作らない中年銀河。'],
+ ['銀河の幼少期','約136億年前に形成。約100億年前にガイア・エンケラドゥス銀河を飲み込み、今はいて座矮小銀河を消化中。'],
+ ['アンドロメダとの衝突','アンドロメダが秒速110kmで接近、約45億年後に衝突し楕円銀河「ミルコメダ」に。星同士が実際にぶつかることはほぼない。'],
+ ['混み合う中心','内側数光年に数百万の星。上下に高さ25,000光年の「フェルミバブル」—— 数百万年前のブラックホール噴出の傷跡。'],
+ ['ガイアミッション','2013年打ち上げ、18億個の星を月面のコインを見分ける精度で計測。']]},
+{h:'☁️ マゼラン雲',sub:'私たちに付き従う2つの矮小銀河',cards:[
+ ['なぜ「マゼラン」？','南半球で肉眼で見える2つの「雲」。1519年マゼラン航海の乗組員が記録。'],
+ ['大マゼラン雲','16万光年、直径14,000光年、天の川の1/100の質量。タランチュラ星雲は局部銀河群最大の星の工場、R136星団には太陽200倍超の最重量星。'],
+ ['小マゼラン雲','20万光年、潮汐で歪み2つに裂けつつある。水素の「マゼラン橋」が両雲をつなぐ。'],
+ ['マゼラン流','両雲の後ろに60万光年のガスの尾、南天の半分を横切る。'],
+ ['SN 1987A','1987年2月、大マゼラン雲の青色超巨星が爆発 —— 1604年以来最も近い超新星。ニュートリノが光より3時間早く到着。'],
+ ['宇宙の物差し','1912年ヘンリエッタ・リービットが小マゼラン雲のセファイド変光星から周期光度関係を発見、ハッブルがアンドロメダの距離を測れた。'],
+ ['未来','約20億年後に大マゼラン雲が天の川に衝突し、中心ブラックホールを8倍に育てる。']]},
+{h:'☀️ 太陽系',sub:'塵から8つの惑星へ',cards:[
+ ['誕生','46億年前、ガスと塵の雲が回転円盤に崩壊。中心が太陽になり、残りの塵が数千万年で惑星にまとまった。'],
+ ['スノーライン','太陽近くは氷が蒸発し小さな岩石惑星4つ、木星の外は氷が残り水素とヘリウムを捕らえた巨大惑星4つ。'],
+ ['小惑星帯','火星と木星の間に数百万の岩、だが総質量は月の4%。ケレス（950km）は準惑星。'],
+ ['カイパーベルトと冥王星','30–50AUの氷の帯。冥王星は2006年に軌道を掃き清めていないため準惑星に再分類。ニューホライズンズが2015年に通過。'],
+ ['オールトの雲','2,000〜100,000AU（約2光年）の氷の殻 —— 長周期彗星の故郷、太陽系の真の境界。'],
+ ['太陽風と太陽圏','太陽が吹き出す荷電粒子が保護の泡を作る。地球磁場を抜けた粒子はオーロラに。ボイジャー1号は2012年に太陽圏を脱出。'],
+ ['旅の時間','光：地球まで8分20秒、木星43分、海王星4時間、プロキシマ・ケンタウリ4.2年。最速の探査機でもプロキシマまで6,600年。'],
+ ['太陽の最期','約50億年後に赤色巨星となり水星と金星を飲み込み、地球サイズの白色矮星だけが残る。']]},
+{h:'📏 宇宙のスケール',sub:'想像を超える大きさを比喩で',cards:[
+ ['1光年はどれくらい？','光が1年に進む距離9.46兆km。プロキシマ・ケンタウリは4.2光年 —— 太陽がゴマならプロキシマは30km先。'],
+ ['家を出発','地球→月 1.3光秒 · →太陽 8分 · →海王星 4時間 · →プロキシマ 4.2年 · →銀河中心 26,000年 · →アンドロメダ 250万年 · →観測可能な宇宙の端 465億光年。'],
+ ['私たちの住所','地球 → 太陽系 → オリオン腕 → 天の川銀河 → 局部銀河群 → おとめ座超銀河団 → ラニアケア → 観測可能な宇宙（約2兆個の銀河）。'],
+ ['望遠鏡はタイムマシン','見える太陽は8分前、アンドロメダの光は250万年前、ウェッブ望遠鏡の最遠銀河は134億年前。']]}]};
+function renderKnow(){
+ const root=$('know');if(!root)return;
+ const groups=KNOW[LANG]||KNOW.en;
+ let h=`<h2>${t('know_h')}</h2><div class="sub">${t('know_sub')}</div>`;
+ groups.forEach((g,i)=>{
+  h+=`<details class="kgroup"${i===0?' open':''}><summary><span>${g.h}</span><small>${g.sub}</small></summary><div class="grid">`;
+  for(const [tt,body] of g.cards)h+=`<div class="kcard"><h4>${tt}</h4><p>${body}</p></div>`;
+  h+=`</div></details>`;});
+ root.innerHTML=h;}
 
 /* ================= 3D 場景 ================= */
 const canvas=$('gl');
@@ -373,7 +743,7 @@ function softTex(){ // 高斯軟光斑（星雲/星團用）
 function dustTex(){ // 乘法混合用：中心暗、邊緣白 → 遮暗背後嘅光
  const c=cnv(64,64),g=c.getContext('2d');
  const gr=g.createRadialGradient(32,32,0,32,32,32);
- gr.addColorStop(0,'rgb(105,80,70)');gr.addColorStop(0.4,'rgb(185,165,155)');gr.addColorStop(1,'rgb(255,255,255)');
+ gr.addColorStop(0,'rgb(128,100,88)');gr.addColorStop(0.4,'rgb(200,185,175)');gr.addColorStop(1,'rgb(255,255,255)');
  g.fillStyle=gr;g.fillRect(0,0,64,64);
  const t=new THREE.CanvasTexture(c);return t;}
 function ringTex(){
@@ -397,21 +767,132 @@ const TEXMAP={
  moon:()=>rockTex('#9a9a9a','#5a5a5a',130,31),
  mars:()=>rockTex('#c1613b','#6e2f16',60,41),
  jupiter:()=>bandTex('#d8b48f',[[0,30,'#e8d3b0'],[30,70,'#b07a4e'],[70,110,'#e3c298'],[110,150,'#a8643c'],[150,190,'#e8d3b0'],[190,256,'#8f5a34']],51,9),
- io:()=>rockTex('#e8d24a','#8a6a1a',50,61),
- europa:()=>bandTex('#c9bfae',[[0,256,'rgba(150,90,60,0)']],0,0),
- ganymede:()=>rockTex('#8a7f70','#4a4238',80,71),
- callisto:()=>rockTex('#5a5148','#2e2823',150,81),
+ io:()=>ioTex(),
+ europa:()=>europaTex(),
+ ganymede:()=>ganymedeTex(),
+ callisto:()=>callistoTex(),
  saturn:()=>bandTex('#e3cfa0',[[0,50,'#efe0b8'],[50,110,'#d4b983'],[110,170,'#e8d5a5'],[170,256,'#c4a878']],91,7),
- titan:()=>bandTex('#dd8c2e',[[0,256,'rgba(120,50,0,0)']],0,0),
+ titan:()=>titanTex(),
  uranus:()=>bandTex('#9fe3e0',[[0,256,'rgba(255,255,255,0)']],0,0),
  neptune:()=>bandTex('#3f66d4',[[20,80,'#5a86e8'],[120,190,'#2f4fb0'],[200,240,'#6a96f0']],101,8),
- triton:()=>rockTex('#c9c2b8','#6a655e',40,111),
- mimas:()=>rockTex('#8a8578','#4a453c',40,121),
- enceladus:()=>rockTex('#e8ecef','#9aa2ab',20,131),
- tethys:()=>rockTex('#b0a89a','#5e574c',60,141),
- dione:()=>rockTex('#a09a8e','#55504a',55,151),
- rhea:()=>rockTex('#96908a','#4e4a46',70,161),
- iapetus:()=>rockTex('#7a6a58','#3a322a',60,171)};
+ triton:()=>tritonTex(),
+ mimas:()=>mimasTex(),
+ enceladus:()=>enceladusTex(),
+ tethys:()=>tethysTex(),
+ dione:()=>dioneTex(),
+ rhea:()=>rheaTex(),
+ iapetus:()=>iapetusTex(),
+ pluto:()=>plutoTex(),
+ charon:()=>charonTex()};
+
+/* ---------- 衛星專屬紋理：按每粒衛星嘅真實特徵繪製 ---------- */
+function craters(g,w,h,n,rnd,rmin,rmax,floor,rim,ray){
+ for(let i=0;i<n;i++){const x=rnd()*w,y=rnd()*h,r=rmin+Math.pow(rnd(),2)*(rmax-rmin);
+  const fl=g.createRadialGradient(x,y,r*0.1,x,y,r);fl.addColorStop(0,floor);fl.addColorStop(0.75,floor.replace(/[\d.]+\)$/,'0.35)'));fl.addColorStop(1,'rgba(0,0,0,0)');
+  g.fillStyle=fl;g.beginPath();g.arc(x,y,r,0,7);g.fill();
+  g.strokeStyle=rim;g.lineWidth=Math.max(1,r*0.16);g.beginPath();g.arc(x,y,r*0.92,Math.PI*0.9,Math.PI*2.1);g.stroke();
+  g.strokeStyle='rgba(0,0,0,.35)';g.beginPath();g.arc(x,y,r*0.92,Math.PI*-0.1,Math.PI*0.9);g.stroke();
+  if(ray&&rnd()<ray){g.strokeStyle='rgba(255,255,255,.28)';g.lineWidth=1;for(let k=0;k<14;k++){const a=rnd()*7,L=r*(2+rnd()*4);g.beginPath();g.moveTo(x+Math.cos(a)*r,y+Math.sin(a)*r);g.lineTo(x+Math.cos(a)*L,y+Math.sin(a)*L);g.stroke();}}}}
+function speckle(g,w,h,n,rnd,col,a){for(let i=0;i<n;i++){g.fillStyle=col.replace('A',(rnd()*a).toFixed(3));g.fillRect(rnd()*w,rnd()*h,2,2);}}
+function blotches(g,w,h,n,rnd,col,rmin,rmax,a){for(let i=0;i<n;i++){const x=rnd()*w,y=rnd()*h,r=rmin+rnd()*(rmax-rmin);const gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,col.replace('A',a.toFixed(3)));gr.addColorStop(1,col.replace('A','0'));g.fillStyle=gr;g.beginPath();g.arc(x,y,r,0,7);g.fill();}}
+function wrapLine(g,w,x0,y0,x1,y1){g.beginPath();g.moveTo(x0,y0);g.lineTo(x1,y1);g.stroke();}
+function ioTex(){const w=1024,h=512,c=cnv(w,h),g=c.getContext('2d'),rnd=R(61);
+ const gr=g.createLinearGradient(0,0,0,h);gr.addColorStop(0,'#cdb35a');gr.addColorStop(0.3,'#e4c95c');gr.addColorStop(0.5,'#d9b445');gr.addColorStop(0.7,'#e6cd68');gr.addColorStop(1,'#c9a94a');g.fillStyle=gr;g.fillRect(0,0,w,h);
+ blotches(g,w,h,160,rnd,'rgba(250,246,220,A)',15,60,0.7);   // 二氧化硫白霜
+ blotches(g,w,h,60,rnd,'rgba(120,150,90,A)',10,40,0.35);    // 綠色硫化物
+ for(let i=0;i<46;i++){const x=rnd()*w,y=h*0.1+rnd()*h*0.8,r=8+rnd()*26;   // 火山：黑口 + 紅色噴出物環
+  const halo=g.createRadialGradient(x,y,r*0.3,x,y,r*2.6);halo.addColorStop(0,'rgba(200,60,20,.55)');halo.addColorStop(0.5,'rgba(230,110,30,.28)');halo.addColorStop(1,'rgba(230,110,30,0)');g.fillStyle=halo;g.beginPath();g.arc(x,y,r*2.6,0,7);g.fill();
+  g.fillStyle='rgba(40,25,15,.9)';g.beginPath();g.ellipse(x,y,r*0.55,r*0.4,rnd()*3,0,7);g.fill();}
+ for(let i=0;i<24;i++){g.strokeStyle='rgba(120,60,20,.35)';g.lineWidth=2+rnd()*5;g.beginPath();let x=rnd()*w,y=rnd()*h;g.moveTo(x,y);for(let k=0;k<6;k++){x+=(rnd()-0.5)*80;y+=(rnd()-0.5)*40;g.lineTo(x,y);}g.stroke();}
+ speckle(g,w,h,3000,rnd,'rgba(90,60,20,A)',0.25);return tex(c);}
+function europaTex(){const w=1024,h=512,c=cnv(w,h),g=c.getContext('2d'),rnd=R(62);
+ g.fillStyle='#e6dcc9';g.fillRect(0,0,w,h);
+ blotches(g,w,h,120,rnd,'rgba(170,130,100,A)',20,90,0.28);   // 褐色混沌地形
+ blotches(g,w,h,60,rnd,'rgba(255,255,255,A)',20,70,0.35);
+ for(let i=0;i<170;i++){                                        // 線狀構造 lineae：長長嘅褐色裂縫
+  const x0=rnd()*w,y0=rnd()*h,len=150+rnd()*600,a=rnd()*Math.PI;const x1=x0+Math.cos(a)*len,y1=y0+Math.sin(a)*len*0.5;
+  const cx=(x0+x1)/2+(rnd()-0.5)*120,cy=(y0+y1)/2+(rnd()-0.5)*80;
+  g.strokeStyle=`rgba(${110+rnd()*40|0},${60+rnd()*30|0},${35+rnd()*20|0},${0.35+rnd()*0.4})`;g.lineWidth=0.8+rnd()*2.6;
+  g.beginPath();g.moveTo(x0,y0);g.quadraticCurveTo(cx,cy,x1,y1);g.stroke();
+  if(rnd()<0.3){g.strokeStyle='rgba(240,235,225,.5)';g.lineWidth=0.8;g.beginPath();g.moveTo(x0,y0+2);g.quadraticCurveTo(cx,cy+2,x1,y1+2);g.stroke();}}
+ const ice=g.createLinearGradient(0,0,0,h);ice.addColorStop(0,'rgba(255,255,255,.5)');ice.addColorStop(0.15,'rgba(255,255,255,0)');ice.addColorStop(0.85,'rgba(255,255,255,0)');ice.addColorStop(1,'rgba(255,255,255,.5)');g.fillStyle=ice;g.fillRect(0,0,w,h);
+ craters(g,w,h,10,rnd,4,14,'rgba(150,120,100,0.6)','rgba(255,255,255,.6)');return tex(c);}
+function ganymedeTex(){const w=1024,h=512,c=cnv(w,h),g=c.getContext('2d'),rnd=R(63);
+ g.fillStyle='#8f857a';g.fillRect(0,0,w,h);
+ for(let i=0;i<14;i++){const x=rnd()*w,y=rnd()*h;g.fillStyle='rgba(70,60,52,.85)';g.beginPath();      // 古老暗區
+  for(let k=0;k<12;k++){const a=k/12*7,r=80+rnd()*140;g.lineTo(x+Math.cos(a)*r,y+Math.sin(a)*r*0.7);}g.closePath();g.fill();}
+ for(let i=0;i<900;i++){const x=rnd()*w,y=rnd()*h,a=rnd()*Math.PI,L=20+rnd()*90;                        // 溝槽地形
+  g.strokeStyle=`rgba(${200+rnd()*40|0},${190+rnd()*40|0},${175+rnd()*30|0},${0.12+rnd()*0.2})`;g.lineWidth=1;g.beginPath();g.moveTo(x,y);g.lineTo(x+Math.cos(a)*L,y+Math.sin(a)*L*0.4);g.stroke();}
+ craters(g,w,h,140,rnd,3,22,'rgba(60,52,45,0.7)','rgba(230,225,215,.6)',0.08);
+ speckle(g,w,h,3000,rnd,'rgba(0,0,0,A)',0.15);return tex(c);}
+function callistoTex(){const w=1024,h=512,c=cnv(w,h),g=c.getContext('2d'),rnd=R(64);
+ g.fillStyle='#4d4239';g.fillRect(0,0,w,h);
+ blotches(g,w,h,120,rnd,'rgba(110,95,80,A)',20,70,0.3);
+ craters(g,w,h,520,rnd,2,18,'rgba(35,28,24,0.75)','rgba(200,190,175,.7)',0.05);
+ {const x=w*0.3,y=h*0.45;for(let k=0;k<9;k++){g.strokeStyle=`rgba(210,200,185,${0.35-k*0.03})`;g.lineWidth=2;g.beginPath();g.arc(x,y,30+k*22,0,7);g.stroke();}   // 瓦爾哈拉多環盆地
+  const b=g.createRadialGradient(x,y,0,x,y,40);b.addColorStop(0,'rgba(220,210,195,.8)');b.addColorStop(1,'rgba(220,210,195,0)');g.fillStyle=b;g.beginPath();g.arc(x,y,40,0,7);g.fill();}
+ speckle(g,w,h,4000,rnd,'rgba(255,240,220,A)',0.2);return tex(c);}
+function titanTex(){const w=1024,h=512,c=cnv(w,h),g=c.getContext('2d'),rnd=R(65);
+ const gr=g.createLinearGradient(0,0,0,h);gr.addColorStop(0,'#b7742a');gr.addColorStop(0.35,'#e09a3a');gr.addColorStop(0.5,'#d98f30');gr.addColorStop(0.65,'#e6a445');gr.addColorStop(1,'#c07c2c');g.fillStyle=gr;g.fillRect(0,0,w,h);
+ blotches(g,w,h,90,rnd,'rgba(120,70,30,A)',30,110,0.2);    // 赤道沙丘暗區（隱約）
+ blotches(g,w,h,40,rnd,'rgba(255,220,160,A)',30,90,0.15);
+ for(let i=0;i<4;i++){g.fillStyle='rgba(60,60,90,.25)';g.beginPath();g.ellipse(rnd()*w,h*0.08+rnd()*h*0.1,30+rnd()*50,10+rnd()*20,rnd(),0,7);g.fill();}   // 北極甲烷湖
+ speckle(g,w,h,2000,rnd,'rgba(255,200,120,A)',0.12);return tex(c);}
+function enceladusTex(){const w=1024,h=512,c=cnv(w,h),g=c.getContext('2d'),rnd=R(66);
+ g.fillStyle='#eef3f8';g.fillRect(0,0,w,h);
+ blotches(g,w,h,60,rnd,'rgba(190,210,235,A)',20,80,0.3);
+ craters(g,w,h,60,rnd,3,16,'rgba(170,190,210,0.6)','rgba(255,255,255,.7)');
+ for(let i=0;i<4;i++){g.strokeStyle='rgba(90,150,210,.55)';g.lineWidth=5;g.beginPath();const y=h*0.84+i*14;g.moveTo(w*0.2,y);g.bezierCurveTo(w*0.4,y-18,w*0.6,y+18,w*0.8,y);g.stroke();}   // 南極「虎紋」
+ for(let i=0;i<200;i++){g.strokeStyle='rgba(120,160,200,.25)';g.lineWidth=1;const x=rnd()*w,y=h*0.3+rnd()*h*0.5,a=rnd()*Math.PI,L=20+rnd()*60;g.beginPath();g.moveTo(x,y);g.lineTo(x+Math.cos(a)*L,y+Math.sin(a)*L*0.3);g.stroke();}
+ return tex(c);}
+function mimasTex(){const w=1024,h=512,c=cnv(w,h),g=c.getContext('2d'),rnd=R(67);
+ g.fillStyle='#8f8a80';g.fillRect(0,0,w,h);craters(g,w,h,320,rnd,3,20,'rgba(50,46,40,0.7)','rgba(200,195,185,.6)');
+ {const x=w*0.62,y=h*0.5,r=118;const fl=g.createRadialGradient(x,y,10,x,y,r);fl.addColorStop(0,'rgba(60,55,50,.9)');fl.addColorStop(0.8,'rgba(70,65,60,.7)');fl.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=fl;g.beginPath();g.arc(x,y,r,0,7);g.fill();   // 赫歇爾環形山
+  g.strokeStyle='rgba(220,215,205,.8)';g.lineWidth=14;g.beginPath();g.arc(x,y,r*0.95,0,7);g.stroke();
+  g.fillStyle='rgba(210,205,195,.9)';g.beginPath();g.arc(x,y,16,0,7);g.fill();}
+ return tex(c);}
+function tethysTex(){const w=1024,h=512,c=cnv(w,h),g=c.getContext('2d'),rnd=R(68);
+ g.fillStyle='#c9c4ba';g.fillRect(0,0,w,h);craters(g,w,h,280,rnd,3,18,'rgba(90,85,78,0.6)','rgba(240,238,232,.6)');
+ {const x=w*0.25,y=h*0.42,r=120;const fl=g.createRadialGradient(x,y,10,x,y,r);fl.addColorStop(0,'rgba(120,115,108,.8)');fl.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=fl;g.beginPath();g.arc(x,y,r,0,7);g.fill();g.strokeStyle='rgba(245,243,238,.7)';g.lineWidth=10;g.beginPath();g.arc(x,y,r*0.95,0,7);g.stroke();}   // 奧德修斯
+ g.strokeStyle='rgba(70,65,60,.75)';g.lineWidth=9;g.beginPath();g.moveTo(w*0.55,0);g.bezierCurveTo(w*0.62,h*0.3,w*0.6,h*0.7,w*0.68,h);g.stroke();   // 伊薩卡裂谷
+ g.strokeStyle='rgba(255,255,255,.35)';g.lineWidth=2;g.beginPath();g.moveTo(w*0.56,0);g.bezierCurveTo(w*0.63,h*0.3,w*0.61,h*0.7,w*0.69,h);g.stroke();
+ return tex(c);}
+function dioneTex(){const w=1024,h=512,c=cnv(w,h),g=c.getContext('2d'),rnd=R(69);
+ g.fillStyle='#a8a298';g.fillRect(0,0,w,h);craters(g,w,h,260,rnd,3,20,'rgba(70,65,58,0.6)','rgba(230,226,218,.6)');
+ for(let i=0;i<160;i++){const x=w*0.55+rnd()*w*0.45,y=rnd()*h,a=rnd()*Math.PI,L=40+rnd()*140;g.strokeStyle=`rgba(245,243,238,${0.3+rnd()*0.5})`;g.lineWidth=1+rnd()*1.5;g.beginPath();g.moveTo(x,y);g.lineTo(x+Math.cos(a)*L,y+Math.sin(a)*L*0.6);g.stroke();}   // 冰崖條紋
+ return tex(c);}
+function rheaTex(){const w=1024,h=512,c=cnv(w,h),g=c.getContext('2d'),rnd=R(70);
+ g.fillStyle='#9a958e';g.fillRect(0,0,w,h);blotches(g,w,h,80,rnd,'rgba(120,112,104,A)',30,100,0.3);craters(g,w,h,520,rnd,2,18,'rgba(60,56,50,0.65)','rgba(225,222,215,.6)',0.03);
+ for(let i=0;i<60;i++){const x=rnd()*w,y=rnd()*h,a=rnd()*Math.PI,L=40+rnd()*120;g.strokeStyle='rgba(240,238,232,.3)';g.lineWidth=1;g.beginPath();g.moveTo(x,y);g.lineTo(x+Math.cos(a)*L,y+Math.sin(a)*L*0.5);g.stroke();}
+ return tex(c);}
+function iapetusTex(){const w=1024,h=512,c=cnv(w,h),g=c.getContext('2d'),rnd=R(71);
+ g.fillStyle='#d8d2c6';g.fillRect(0,0,w,h);
+ g.fillStyle='#3a2c22';g.beginPath();g.moveTo(w*0.05,0);for(let y=0;y<=h;y+=16)g.lineTo(w*0.06+Math.sin(y*0.05)*25+(rnd()-0.5)*30,y);g.lineTo(w*0.53,h);for(let y=h;y>=0;y-=16)g.lineTo(w*0.52+Math.sin(y*0.04+1)*30+(rnd()-0.5)*30,y);g.closePath();g.fill();   // 卡西尼區（暗半球）
+ blotches(g,w,h,60,rnd,'rgba(90,70,55,A)',20,60,0.35);
+ craters(g,w,h,240,rnd,3,20,'rgba(40,32,26,0.6)','rgba(235,230,222,.5)');
+ g.strokeStyle='rgba(20,14,10,.9)';g.lineWidth=7;g.beginPath();g.moveTo(0,h/2);for(let x=0;x<=w;x+=20)g.lineTo(x,h/2+(rnd()-0.5)*4);g.stroke();   // 赤道山脊
+ g.strokeStyle='rgba(240,235,225,.5)';g.lineWidth=2;g.beginPath();g.moveTo(w*0.53,h/2-4);g.lineTo(w,h/2-4);g.stroke();
+ return tex(c);}
+function tritonTex(){const w=1024,h=512,c=cnv(w,h),g=c.getContext('2d'),rnd=R(72);
+ g.fillStyle='#d6c4bc';g.fillRect(0,0,w,h);
+ for(let i=0;i<900;i++){const x=rnd()*w,y=h*0.15+rnd()*h*0.5,r=6+rnd()*14;g.strokeStyle='rgba(120,100,95,.35)';g.lineWidth=1.5;g.beginPath();g.arc(x,y,r,0,7);g.stroke();}   // 哈密瓜地形
+ const cap=g.createLinearGradient(0,h*0.55,0,h);cap.addColorStop(0,'rgba(255,235,230,0)');cap.addColorStop(0.4,'rgba(255,240,235,.85)');cap.addColorStop(1,'rgba(255,245,240,.95)');g.fillStyle=cap;g.fillRect(0,h*0.55,w,h*0.45);   // 南極氮冰帽
+ for(let i=0;i<60;i++){const x=rnd()*w,y=h*0.62+rnd()*h*0.3;g.strokeStyle='rgba(60,45,40,.55)';g.lineWidth=2+rnd()*2;g.beginPath();g.moveTo(x,y);g.lineTo(x+20+rnd()*60,y-(5+rnd()*15));g.stroke();}   // 氮氣間歇泉黑條紋
+ return tex(c);}
+function charonTex(){const w=1024,h=512,c=cnv(w,h),g=c.getContext('2d'),rnd=R(73);
+ g.fillStyle='#8c8580';g.fillRect(0,0,w,h);craters(g,w,h,200,rnd,3,22,'rgba(55,50,46,0.6)','rgba(200,195,188,.6)');
+ const cap=g.createLinearGradient(0,0,0,h*0.3);cap.addColorStop(0,'rgba(110,55,40,.95)');cap.addColorStop(1,'rgba(110,55,40,0)');g.fillStyle=cap;g.fillRect(0,0,w,h*0.3);   // 魔多暗紅極區
+ g.strokeStyle='rgba(50,45,42,.6)';g.lineWidth=6;g.beginPath();g.moveTo(w*0.2,h*0.5);g.bezierCurveTo(w*0.4,h*0.45,w*0.6,h*0.55,w*0.85,h*0.5);g.stroke();   // 赤道峽谷帶
+ return tex(c);}
+function plutoTex(){ // 冥王星：淺褐冰面 + 深色「克蘇魯區」+ 淺色心形「湯博區」
+ const w=512,h=256,c=cnv(w,h),g=c.getContext('2d'),rnd=R(2015);
+ g.fillStyle='#d3b48f';g.fillRect(0,0,w,h);
+ g.fillStyle='#5a3a2c';g.globalAlpha=0.85;g.beginPath();g.ellipse(120,150,120,55,0.1,0,7);g.fill();
+ g.fillStyle='#f1e6d6';g.globalAlpha=0.95;g.beginPath();g.ellipse(330,140,75,60,-0.3,0,7);g.fill();g.beginPath();g.ellipse(395,120,45,50,0.3,0,7);g.fill();
+ g.globalAlpha=1;
+ for(let i=0;i<900;i++){g.fillStyle=`rgba(90,60,40,${rnd()*0.18})`;g.fillRect(rnd()*w,rnd()*h,2,2);}
+ for(let i=0;i<40;i++){const x=rnd()*w,y=rnd()*h,r=3+rnd()*9;g.fillStyle='rgba(70,45,35,.35)';g.beginPath();g.arc(x,y,r,0,7);g.fill();}
+ return tex(c);}
 const bodies3D={};
 const loadMan=new THREE.LoadingManager();
 const texLoader=new THREE.TextureLoader(loadMan);
@@ -494,8 +975,10 @@ function buildBody(b){
  const grp=new THREE.Group();
  const mat=b.sun?new THREE.MeshBasicMaterial({map:TEXMAP[b.id]()}):
   new THREE.MeshPhongMaterial({map:TEXMAP[b.id](),shininess:6,specular:0x222222});
+ if(!b.sun&&(b.parent||b.dwarf)){mat.bumpMap=mat.map;mat.bumpScale=b.id==='iapetus'?0.02:0.06;}   // 衛星：用紋理做凹凸，環形山有立體感
  const mesh=new THREE.Mesh(new THREE.SphereGeometry(b.size,48,32),mat);
  const tiltG=new THREE.Group();tiltG.add(mesh);tiltG.rotation.z=(b.tilt||0)*Math.PI/180;grp.add(tiltG);
+ b.trueSize=4.6*parseFloat(String(b.stats.dia).replace(/,/g,''))/139820;   // 以木星=4.6為基準嘅真實相對大小
  if(b.id==='earth'){
   const cl=new THREE.Mesh(new THREE.SphereGeometry(b.size*1.02,48,32),
    new THREE.MeshPhongMaterial({map:cloudTex(),transparent:true,depthWrite:false}));
@@ -505,11 +988,11 @@ function buildBody(b){
   const pp=rg.attributes.position,uu=rg.attributes.uv;
   for(let i=0;i<pp.count;i++){const rr=Math.hypot(pp.getX(i),pp.getY(i));
    uu.setXY(i,(rr-b.ring[0])/(b.ring[1]-b.ring[0]),0.5);}
-  const rm=new THREE.Mesh(rg,new THREE.MeshBasicMaterial({map:ringTex(),transparent:true,side:THREE.DoubleSide,depthWrite:false}));
-  rm.rotation.x=-Math.PI/2;grp.add(rm);}
+  const rm=new THREE.Mesh(rg,new THREE.MeshBasicMaterial({map:b.ringDark?ringTexDark():ringTex(),transparent:true,side:THREE.DoubleSide,depthWrite:false,opacity:b.ringDark?0.75:1}));
+  rm.rotation.x=-Math.PI/2;tiltG.add(rm);}  // 環跟行星一齊傾斜（土星27°、天王星98°）
  sysGrp.add(grp);
  loadReal(b,mat);
- bodies3D[b.id]={def:b,grp,mesh,angle:Math.random()*Math.PI*2};
+ bodies3D[b.id]={def:b,grp,mesh,tiltG,angle:Math.random()*Math.PI*2};
  return bodies3D[b.id];}
 BODIES.forEach(buildBody);
 const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex(),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
@@ -568,24 +1051,30 @@ function galArmPt(ph,t){const r=galArmR(t),a=ph+t;return [r*Math.cos(a),0,r*Math
 function galSun(){return [SUN_R*Math.cos(SUN_A),0,SUN_R*Math.sin(SUN_A)];}
 const galAnim={spin:[],rings:[],tw:[],mark:null,sgra:null};
 const galHit={};
+function ringTexDark(){ // 天王星：幾條窄而暗嘅環
+ const c=cnv(256,8),g=c.getContext('2d');
+ g.clearRect(0,0,256,8);
+ const rings=[[0.05,0.03,0.35],[0.18,0.025,0.3],[0.30,0.03,0.4],[0.42,0.02,0.3],[0.55,0.03,0.35],[0.72,0.04,0.45],[0.90,0.07,0.9]];
+ for(const [u,wd,a] of rings){g.fillStyle=`rgba(190,200,210,${a})`;g.fillRect(Math.floor(u*256),0,Math.max(1,Math.floor(wd*256)),8);}
+ return tex(c);}
 function galaxyHazeTex(){ // 1024² 旋臂底圖：柔和盤面、旋臂光帶、暗塵帶、中央棒
- const S=1024,c=cnv(S,S),g=c.getContext('2d'),rnd=R(9001);
+ const S=2048,c=cnv(S,S),g=c.getContext('2d'),rnd=R(9001);
  const px=r=>r/GALR*(S*0.47),cx=S/2,cy=S/2;
  g.clearRect(0,0,S,S);
  // 盤面
  let gr=g.createRadialGradient(cx,cy,0,cx,cy,px(GALR));
- gr.addColorStop(0,'rgba(255,225,185,.70)');gr.addColorStop(0.12,'rgba(235,205,175,.40)');gr.addColorStop(0.3,'rgba(150,160,225,.22)');gr.addColorStop(0.6,'rgba(90,110,200,.10)');gr.addColorStop(0.9,'rgba(60,80,170,.03)');gr.addColorStop(1,'rgba(60,80,160,0)');
+ gr.addColorStop(0,'rgba(255,220,175,.55)');gr.addColorStop(0.1,'rgba(235,205,175,.32)');gr.addColorStop(0.3,'rgba(150,160,225,.18)');gr.addColorStop(0.6,'rgba(90,110,200,.09)');gr.addColorStop(0.9,'rgba(60,80,170,.03)');gr.addColorStop(1,'rgba(60,80,160,0)');
  g.fillStyle=gr;g.beginPath();g.arc(cx,cy,px(GALR),0,7);g.fill();
  // 旋臂光帶
  g.globalCompositeOperation='lighter';
  for(const arm of ARMS){
-  for(let i=0;i<1400;i++){
+  for(let i=0;i<5200;i++){
    const t=rnd()*ARM_TMAX,r=galArmR(t),a=arm.ph+t;
-   const spread=(28+r*0.075)*(0.6+rnd()*0.8);
-   const rr=r+(rnd()+rnd()-1)*spread,aa=a+(rnd()+rnd()-1)*spread/r;
+   const spread=(26+r*0.07)*(0.5+rnd()*0.9);
+   const rr=r+(rnd()+rnd()+rnd()-1.5)*spread,aa=a+(rnd()+rnd()+rnd()-1.5)*spread/r;
    const x=cx+px(rr)*Math.cos(aa),y=cy+px(rr)*Math.sin(aa);
-   const rad=px(14+r*0.05)*(0.7+rnd()*0.8),fade=1-t/ARM_TMAX*0.55;
-   const al=0.07*arm.w*fade;
+   const rad=px(7+r*0.028)*(0.5+rnd()*1.1),fade=1-t/ARM_TMAX*0.55;
+   const al=0.05*arm.w*fade;
    const b=g.createRadialGradient(x,y,0,x,y,rad);
    const blue=rnd()<0.6;
    b.addColorStop(0,blue?`rgba(150,180,255,${al*1.5})`:`rgba(255,225,190,${al*1.2})`);b.addColorStop(0.5,blue?`rgba(120,150,240,${al*0.6})`:`rgba(230,200,170,${al*0.5})`);b.addColorStop(1,'rgba(100,130,230,0)');
@@ -593,22 +1082,31 @@ function galaxyHazeTex(){ // 1024² 旋臂底圖：柔和盤面、旋臂光帶�
  // 中央棒
  g.save();g.translate(cx,cy);g.rotate(0);
  gr=g.createRadialGradient(0,0,0,0,0,px(ARM_R0*1.1));
- gr.addColorStop(0,'rgba(255,235,200,.95)');gr.addColorStop(0.3,'rgba(255,215,165,.55)');gr.addColorStop(0.7,'rgba(240,190,140,.18)');gr.addColorStop(1,'rgba(230,180,130,0)');
+ gr.addColorStop(0,'rgba(255,228,190,.7)');gr.addColorStop(0.3,'rgba(250,205,155,.42)');gr.addColorStop(0.7,'rgba(235,180,130,.15)');gr.addColorStop(1,'rgba(230,180,130,0)');
  g.fillStyle=gr;g.beginPath();g.ellipse(0,0,px(ARM_R0*1.15),px(ARM_R0*0.5),0,0,7);g.fill();
  g.restore();
- // 暗塵帶（旋臂內緣）—— 喺發光層上面挖窿，等背景透出嚟
+ // 暗塵帶：沿旋臂內緣嘅細長絲狀塵雲（順住旋臂方向拉長），喺發光層挖窿
  g.globalCompositeOperation='destination-out';
+ const TAN=Math.atan(1/ARM_K); // 對數螺線切線同徑向嘅夾角
  for(const arm of ARMS){
-  for(let i=0;i<1300;i++){
-   const t=0.3+rnd()*(ARM_TMAX-0.5),r=galArmR(t)*0.93,a=arm.ph+t;
-   const spread=(10+r*0.03)*(0.5+rnd());
+  for(let i=0;i<3200;i++){
+   const t=0.25+rnd()*(ARM_TMAX-0.4),r=galArmR(t)*(0.9+rnd()*0.07),a=arm.ph+t;
+   const spread=(5+r*0.02)*(0.4+rnd());
    const rr=r+(rnd()+rnd()-1)*spread,aa=a+(rnd()+rnd()-1)*spread/r;
    const x=cx+px(rr)*Math.cos(aa),y=cy+px(rr)*Math.sin(aa);
-   const rad=px(8+r*0.03)*(0.6+rnd()*0.9);
-   const b=g.createRadialGradient(x,y,0,x,y,rad);
-   const al=0.55*arm.w;
-   b.addColorStop(0,`rgba(0,0,0,${al})`);b.addColorStop(0.5,`rgba(0,0,0,${al*0.4})`);b.addColorStop(1,'rgba(0,0,0,0)');
-   g.fillStyle=b;g.beginPath();g.arc(x,y,rad,0,7);g.fill();}}
+   const len=px(10+r*0.03)*(0.5+rnd()*1.3),wid=len*(0.18+rnd()*0.2);
+   const al=(0.17+rnd()*0.16)*arm.w;
+   g.save();g.translate(x,y);g.rotate(aa+TAN+(rnd()-0.5)*0.5);
+   const b=g.createRadialGradient(0,0,0,0,0,len);
+   b.addColorStop(0,`rgba(0,0,0,${al})`);b.addColorStop(0.6,`rgba(0,0,0,${al*0.35})`);b.addColorStop(1,'rgba(0,0,0,0)');
+   g.fillStyle=b;g.scale(1,wid/len);g.beginPath();g.arc(0,0,len,0,7);g.fill();g.restore();}}
+ // 零散細塵斑
+ for(let i=0;i<4000;i++){
+  const r=Math.pow(rnd(),0.7)*GALR*0.95,a=rnd()*Math.PI*2;
+  const x=cx+px(r)*Math.cos(a),y=cy+px(r)*Math.sin(a),rad=px(3+rnd()*9);
+  const b=g.createRadialGradient(x,y,0,x,y,rad);
+  b.addColorStop(0,'rgba(0,0,0,.14)');b.addColorStop(1,'rgba(0,0,0,0)');
+  g.fillStyle=b;g.beginPath();g.arc(x,y,rad,0,7);g.fill();}
  g.globalCompositeOperation='source-over';
  return tex(c);}
 {
@@ -629,13 +1127,13 @@ function galaxyHazeTex(){ // 1024² 旋臂底圖：柔和盤面、旋臂光帶�
   return new THREE.Points(g,new THREE.PointsMaterial(Object.assign({vertexColors:true,transparent:true,depthWrite:false},opt)));};
  // ① 旋臂底圖（3層微錯位 → 有厚度）
  const haze=galaxyHazeTex();
- [[0,0.72],[-14,0.28],[14,0.28]].forEach(([y,op])=>{
+ [[0,0.62],[-14,0.24],[14,0.24]].forEach(([y,op])=>{
   const m=new THREE.Mesh(new THREE.PlaneGeometry(GALR*2.13,GALR*2.13),
    new THREE.MeshBasicMaterial({map:haze,color:0xd8e2ff,transparent:true,opacity:op,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending}));
   m.rotation.x=-Math.PI/2;m.position.y=y;m.renderOrder=1;G.add(m);});
  // ② 發光星雲粒子（加法混合、有透視大小）
  {
-  const p=[],c=[];const n=26000;
+  const p=[],c=[];const n=42000;
   for(let k=0;k<n;k++){
    const [x,y,z,t,r,w]=armSample(k);
    if(RND()>w)continue;
@@ -648,21 +1146,27 @@ function galaxyHazeTex(){ // 1024² 旋臂底圖：柔和盤面、旋臂光帶�
    const r=Math.pow(RND(),0.55)*GALR*0.98,a=RND()*Math.PI*2;
    p.push(r*Math.cos(a),gauss()*(12+r*0.018),r*Math.sin(a));
    const b=0.25+RND()*0.35;c.push(1.0*b,0.85*b,0.65*b);}
-  const m=mkPoints(p,c,null,{size:62,sizeAttenuation:true,map:soft,blending:THREE.AdditiveBlending,opacity:0.2});
+  const m=mkPoints(p,c,null,{size:38,sizeAttenuation:true,map:soft,blending:THREE.AdditiveBlending,opacity:0.16});
   m.renderOrder=2;G.add(m);
+  // 細節層：細小光斑，令旋臂有顆粒狀嘅星團質感
+  const p2=[],c2=[];
+  for(let k=0;k<30000;k++){const [x,y,z,t,r,w]=armSample(k);if(RND()>w)continue;p2.push(x,y*0.8,z);
+   const b=0.3+RND()*0.5,young=RND()<0.55;if(young)c2.push(0.6*b,0.72*b,1*b);else c2.push(1*b,0.9*b,0.72*b);}
+  const m2=mkPoints(p2,c2,null,{size:12,sizeAttenuation:true,map:soft,blending:THREE.AdditiveBlending,opacity:0.3});
+  m2.renderOrder=2;G.add(m2);
  }
  // ③ 暗塵帶：乘法混合，遮暗後面嘅光（沿旋臂內緣）
  {
   const p=[],c=[];
-  for(let k=0;k<9000;k++){
+  for(let k=0;k<16000;k++){
    const arm=ARMS[k%4],t=0.25+RND()*(ARM_TMAX-0.45);
-   const r=galArmR(t)*0.93,a=arm.ph+t;
-   const spread=(6+r*0.022);
+   const r=galArmR(t)*(0.9+RND()*0.07),a=arm.ph+t;
+   const spread=(5+r*0.02);
    const rr=r+gauss()*spread,aa=a+gauss()*spread/r;
    if(RND()>arm.w*0.9)continue;
    p.push(rr*Math.cos(aa),gauss()*6,rr*Math.sin(aa));
    const d=0.8+RND()*0.2;c.push(d,d*0.96,d*0.93);}
-  const m=mkPoints(p,c,null,{size:72,sizeAttenuation:true,map:dustTex(),blending:THREE.MultiplyBlending,opacity:1});
+  const m=mkPoints(p,c,null,{size:34,sizeAttenuation:true,map:dustTex(),blending:THREE.MultiplyBlending,opacity:1});
   m.renderOrder=3;G.add(m);
  }
  // ④ 銳利星點（無透視大小 → 遠望仍然係一粒粒星）
@@ -679,7 +1183,7 @@ function galaxyHazeTex(){ // 1024² 旋臂底圖：柔和盤面、旋臂光帶�
    const r=Math.pow(RND(),0.6)*GALR,a=RND()*Math.PI*2;
    p.push(r*Math.cos(a),gauss()*(12+r*0.02),r*Math.sin(a));
    const b=0.3+RND()*0.45;c.push(1*b,0.92*b,0.8*b);}
-  const m=mkPoints(p,c,null,{size:1.5,sizeAttenuation:false,map:dot,blending:THREE.AdditiveBlending,opacity:0.45});
+  const m=mkPoints(p,c,null,{size:1.25,sizeAttenuation:false,map:dot,blending:THREE.AdditiveBlending,opacity:0.38});
   m.renderOrder=4;G.add(m);
  }
  // ⑤ 核球 + 中央棒（暖色、3D橢球）
@@ -690,8 +1194,8 @@ function galaxyHazeTex(){ // 1024² 旋臂底圖：柔和盤面、旋臂光帶�
    let x=gauss()*ARM_R0*0.55*(0.4+u),y=gauss()*120*(0.4+u),z=gauss()*ARM_R0*0.28*(0.4+u);
    if(i%3===0){x=gauss()*70;y=gauss()*60;z=gauss()*70;} // 核心密集
    p.push(x,y,z);
-   const b=0.4+RND()*0.45;c.push(1*b,0.8*b,0.52*b);}
-  const m=mkPoints(p,c,null,{size:30,sizeAttenuation:true,map:soft,blending:THREE.AdditiveBlending,opacity:0.26});
+   const b=0.35+RND()*0.45;c.push(1*b,0.78*b,0.5*b);}
+  const m=mkPoints(p,c,null,{size:24,sizeAttenuation:true,map:soft,blending:THREE.AdditiveBlending,opacity:0.2});
   m.renderOrder=2;G.add(m);
   const m2=mkPoints(p,c,null,{size:1.4,sizeAttenuation:false,map:dot,blending:THREE.AdditiveBlending,opacity:0.5});
   m2.renderOrder=4;G.add(m2);
@@ -723,16 +1227,16 @@ function galaxyHazeTex(){ // 1024² 旋臂底圖：柔和盤面、旋臂光帶�
    const sc=18+RND()*30;s.scale.set(sc,sc,1);G.add(s);}
  }
  // ⑧ 核心光暈 + 人馬座A*（可撳）
- const core=new THREE.Sprite(new THREE.SpriteMaterial({map:soft,color:0xffd2a0,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0.42}));
+ const core=new THREE.Sprite(new THREE.SpriteMaterial({map:soft,color:0xffc98a,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0.34}));
  core.scale.set(560,560,1);core.renderOrder=6;G.add(core);
- const core2=new THREE.Sprite(new THREE.SpriteMaterial({map:soft,color:0xfff0d8,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0.6}));
- core2.scale.set(150,150,1);core2.renderOrder=6;G.add(core2);
+ const core2=new THREE.Sprite(new THREE.SpriteMaterial({map:soft,color:0xffe6c0,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0.5}));
+ core2.scale.set(130,130,1);core2.renderOrder=6;G.add(core2);
  const sgra=new THREE.Sprite(new THREE.SpriteMaterial({map:dot,color:0xffffff,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
  sgra.scale.set(50,50,1);sgra.renderOrder=7;G.add(sgra);galAnim.sgra=sgra;
  // ⑨ 大/小麥哲倫雲
  const mk=(dx,dy,dz,sc,op)=>{const s=new THREE.Sprite(new THREE.SpriteMaterial({map:soft,color:0xaac4ff,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:op}));
   s.position.set(dx,dy,dz);s.scale.set(sc,sc*0.7,1);G.add(s);return s;};
- galAnim.lmc=mk(2600,-700,-1800,520,0.55);mk(3100,-950,-1200,300,0.5);
+ galAnim.lmc=mk(2600,-700,-1800,520,0.55);galAnim.smc=mk(3150,-980,-1150,300,0.5);
  // ⑩ 太陽系標記（脈動 + 擴散環）+ 太陽軌道
  const sp=galSun();
  const mark=new THREE.Sprite(new THREE.SpriteMaterial({map:dot,color:0xffc040,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
@@ -755,6 +1259,8 @@ function galaxyHazeTex(){ // 1024² 旋臂底圖：柔和盤面、旋臂光帶�
  const hitMat=new THREE.MeshBasicMaterial({colorWrite:false,depthWrite:false});
  galHit.center=new THREE.Mesh(new THREE.SphereGeometry(110,12,8),hitMat);G.add(galHit.center);
  galHit.sun=new THREE.Mesh(new THREE.SphereGeometry(85,12,8),hitMat);galHit.sun.position.set(sp[0],sp[1],sp[2]);G.add(galHit.sun);
+ galHit.lmc=new THREE.Mesh(new THREE.SphereGeometry(230,12,8),hitMat);galHit.lmc.position.copy(galAnim.lmc.position);G.add(galHit.lmc);
+ galHit.smc=new THREE.Mesh(new THREE.SphereGeometry(140,12,8),hitMat);galHit.smc.position.copy(galAnim.smc.position);G.add(galHit.smc);
 }
 
 /* ================= 人馬座A* 黑洞：光線追蹤 shader（重力透鏡 + 吸積盤 + 多普勒增亮） ================= */
@@ -856,7 +1362,10 @@ void main(){
   p=np;prevY=np.y;
   if(dot(p,p)>4900.)break;
  }
- vec3 bg=sky(normalize(v));
+ // 參考系拖拽：越貼近黑洞，背景星空被扭成旋渦
+ float sw=1.1/(minR*minR+0.15);
+ vec3 vv=normalize(v);vv=vec3(vv.x*cos(sw)-vv.z*sin(sw),vv.y,vv.x*sin(sw)+vv.z*cos(sw));
+ vec3 bg=sky(vv);
  col+=bg*(1.-alpha);
  // 光子環：光繞黑洞兜圈嘅極薄亮環
  float ring=smoothstep(0.16,0.,abs(minR-1.5))*1.6+smoothstep(0.6,0.,abs(minR-1.5))*0.25;
@@ -864,6 +1373,10 @@ void main(){
  // 近視界暗角（重力拖曳感）
  vec2 q=v_uv-0.5;
  col*=1.-dot(q,q)*0.45;
+ // 靚近視界：畫面偏紅（重力紅移）、邊緣收窄（潮汐拉扯感）
+ float near=smoothstep(5.,2.05,u_dist);
+ col=mix(col,col*vec3(1.05,.62,.42),near*0.65);
+ col*=1.-near*dot(q,q)*2.2;
  col=aces(col*0.95);
  col=pow(col,vec3(0.92));
  gl_FragColor=vec4(col,u_alpha);
@@ -878,10 +1391,11 @@ const isMobile=/Android|iPhone|iPad|Mobile/i.test(navigator.userAgent)||Math.min
 let bhSteps=isMobile?80:120;bhMat.uniforms.u_steps.value=bhSteps;
 
 /* ---------- 真實AU距離 ---------- */
-const AUD={mercury:0.39,venus:0.72,earth:1,mars:1.52,jupiter:5.2,saturn:9.5,uranus:19.19,neptune:30.07};
+const AUD={mercury:0.39,venus:0.72,earth:1,mars:1.52,jupiter:5.2,saturn:9.5,uranus:19.19,neptune:30.07,pluto:39.5};
 const AU_U=28;
 let scaleMix=0,scaleMixT=0;
 function effDist(d){const tr=(d.id&&AUD[d.id])?AUD[d.id]*AU_U:(d.dist||0);return (d.dist||0)*(1-scaleMix)+tr*scaleMix;}
+function effSize(d){if(d.sun||!d.trueSize)return d.size;return d.size*(1-scaleMix)+d.trueSize*scaleMix;}
 /* ---------- 位置更新 ---------- */
 function bodyPos(b3,out){
  const d=b3.def;
@@ -898,6 +1412,7 @@ function updateBodies(dt){
   if(!d.sun&&d.period)b3.angle+=dt*(2*Math.PI/90)*(365/Math.abs(d.period))*(d.period<0?-1:1)*timeScale;
   bodyPos(b3,_v);b3.grp.position.copy(_v);
   b3.mesh.rotation.y+=dt*(d.spin||0.2)*timeScale;
+  if(b3.tiltG&&!d.sun&&d.trueSize){const k=effSize(d)/d.size;if(Math.abs(b3.tiltG.scale.x-k)>1e-4)b3.tiltG.scale.setScalar(k);}
   if(b3.def.clouds)b3.def.clouds.rotation.y+=dt*0.06*timeScale;}
 }
 
@@ -905,7 +1420,7 @@ function updateBodies(dt){
    mode: 'galaxy' → 由外面望成個銀河 · 'sgra' → 中心黑洞（shader） · 'system' → 太陽系 */
 let mode='galaxy';
 let camT=0.9,camP=0.92,camD=12000,tgtD=3400;
-let bhD=70,bhDT=11,bhAlpha=0,bhAlphaT=0,bhTime=0;
+let bhD=70,bhDT=11,bhAlpha=0,bhAlphaT=0,bhTime=0,idleT=0,diving=false;
 let focusId='galaxy',timeScale=1,showOrbit=true,showLabel=true,tourOn=false,tourT=0,tourIdx=-1;
 const TOUR=['galaxy','sgra','system','sun','earth','moon','mars','jupiter','saturn','uranus','neptune'];
 function dRange(){return mode==='sgra'?[2.05,80]:mode==='galaxy'?[350,9000]:[6,2600];}
@@ -913,7 +1428,12 @@ function clampD(v){const [a,b]=dRange();return Math.max(a,Math.min(b,v));}
 function getTgt(){return mode==='sgra'?bhDT:tgtD;}
 function setTgt(v){v=clampD(v);if(mode==='sgra')bhDT=v;else tgtD=v;}
 function curD(){return mode==='sgra'?bhD:camD;}
-function fitGalaxy(){const a=canvas.clientWidth/Math.max(1,canvas.clientHeight);return clampD(a<0.9?3000/(a*1.0):3300/Math.min(1,a*1.05));}
+function fitGalaxy(){ // 令成個銀河啱啱好放入「未被面板遮住」嘅空位
+ const w=canvas.clientWidth,h=Math.max(1,canvas.clientHeight),a=w/h;
+ const tanH=Math.tan(camera.fov*Math.PI/360),free=(viewOff.free||h*0.6)/h;
+ const infoW=(innerWidth>=900&&!$('info').classList.contains('hidden'))?0.72:1;   // 桌面右邊有資訊卡
+ const dW=GALR*1.12/(tanH*a*infoW),dH=GALR*0.8/(tanH*free);
+ return clampD(Math.max(dW,dH));}
 function focusTarget(out){
  if(mode!=='system'||focusId==='system')return out.set(0,0,0);
  const b3=bodies3D[focusId];if(!b3)return out.set(0,0,0);
@@ -921,7 +1441,7 @@ function focusTarget(out){
 function focusDist(id){
  if(id==='system')return 200;
  const b3=bodies3D[id];if(!b3)return 200;
- const d=b3.def;return Math.max(5,(d.size||2)*5);}
+ const d=b3.def;return Math.max(4,(effSize(d)||2)*5+(scaleMix>0.5?2:0));}
 function setMode(m){
  mode=m;
  galaxyGrp.visible=(m!=='system');
@@ -931,15 +1451,29 @@ function setMode(m){
  sunLight.intensity=m==='system'?1.8:0;
  $('planetRow').style.display=(m==='system')?'flex':'none';
  $('distBtn').style.display=(m==='system')?'':'none';
+ $('diveBtn').style.display=(m==='sgra')?'':'none';diving=false;idleT=0;
  $('orbitBtn').style.display=(m==='system')?'':'none';
- $('timeRow').style.display=(m==='system')?'':'none';
  $('scaleBadge').style.display=(m==='system'&&scaleMixT>0.5)?'block':'none';
  document.querySelectorAll('#navRow [data-go]').forEach(b=>b.classList.toggle('on',b.dataset.go===m));
  $('hint').innerHTML=m==='galaxy'?t('hint_gal'):m==='sgra'?t('hint_bh'):t('hint');
  // 唔同模式下滑桿範圍唔同 → 重設滑桿
  zoomSlider.value=distToSlider(getTgt());}
-function layoutInfo(){const info=$('info');if(innerWidth<900)info.style.bottom=($('panel').offsetHeight+18)+'px';else info.style.bottom='';}
-if(window.ResizeObserver)new ResizeObserver(layoutInfo).observe($('panel'));
+let viewOff={x:0,y:0};
+function layoutInfo(){
+ const info=$('info'),panel=$('panel'),narrow=innerWidth<900;
+ const w=canvas.clientWidth,h=canvas.clientHeight;if(!w||!h)return;
+ let bottom=panel.offsetHeight+18,top=$('title').offsetHeight+24;
+ if(narrow){info.style.bottom=(panel.offsetHeight+18)+'px';if(!info.classList.contains('hidden'))bottom+=info.offsetHeight+10;}
+ else info.style.bottom='';
+ // 畫面重心放喺剩低空位嘅中間
+ let oy=Math.round((bottom-top)/2),ox=0;
+ if(!narrow&&!info.classList.contains('hidden'))ox=Math.round(Math.min(w*0.14,190));
+ else if(!narrow)ox=Math.round(w*0.02);
+ viewOff={x:ox,y:oy,free:Math.max(120,h-top-bottom)};
+ camera.setViewOffset(w,h,ox,oy,w,h);camera.updateProjectionMatrix();
+ bhMat.uniforms.u_off.value.set(ox/w*2,-oy/h*2);
+ if(mode==='galaxy'&&focusId==='galaxy')tgtD=fitGalaxy();}
+if(window.ResizeObserver){const ro=new ResizeObserver(()=>layoutInfo());ro.observe($('panel'));ro.observe($('info'));}
 const fadeEl=$('fade');
 function blackFade(mid){fadeEl.style.opacity=1;setTimeout(()=>{mid();fadeEl.style.opacity=0;},470);}
 function goFocus(id,fromTour){
@@ -964,14 +1498,14 @@ function goFocus(id,fromTour){
 function sliderToDist(v){const [a,b]=dRange();return a*Math.pow(b/a,v/1000);}
 function distToSlider(d){const [a,b]=dRange();return Math.round(1000*Math.log(Math.max(a,Math.min(b,d))/a)/Math.log(b/a));}
 const zoomSlider=$('zoom');
-zoomSlider.addEventListener('input',()=>{setTgt(sliderToDist(+zoomSlider.value));tourOn=false;renderTour();});
+zoomSlider.addEventListener('input',()=>{setTgt(sliderToDist(+zoomSlider.value));tourOn=false;renderTour();idleT=0;diving=false;});
 const timeSlider=$('time');
 timeSlider.addEventListener('input',()=>{const v=+timeSlider.value/100;
  timeScale=v<=0.02?0:0.05*Math.pow(80,v);$('timeRead').textContent=timeScale===0?'⏸':timeScale.toFixed(1)+'×';});
 function setTime(v){timeSlider.value=v;timeSlider.dispatchEvent(new Event('input'));}
 setTime(35);
 let drags=new Map(),pinchD=0,downXY=null,movedFar=false,multiTouch=false;
-canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);
+canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);idleT=0;diving=false;
  if(drags.size===0){downXY=[e.clientX,e.clientY];movedFar=false;multiTouch=false;} // 只有全新手勢先重設
  drags.set(e.pointerId,[e.clientX,e.clientY]);
  if(drags.size>=2){multiTouch=true;const p=[...drags.values()];pinchD=Math.hypot(p[0][0]-p[1][0],p[0][1]-p[1][1]);}});
@@ -989,22 +1523,26 @@ canvas.addEventListener('pointermove',e=>{if(!drags.has(e.pointerId))return;
 const up=e=>{if(drags.has(e.pointerId)&&!movedFar&&!multiTouch&&drags.size===1)tapPick(e);drags.delete(e.pointerId);};
 canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',e=>drags.delete(e.pointerId));
 canvas.addEventListener('lostpointercapture',e=>drags.delete(e.pointerId));
-canvas.addEventListener('wheel',e=>{e.preventDefault();
+canvas.addEventListener('wheel',e=>{e.preventDefault();idleT=0;diving=false;
  setTgt(getTgt()*Math.pow(1.0015,e.deltaY));tourOn=false;renderTour();},{passive:false});
 const ray=new THREE.Raycaster(),mouseV=new THREE.Vector2();
 function tapPick(e){const r=canvas.getBoundingClientRect();
  mouseV.set(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1);
  ray.setFromCamera(mouseV,camera);
  if(mode==='galaxy'){
-  const hit=ray.intersectObjects([galHit.center,galHit.sun],false)[0];
-  if(hit){goFocus(hit.object===galHit.center?'sgra':'system');}
+  const hit=ray.intersectObjects([galHit.center,galHit.sun,galHit.lmc,galHit.smc],false)[0];
+  if(!hit)return;
+  if(hit.object===galHit.center)goFocus('sgra');else if(hit.object===galHit.sun)goFocus('system');
+  else if(hit.object===galHit.lmc)showKB('lmc');else showKB('smc');
   return;}
  if(mode!=='system')return;
  const meshes=[];for(const id in bodies3D){const b=bodies3D[id];if(b.mesh&&id!=='belt')meshes.push(b.mesh);}
  const hit=ray.intersectObjects(meshes,false)[0];
  if(hit){for(const id in bodies3D)if(bodies3D[id].mesh===hit.object){goFocus(id);break;}}}
 function renderTour(){$('tourBtn').classList.toggle('on',tourOn);}
-$('tourBtn').onclick=()=>{tourOn=!tourOn;renderTour();tourT=0;if(tourOn){tourIdx=-1;tourT=8;}};
+let toastT=null;
+function toast(msg){const el=$('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),3200);}
+$('tourBtn').onclick=()=>{tourOn=!tourOn;renderTour();tourT=0;if(tourOn){tourIdx=-1;tourT=8;}toast(t(tourOn?'tour_on':'tour_off'));};
 $('orbitBtn').onclick=function(){showOrbit=!showOrbit;this.classList.toggle('on',showOrbit);
  sysGrp.traverse(o=>{if(o.name==='orbit'||o.name==='belt')o.visible=showOrbit;});};
 $('labelBtn').onclick=function(){showLabel=!showLabel;this.classList.toggle('on',showLabel);};
@@ -1013,6 +1551,10 @@ $('distBtn').onclick=function(){scaleMixT=scaleMixT>0.5?0:1;this.classList.toggl
  if(scaleMixT>0.5){bd.innerHTML=t('scalemode');bd.style.display='block';if(focusId==='system')tgtD=1000;}
  else bd.style.display='none';};
 document.querySelectorAll('#navRow [data-go]').forEach(b=>b.onclick=()=>goFocus(b.dataset.go));
+$('knowBtn').onclick=()=>$('know').scrollIntoView({behavior:'smooth'});
+$('diveBtn').onclick=()=>{if(mode!=='sgra')return;diving=!diving;idleT=0;tourOn=false;renderTour();if(diving){camP=Math.max(0.9,Math.min(1.3,camP));toast(t('dive_on'));}};
+$('panelTog').onclick=()=>{const m=$('panel').classList.toggle('min');$('panelTog').textContent=m?'⌃':'⌄';try{localStorage.setItem('gv_panel',m?'1':'0');}catch(e){}layoutInfo();};
+try{if(localStorage.getItem('gv_panel')==='1'){$('panel').classList.add('min');$('panelTog').textContent='⌃';}}catch(e){}
 function buildPlanetBtns(){const row=$('planetRow');row.innerHTML='';
  for(const b of BODIES){if(b.sun||b.parent)continue;
   const btn=document.createElement('button');btn.className='pbtn';btn.textContent=bn(b);
@@ -1024,10 +1566,10 @@ function buildLabels(){
  const ids=['system'].concat(BODIES.map(b=>b.id));
  for(const id of ids){const d=document.createElement('div');d.className='lbl';d.style.display='none';
   d.onclick=()=>goFocus(id);labelLayer.appendChild(d);labelDivs[id]=d;}
- const maps=[['map_sun','system',true],['map_sgra','sgra',true],['map_per',null],['map_sag',null],['map_nor',null],['map_sct',null],['map_lmc',null],['map_scale',null]];
+ const maps=[['map_sun','system',true],['map_sgra','sgra',true],['map_per','#arm_per'],['map_sag','#arm_sag'],['map_nor','#arm_nor'],['map_sct','#arm_sct'],['map_lmc','#lmc'],['map_smc','#smc'],['map_scale',null]];
  for(const [id,go,big] of maps){const d=document.createElement('div');d.className='lbl'+(big?' big':'');d.style.display='none';
-  d.onclick=()=>{if(go)goFocus(go);};labelLayer.appendChild(d);labelDivs[id]=d;}}
-const MAPL=['map_sun','map_sgra','map_per','map_sag','map_nor','map_sct','map_lmc','map_scale'];
+  d.onclick=()=>{if(!go)return;if(go[0]==='#')showKB(go.slice(1));else goFocus(go);};labelLayer.appendChild(d);labelDivs[id]=d;}}
+const MAPL=['map_sun','map_sgra','map_per','map_sag','map_nor','map_sct','map_lmc','map_smc','map_scale'];
 function updateLabels(){
  const W=canvas.clientWidth,H=canvas.clientHeight;
  const put=(id,x,y,txt,op)=>{const d=labelDivs[id];if(!d)return;
@@ -1048,6 +1590,7 @@ function updateLabels(){
   const sp3=galArmPt(Math.PI,3.9);wput('map_sct',sp3[0],sp3[1]+40,sp3[2],t('mapsct'),galOp*0.85*armOp);
   const sp4=galArmPt(Math.PI*1.5,2.2);wput('map_nor',sp4[0],sp4[1]+40,sp4[2],t('mapnor'),galOp*0.85*armOp);
   if(galAnim.lmc)wput('map_lmc',galAnim.lmc.position.x,galAnim.lmc.position.y+200,galAnim.lmc.position.z,t('maplmc'),galOp*0.8*armOp);
+  if(galAnim.smc)wput('map_smc',galAnim.smc.position.x,galAnim.smc.position.y+120,galAnim.smc.position.z,t('mapsmc'),galOp*0.8*armOp);
   wput('map_scale',-1350,-40,1150,t('scale10k'),galOp*0.9*armOp);
  }else MAPL.forEach(id=>put(id,0,0,'',0));
  // 太陽系
@@ -1057,7 +1600,7 @@ function updateLabels(){
   put('system',sx2,sy2-30,t('sys'),(ok2&&camD>420)?0.95:0);
   for(const b of BODIES){
    const b3=bodies3D[b.id];_v.copy(b3.grp.position);
-   if(b.parent)_v.y+=b.size+1.5;else _v.y+=b.size+2;
+   if(b.parent)_v.y+=effSize(b)+1.5;else _v.y+=effSize(b)+2;
    const [x,y,ok3]=proj(_v);if(!ok3){put(b.id,0,0,'',0);continue;}
    let op=0;
    if(far){op=(b.sun)?0.9:0;}
@@ -1083,15 +1626,19 @@ const MILKY={
   ko:'우리의 고향 은하를 바깥에서 본 모습. 중심에는 늙은 노란 별들의 막대, 네 개의 나선팔은 젊은 청백색 별과 분홍 수소 성운, 어두운 먼지띠로 그려지고, 구상성단과 암흑물질 헤일로가 둘러싸요. 깜빡이는 주황 점이 태양계 — 눌러서 집으로, 밝은 중심을 누르면 궁수자리 A* 블랙홀로 갑니다.',
   ja:'私たちの故郷の銀河を外から見た姿。中心には老いた黄色い星の棒、4本の渦状腕は若い青白い星、ピンクの水素星雲、暗い塵の帯で描かれ、球状星団と暗黒物質ハローが取り囲みます。脈打つオレンジの点が太陽系 —— タップで帰宅、明るい中心をタップでいて座A*ブラックホールへ。'}};
 let lastInfo=null;
-function openInfo(name,tag,blurb,rows){
- const el=$('info');el.classList.add('hidden');
+function openInfo(name,tag,blurb,rows,facts){
+ const el=$('info');el.classList.add('hidden');el.classList.remove('min');
  $('infoName').textContent=name;$('infoTag').textContent=tag||'';
  $('infoBlurb').textContent=blurb;
  let h='';for(const [k,v] of rows)h+=`<tr><td class="k">${k}</td><td>${v}</td></tr>`;
  $('infoStats').innerHTML=h;
- void el.offsetWidth;el.classList.remove('hidden');el.scrollTop=0;}
-function showMilky(){lastInfo='@milky';openInfo(MILKY.name[LANG]||MILKY.name.en,t('tag_gal'),MILKY.blurb[LANG]||MILKY.blurb.en,MILKY.stats[LANG]||MILKY.stats.en);}
-function showSys(){lastInfo='@sys';openInfo(SYS.name[LANG]||SYS.name.en,t('tag_sys'),SYS.blurb[LANG]||SYS.blurb.en,SYS.stats[LANG]||SYS.stats.en);}
+ const f=$('infoFacts');
+ if(facts&&facts.length){f.style.display='block';f.innerHTML=`<b>${t('facts_h')}</b><ul>${facts.map(x=>`<li>${x}</li>`).join('')}</ul>`;}
+ else{f.style.display='none';f.innerHTML='';}
+ void el.offsetWidth;el.classList.remove('hidden');el.querySelector('.bd').scrollTop=0;layoutInfo();}
+$('infoHd').onclick=()=>{$('info').classList.toggle('min');layoutInfo();};
+function showMilky(){lastInfo='@milky';openInfo(MILKY.name[LANG]||MILKY.name.en,t('tag_gal'),MILKY.blurb[LANG]||MILKY.blurb.en,MILKY.stats[LANG]||MILKY.stats.en,FACTS.milky[LANG]||FACTS.milky.en);}
+function showSys(){lastInfo='@sys';openInfo(SYS.name[LANG]||SYS.name.en,t('tag_sys'),SYS.blurb[LANG]||SYS.blurb.en,SYS.stats[LANG]||SYS.stats.en,FACTS.sys[LANG]||FACTS.sys.en);}
 
 /* ---------- 人馬座A*(銀河中心黑洞) ---------- */
 const SGRA={
@@ -1108,7 +1655,7 @@ const SGRA={
   ms:'Lubang hitam supermasif di pusat galaksi, dibesarkan tidak terkira — yang sebenar tidak kelihatan pada peta galaksi. Ini simulasi jejak sinar: graviti membengkokkan cakera akresi supaya sisi jauhnya kelihatan di atas dan bawah, sisi yang berputar ke arah anda lebih terang (pancaran Doppler), dan Bima Sakti di belakang diregang menjadi gelang.',
   ko:'우리 은하 중심의 초대질량 블랙홀을 엄청나게 확대한 모습 — 실제로는 은하 지도에서 보이지 않아요. 광선 추적 시뮬레이션: 중력이 강착원반을 휘어 반대편이 위아래로 보이고, 나를 향해 도는 쪽이 도플러 효과로 더 밝고, 뒤편 은하수가 고리로 늘어나요. 드래그로 회전, 스크롤로 지평선 접근.',
   ja:'銀河中心の超大質量ブラックホールを大幅に拡大 —— 実物は銀河図では見えません。これはレイトレーシングのシミュレーション：重力で降着円盤の裏側が上下に見え、手前へ回る側がドップラー効果で明るく、背後の天の川は環状に引き伸ばされます。ドラッグで周回、スクロールで地平面へ。'}};
-function showSgra(){lastInfo='@sgra';openInfo(SGRA.name[LANG]||SGRA.name.en,t('tag_bh'),SGRA.blurb[LANG]||SGRA.blurb.en,SGRA.stats[LANG]||SGRA.stats.en);}
+function showSgra(){lastInfo='@sgra';openInfo(SGRA.name[LANG]||SGRA.name.en,t('tag_bh'),SGRA.blurb[LANG]||SGRA.blurb.en,SGRA.stats[LANG]||SGRA.stats.en,FACTS.sgra[LANG]||FACTS.sgra.en);}
 
 /* ---------- 星球資訊 ---------- */
 const STATL={dia:'k_dia',dis:'k_dis',year:'k_year',day:'k_day',moon:'k_moon',temp:'k_temp',extra:'k_extra'};
@@ -1121,7 +1668,7 @@ function showInfo(id){
   const v=typeof b.stats[k]==='object'?(b.stats[k][LANG]||b.stats[k].en):b.stats[k];
   rows.push([t(STATL[k]),v]);}
  openInfo(bn(b),'',b.blurb[LANG]||b.blurb.en,rows);}
-function hideInfo(){$('info').classList.add('hidden');}
+function hideInfo(){$('info').classList.add('hidden');layoutInfo();}
 $('infoClose').onclick=hideInfo;
 
 /* ---------- 資料表 ---------- */
@@ -1137,7 +1684,8 @@ function applyLang(){
  document.querySelectorAll('[data-i18n]').forEach(el=>{el.innerHTML=t(el.dataset.i18n);});
  buildPlanetBtns();buildTable();
  $('hint').innerHTML=mode==='galaxy'?t('hint_gal'):mode==='sgra'?t('hint_bh'):t('hint');
- if(!$('info').classList.contains('hidden')&&lastInfo){if(lastInfo==='@milky')showMilky();else if(lastInfo==='@sgra')showSgra();else if(lastInfo==='@sys')showSys();else showInfo(lastInfo);}
+ if(!$('info').classList.contains('hidden')&&lastInfo){if(lastInfo==='@milky')showMilky();else if(lastInfo==='@sgra')showSgra();else if(lastInfo==='@sys')showSys();else if(lastInfo[0]==='#')showKB(lastInfo.slice(1));else showInfo(lastInfo);}
+ renderKnow();
  $('langSel').value=LANG;}
 $('langSel').value=LANG;
 $('langSel').addEventListener('change',function(){LANG=this.value;localStorage.setItem('gv_lang',LANG);applyLang();});
@@ -1148,16 +1696,10 @@ function size(){const r=canvas.parentElement.getBoundingClientRect();
  renderer.setSize(w,h,false);
  camera.aspect=w/h;
  // 視覺重心偏移：直屏往上（避開底部面板+資訊卡），橫屏略偏左（資訊卡喺右邊）
- let ox=0,oy=0;
- if(w/h<0.9){oy=Math.round(h*0.13);}
- else if(w>=900){ox=Math.round(w*0.08);oy=Math.round(h*0.03);}
- else{oy=Math.round(h*0.05);}
- camera.setViewOffset(w,h,ox,oy,w,h);
  camera.updateProjectionMatrix();
- bhMat.uniforms.u_off.value.set(ox/w*2,-oy/h*2);
  layoutInfo();
  bhMat.uniforms.u_res.value.set(canvas.width,canvas.height);
- if(mode==='galaxy'&&focusId==='galaxy')tgtD=fitGalaxy();}
+}
 addEventListener('resize',size);size();
 const camTarget=new THREE.Vector3(),camPos=new THREE.Vector3();
 let last=performance.now(),fpsA=60,lastQ=0;
@@ -1185,6 +1727,10 @@ function frame(now){
  if(mode==='galaxy'&&drags.size===0)camT+=dt*0.025;   // 銀河慢慢自轉展示
  else if(tourOn)camT+=dt*0.02;
  // 黑洞相機 + 淡入淡出
+ if(mode==='sgra'){idleT+=rdt;
+  if(diving){bhDT=Math.max(2.08,bhDT-rdt*Math.max(0.6,bhDT*0.18));if(bhDT<=2.081){diving=false;idleT=-6;}}   // 跌落去：越近越快
+  else if(idleT>4&&bhDT>4.5)bhDT-=rdt*0.12*(bhDT-4);                                                       // 冇動作時慢慢被引力拉近
+ }
  bhD+=(bhDT-bhD)*(1-Math.pow(0.003,rdt));
  bhAlpha+=(bhAlphaT-bhAlpha)*Math.min(1,rdt*1.6);
  if(Math.abs(bhAlpha-bhAlphaT)<0.004)bhAlpha=bhAlphaT;
@@ -1216,7 +1762,7 @@ function frame(now){
  if(Math.abs(cur-sliderToDist(+zoomSlider.value))>cur*0.05+0.01)zoomSlider.value=distToSlider(curD());
 }
 buildLabels();buildPlanetBtns();buildTable();
-setMode('galaxy');tgtD=fitGalaxy();camD=tgtD*3.5;
+setMode('galaxy');layoutInfo();tgtD=fitGalaxy();camD=tgtD*3.5;
 applyLang();
 setTimeout(showMilky,900);
 requestAnimationFrame(frame);
