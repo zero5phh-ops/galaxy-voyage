@@ -753,8 +753,8 @@ function galaxyHazeTex(){ // 1024² 旋臂底圖：柔和盤面、旋臂光帶�
  }
  // ⑪ 隱形點擊目標
  const hitMat=new THREE.MeshBasicMaterial({colorWrite:false,depthWrite:false});
- galHit.center=new THREE.Mesh(new THREE.SphereGeometry(150,12,8),hitMat);G.add(galHit.center);
- galHit.sun=new THREE.Mesh(new THREE.SphereGeometry(110,12,8),hitMat);galHit.sun.position.set(sp[0],sp[1],sp[2]);G.add(galHit.sun);
+ galHit.center=new THREE.Mesh(new THREE.SphereGeometry(110,12,8),hitMat);G.add(galHit.center);
+ galHit.sun=new THREE.Mesh(new THREE.SphereGeometry(85,12,8),hitMat);galHit.sun.position.set(sp[0],sp[1],sp[2]);G.add(galHit.sun);
 }
 
 /* ================= 人馬座A* 黑洞：光線追蹤 shader（重力透鏡 + 吸積盤 + 多普勒增亮） ================= */
@@ -970,21 +970,25 @@ timeSlider.addEventListener('input',()=>{const v=+timeSlider.value/100;
  timeScale=v<=0.02?0:0.05*Math.pow(80,v);$('timeRead').textContent=timeScale===0?'⏸':timeScale.toFixed(1)+'×';});
 function setTime(v){timeSlider.value=v;timeSlider.dispatchEvent(new Event('input'));}
 setTime(35);
-let drags=new Map(),pinchD=0,downXY=null,movedFar=false;
+let drags=new Map(),pinchD=0,downXY=null,movedFar=false,multiTouch=false;
 canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);
- drags.set(e.pointerId,[e.clientX,e.clientY]);downXY=[e.clientX,e.clientY];movedFar=false;
- if(drags.size===2){const p=[...drags.values()];pinchD=Math.hypot(p[0][0]-p[1][0],p[0][1]-p[1][1]);}});
+ if(drags.size===0){downXY=[e.clientX,e.clientY];movedFar=false;multiTouch=false;} // 只有全新手勢先重設
+ drags.set(e.pointerId,[e.clientX,e.clientY]);
+ if(drags.size>=2){multiTouch=true;const p=[...drags.values()];pinchD=Math.hypot(p[0][0]-p[1][0],p[0][1]-p[1][1]);}});
 canvas.addEventListener('pointermove',e=>{if(!drags.has(e.pointerId))return;
  const old=drags.get(e.pointerId);drags.set(e.pointerId,[e.clientX,e.clientY]);
- if(downXY&&Math.hypot(e.clientX-downXY[0],e.clientY-downXY[1])>10)movedFar=true;
+ if(downXY&&Math.hypot(e.clientX-downXY[0],e.clientY-downXY[1])>8)movedFar=true;
+ if(Math.hypot(e.clientX-old[0],e.clientY-old[1])>0)movedFar=movedFar||Math.hypot(e.clientX-(downXY?downXY[0]:e.clientX),e.clientY-(downXY?downXY[1]:e.clientY))>8;
  if(drags.size===1){camT+=(e.clientX-old[0])*0.005;
   const lo=mode==='sgra'?0.2:0.08,hi=mode==='sgra'?1.45:1.65;
   camP=Math.max(lo,Math.min(hi,camP-(e.clientY-old[1])*0.004));tourOn=false;renderTour();}
  else if(drags.size===2){const p=[...drags.values()];
   const d=Math.hypot(p[0][0]-p[1][0],p[0][1]-p[1][1]);
   if(pinchD>0)setTgt(getTgt()*pinchD/Math.max(1,d));pinchD=d;tourOn=false;renderTour();}});
-const up=e=>{if(drags.has(e.pointerId)&&!movedFar&&drags.size===1)tapPick(e);drags.delete(e.pointerId);};
+// 只有「單指、冇移動、冇捏合過」嘅輕點先當作點選，避免縫合/拖拽時誤跳
+const up=e=>{if(drags.has(e.pointerId)&&!movedFar&&!multiTouch&&drags.size===1)tapPick(e);drags.delete(e.pointerId);};
 canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',e=>drags.delete(e.pointerId));
+canvas.addEventListener('lostpointercapture',e=>drags.delete(e.pointerId));
 canvas.addEventListener('wheel',e=>{e.preventDefault();
  setTgt(getTgt()*Math.pow(1.0015,e.deltaY));tourOn=false;renderTour();},{passive:false});
 const ray=new THREE.Raycaster(),mouseV=new THREE.Vector2();
